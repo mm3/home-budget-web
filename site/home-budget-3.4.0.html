@@ -6,11 +6,32 @@
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="Offline home budget: entries, categories, statistics, CSV/XLSX/PDF export and import.">
 <meta name="application-name" content="Home Budget">
-<meta name="application-version" content="3.0.0">
-<meta name="generator" content="Home Budget 3.0.0">
-<title>Home Budget 3.0.0</title>
+<meta name="application-version" content="3.4.0">
+<meta name="generator" content="Home Budget 3.4.0">
+<meta name="robots" content="index, follow">
+<title>Home Budget 3.4.0</title>
+
+<!-- The file never changes once it is built: its name carries the version, so any
+     copy of it can be kept forever. Servers should send the same rule as a header;
+     these tags state the intent for proxies and for anyone saving the file. -->
+<meta http-equiv="Cache-Control" content="public, max-age=31536000, immutable">
+<meta http-equiv="Expires" content="Tue, 31 Dec 2069 23:59:59 GMT">
+<meta http-equiv="Pragma" content="cache">
+
+<!-- Installable single page app: no server, no navigation, everything in this file. -->
+<meta name="theme-color" content="#4f46e5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home Budget">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Home Budget">
+<meta property="og:description" content="A home budget that is one offline HTML file.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M7 14l9-7 9 7v11H7z' fill='white'/%3E%3Ccircle cx='16' cy='18' r='3.4' fill='%2322c55e'/%3E%3C/svg%3E">
-<style>/*! Home Budget 3.0.0 */
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%234f46e5'/%3E%3Cpath d='M39 79l51-40 51 40v62H39z' fill='white'/%3E%3Ccircle cx='90' cy='101' r='19' fill='%2322c55e'/%3E%3C/svg%3E">
+
+<style>/*! Home Budget 3.4.0 */
 /* Home Budget - light and dark theme, mobile and desktop layouts */
 
 :root {
@@ -29,6 +50,10 @@
   --bar-expense: #f97316;
   --bar-income: #22c55e;
   --radius: 14px;
+  /* Every control in a form row is exactly this tall, and every field label exactly
+     that high, so controls next to each other always sit on the same line. */
+  --control-height: 40px;
+  --label-height: 18px;
   --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .06);
   color-scheme: light;
 }
@@ -176,6 +201,7 @@ button, input, select { font: inherit; color: inherit; }
 .quick-input-wrap { position: relative; flex: 1; }
 .quick-input {
   width: 100%;
+  height: auto; /* the quick amount field is deliberately bigger than a form control */
   padding: 14px 44px 14px 14px;
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
@@ -233,32 +259,46 @@ button.link.danger { color: var(--danger); }
 .segmented button.active { background: var(--surface-2); color: var(--text); }
 
 input, select {
+  box-sizing: border-box;
+  height: var(--control-height);
   padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
   max-width: 100%;
 }
-input[type="color"] { padding: 2px; width: 48px; height: 36px; }
+/* Checkboxes keep their own size; only the text-like controls share a height. */
+input[type="checkbox"], input[type="radio"] { height: auto; }
+input[type="color"] { padding: 2px; width: 48px; }
 input:focus-visible, select:focus-visible, button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
 .field { display: flex; flex-direction: column; gap: 4px; }
-.field-label { color: var(--muted); font-size: .8rem; font-weight: 600; }
-.field-hint { color: var(--muted); font-size: .75rem; }
-.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+/* A fixed label height plus top alignment is what keeps a row of fields lined up:
+   a longer label, or a hint under one of them, then moves nothing else. */
+.field-label {
+  color: var(--muted); font-size: .8rem; font-weight: 600;
+  min-height: var(--label-height); line-height: var(--label-height);
+}
+.field-hint { color: var(--muted); font-size: .75rem; line-height: 1.3; max-width: 240px; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: start; }
 .filters-box { margin-bottom: 4px; }
 .filters-box > summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: .85rem; padding: 4px 0; }
 .filters-box[open] > summary { margin-bottom: 8px; }
 .entry-row { cursor: pointer; }
-.filter-actions { display: flex; gap: 8px; }
-.inline-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 12px; }
+.filter-actions { display: flex; gap: 8px; margin-top: calc(var(--label-height) + 4px); }
+.inline-form { display: flex; flex-wrap: wrap; gap: 12px 10px; align-items: start; margin-top: 12px; }
+/* The submit button has no label above it, so it is pushed down by exactly one. */
+.inline-form > button { margin-top: calc(var(--label-height) + 4px); }
+/* Buttons that stand in a row with form controls are exactly as tall as they are. */
+.inline-form > button, .filters button, .button-row > button, .file-button { height: var(--control-height); }
 
 /* ---------- lists and tables ---------- */
 .summary { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; font-size: .9rem; font-weight: 600; }
 .table-wrap { overflow-x: auto; }
+.more-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
 table { width: 100%; border-collapse: collapse; }
 th {
   text-align: left;
@@ -275,9 +315,17 @@ tbody tr:hover { background: var(--surface-2); }
 tbody tr:last-child td { border-bottom: 0; }
 .row-actions { white-space: nowrap; text-align: right; }
 .category-icon { font-size: 1.05em; margin-right: 7px; line-height: 1; }
+.currency-flag { font-size: 1.05em; margin-right: 6px; line-height: 1; }
 .legend-icon { font-size: 1em; }
 .small { font-size: .78rem; }
-.row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; }
+.row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.date-input { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.date-input .date-text { width: 120px; font-variant-numeric: tabular-nums; }
+.date-input .date-text.invalid { border-color: var(--danger); }
+.date-button { height: var(--control-height); padding: 0 8px; font-size: 1rem; }
+/* The native control only exists to open the browser's calendar; it is never shown. */
+.date-native { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; padding: 0;
+  border: 0; opacity: 0; pointer-events: none; }
 .icon-input { width: 64px; font-size: 1.2rem; text-align: center; }
 .rate-input { width: 110px; text-align: right; }
 .converted-note { margin-top: -6px; }
@@ -426,7 +474,7 @@ body[data-mode="desktop"] .grid { grid-template-columns: 1.3fr 1fr; }
 <body data-mode="auto">
 <div id="app"></div>
 <noscript>This app needs JavaScript. Everything runs locally in your browser; nothing is sent anywhere.</noscript>
-<script>/*! Home Budget 3.0.0 - offline single file build, https://github.com/ (no dependencies) */
+<script>/*! Home Budget 3.4.0 - offline single file build, https://github.com/ (no dependencies) */
 (function () {
 'use strict';
 const __cache = {};
@@ -450,11 +498,11 @@ __modules["ui/app.js"] = function () {
 
 const { BudgetStore } = __require("core/store.js");
 const { AppError } = __require("core/model.js");
-const { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES } = __require("core/i18n.js");
+const { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES, periodTexts } = __require("core/i18n.js");
 const { APP_VERSION } = __require("core/version.js");
 const { loadState, migrateState, pickStorage, saveState } = __require("core/storage.js");
 const { append, clear, el, render } = __require("ui/dom.js");
-const { entriesView, entryForm } = __require("ui/views/entries.js");
+const { entriesView, entryForm, PAGE_SIZE } = __require("ui/views/entries.js");
 const { homeView } = __require("ui/views/home.js");
 const { settingsView, categoryForm } = __require("ui/views/settings.js");
 const { statsView } = __require("ui/views/stats.js");
@@ -486,6 +534,9 @@ class App {
       showIncome: false,
       showAverage: true,
       filter: {},
+      // The list draws one row per entry, so a store with tens of thousands of them
+      // would spend seconds in the DOM on every render. It grows on demand instead.
+      shownEntries: PAGE_SIZE,
       importPreview: null,
       message: loaded.error ? { text: loaded.error, kind: 'error' } : null,
     };
@@ -501,8 +552,15 @@ class App {
     if (this.translatorSignature !== signature) {
       this.translatorSignature = signature;
       this.translatorFunction = createTranslator(language, settings.customTranslation);
+      this.translatedPeriods = periodTexts(this.translatorFunction);
     }
     return this.translatorFunction;
+  }
+
+  /** Month and week names for the charts, the statistics and the exports. */
+  periodTexts() {
+    this.translator();
+    return this.translatedPeriods;
   }
 
   /** Language code guessed from the browser. */
@@ -535,6 +593,10 @@ class App {
     const map = {
       'Enter an amount, for example 12.50': 'error.amountRequired',
       'Unknown category': 'error.unknownCategory',
+      'This amount is too large': 'error.amountTooLarge',
+      'This amount is too small': 'error.amountTooSmall',
+      'Amount cannot be zero': 'error.amountZero',
+      'Enter a date like 23.09.2026': 'error.badDate',
     };
     return map[error.message] ? this.t(map[error.message]) : error.message;
   }
@@ -552,7 +614,15 @@ class App {
   }
 
   setUi(changes) {
+    // Any new filter starts the list from the top again.
+    if (changes.filter !== undefined) this.ui.shownEntries = PAGE_SIZE;
     Object.assign(this.ui, changes);
+    this.render();
+  }
+
+  /** Shows the next page of entries. */
+  showMoreEntries(all = false) {
+    this.ui.shownEntries = all ? Number.MAX_SAFE_INTEGER : this.ui.shownEntries + PAGE_SIZE;
     this.render();
   }
 
@@ -649,6 +719,12 @@ class App {
     if (!window.confirm(this.t('settings.confirmDeleteAll'))) return;
     const removed = this.store.clearEntries();
     this.notify(this.t('settings.deletedEntries', { count: removed }));
+  }
+
+  resetAll() {
+    if (!window.confirm(this.t('settings.confirmResetAll'))) return;
+    this.store.resetAll();
+    this.notify(this.t('settings.resetDone'));
   }
 
   restore(rawState) {
@@ -788,7 +864,11 @@ class BudgetStore {
     const currency = this.currency(this.settings.defaultCurrency);
     const amount = parseAmount(amountText, currency.decimals);
     if (amount === null) throw new AppError('Enter an amount, for example 12.50');
-    if (amount === 0) throw new AppError('Amount cannot be zero');
+    // "0.001" in a currency with two decimals rounds to nothing - that is not the
+    // same mistake as typing a plain zero, and saying so avoids a puzzling error.
+    if (amount === 0) {
+      throw new AppError(/[1-9]/.test(String(amountText)) ? 'This amount is too small' : 'Amount cannot be zero');
+    }
     return this.addEntry({
       amount: Math.abs(amount),
       categoryId: this.settings.defaultCategoryId,
@@ -1016,7 +1096,16 @@ class BudgetStore {
     this.#changed();
   }
 
-  /** Deletes all entries but keeps the settings. */
+  /**
+   * Throws everything away: entries, categories, currencies and settings all go
+   * back to what a fresh installation has. Deleting the entries does NOT do this.
+   */
+  resetAll() {
+    this.state = createDefaultState();
+    this.#changed();
+  }
+
+  /** Deletes all entries but keeps the categories, currencies and settings. */
   clearEntries() {
     const removed = this.state.entries.length;
     this.state.entries = [];
@@ -1116,6 +1205,13 @@ const STATE_VERSION = DATA_VERSION;
 const LIMIT_PERIODS = ['day', 'week', 'month', 'year'];
 const DEFAULT_CATEGORY_ID = 'daily';
 const MAX_NOTE_LENGTH = 200;
+/**
+ * Biggest amount one entry may hold, in minor units: a thousand million major
+ * units, e.g. 1 000 000 000.00 EUR. Far beyond any home budget, and low enough
+ * that even a full store of entries adds up well inside the range where integers
+ * stay exact (2^53), so no single entry can turn the totals into nonsense.
+ */
+const MAX_AMOUNT = 100000000000;
 const MAX_NAME_LENGTH = 40;
 
 /** The category every quick entry goes to. */
@@ -1149,27 +1245,56 @@ const ICON_CHOICES = ['\u2615', '\ud83d\udd01', '\ud83d\udcc5', '\ud83d\uded2', 
   '\ud83c\udf81', '\u2708\ufe0f', '\ud83d\udcda', '\ud83c\udfcb\ufe0f', '\ud83d\udc76', '\ud83d\udd27', '\ud83d\udcb3', '\u2753'];
 
 /**
- * Currencies a new installation knows about. `rate` is how much one unit is worth in the
+ * Currencies a new installation knows about. Symbols are kept distinct on purpose:
+ * three Nordic crowns and two yen would otherwise share one sign, and an amount has
+ * to say which currency it is in. `rate` is how much one unit is worth in the
  * default currency; these values are only a starting point and are meant to be edited in the
  * settings, because an offline app cannot look rates up.
  */
 function defaultCurrencies() {
   return [
-    { code: 'EUR', symbol: '€', decimals: 2, rate: 1 },
-    { code: 'USD', symbol: '$', decimals: 2, rate: 0.92 },
-    { code: 'GBP', symbol: '£', decimals: 2, rate: 1.17 },
-    { code: 'CHF', symbol: 'Fr', decimals: 2, rate: 1.04 },
-    { code: 'SEK', symbol: 'kr', decimals: 2, rate: 0.088 },
-    { code: 'NOK', symbol: 'kr', decimals: 2, rate: 0.086 },
-    { code: 'DKK', symbol: 'kr', decimals: 2, rate: 0.134 },
-    { code: 'PLN', symbol: 'zł', decimals: 2, rate: 0.23 },
-    { code: 'CZK', symbol: 'Kč', decimals: 2, rate: 0.04 },
-    { code: 'UAH', symbol: '₴', decimals: 2, rate: 0.022 },
-    { code: 'TRY', symbol: '₺', decimals: 2, rate: 0.026 },
-    { code: 'CAD', symbol: 'C$', decimals: 2, rate: 0.66 },
-    { code: 'AUD', symbol: 'A$', decimals: 2, rate: 0.6 },
-    { code: 'JPY', symbol: '¥', decimals: 0, rate: 0.0059 },
+    { code: 'EUR', symbol: '€', flag: '🇪🇺', decimals: 2, rate: 1 },
+    { code: 'USD', symbol: '$', flag: '🇺🇸', decimals: 2, rate: 0.92 },
+    { code: 'GBP', symbol: '£', flag: '🇬🇧', decimals: 2, rate: 1.17 },
+    { code: 'CHF', symbol: 'Fr', flag: '🇨🇭', decimals: 2, rate: 1.04 },
+    { code: 'SEK', symbol: 'Skr', flag: '🇸🇪', decimals: 2, rate: 0.088 },
+    { code: 'NOK', symbol: 'Nkr', flag: '🇳🇴', decimals: 2, rate: 0.086 },
+    { code: 'DKK', symbol: 'Dkr', flag: '🇩🇰', decimals: 2, rate: 0.134 },
+    { code: 'PLN', symbol: 'zł', flag: '🇵🇱', decimals: 2, rate: 0.23 },
+    { code: 'CZK', symbol: 'Kč', flag: '🇨🇿', decimals: 2, rate: 0.04 },
+    { code: 'RUB', symbol: '₽', flag: '🇷🇺', decimals: 2, rate: 0.0098 },
+    { code: 'UAH', symbol: '₴', flag: '🇺🇦', decimals: 2, rate: 0.022 },
+    { code: 'TRY', symbol: '₺', flag: '🇹🇷', decimals: 2, rate: 0.026 },
+    { code: 'KZT', symbol: '₸', flag: '🇰🇿', decimals: 2, rate: 0.0019 },
+    { code: 'GEL', symbol: '₾', flag: '🇬🇪', decimals: 2, rate: 0.34 },
+    { code: 'RON', symbol: 'lei', flag: '🇷🇴', decimals: 2, rate: 0.2 },
+    { code: 'HUF', symbol: 'Ft', flag: '🇭🇺', decimals: 0, rate: 0.0025 },
+    { code: 'BGN', symbol: 'лв', flag: '🇧🇬', decimals: 2, rate: 0.51 },
+    { code: 'CAD', symbol: 'C$', flag: '🇨🇦', decimals: 2, rate: 0.66 },
+    { code: 'AUD', symbol: 'A$', flag: '🇦🇺', decimals: 2, rate: 0.6 },
+    { code: 'NZD', symbol: 'NZ$', flag: '🇳🇿', decimals: 2, rate: 0.55 },
+    { code: 'JPY', symbol: '¥', flag: '🇯🇵', decimals: 0, rate: 0.0059 },
+    { code: 'CNY', symbol: 'CN¥', flag: '🇨🇳', decimals: 2, rate: 0.13 },
+    { code: 'INR', symbol: '₹', flag: '🇮🇳', decimals: 2, rate: 0.011 },
+    { code: 'ILS', symbol: '₪', flag: '🇮🇱', decimals: 2, rate: 0.25 },
   ];
+}
+
+/** Flags for the currencies people add by hand; the code's country is a good guess. */
+const FLAGS_BY_CODE = {
+  AED: '🇦🇪', ARS: '🇦🇷', AMD: '🇦🇲', AZN: '🇦🇿', BRL: '🇧🇷', BYN: '🇧🇾', CLP: '🇨🇱', COP: '🇨🇴',
+  EGP: '🇪🇬', HKD: '🇭🇰', IDR: '🇮🇩', ISK: '🇮🇸', KRW: '🇰🇷', MDL: '🇲🇩', MXN: '🇲🇽', MYR: '🇲🇾',
+  NGN: '🇳🇬', PHP: '🇵🇭', PKR: '🇵🇰', RSD: '🇷🇸', SAR: '🇸🇦', SGD: '🇸🇬', THB: '🇹🇭', TWD: '🇹🇼',
+  UZS: '🇺🇿', VND: '🇻🇳', ZAR: '🇿🇦',
+};
+
+/**
+ * The flag shown next to a currency. Known codes get their country's flag, the
+ * rest get a neutral exchange symbol, so every currency has an icon.
+ */
+function flagForCurrency(code) {
+  const known = defaultCurrencies().find((currency) => currency.code === code);
+  return known ? known.flag : (FLAGS_BY_CODE[code] || '💱');
 }
 
 /** A fresh, empty application state. */
@@ -1219,6 +1344,7 @@ function createEntry(input, now = new Date()) {
     throw new AppError('Amount must be a whole number of minor units');
   }
   if (amount === 0) throw new AppError('Amount cannot be zero');
+  if (Math.abs(amount) > MAX_AMOUNT) throw new AppError('This amount is too large');
   const date = input.date === undefined || input.date === null || input.date === '' ? todayIso(now) : input.date;
   if (!isIsoDate(date)) throw new AppError('Date must be yyyy-mm-dd');
   if (!input.categoryId) throw new AppError('Category is required');
@@ -1270,7 +1396,10 @@ function createCurrency(input) {
   const symbol = String(input.symbol ?? '').trim() || code;
   const rate = input.rate === undefined || input.rate === null || input.rate === '' ? 1 : Number(input.rate);
   if (!Number.isFinite(rate) || rate <= 0) throw new AppError('The rate must be a positive number');
-  return { code, symbol, decimals, rate };
+  const given = String(input.flag ?? '').trim();
+  if ([...given].length > 3) throw new AppError('The flag must be a single emoji');
+  const flag = given || flagForCurrency(code);
+  return { code, symbol, flag, decimals, rate };
 }
 
 /**
@@ -1303,7 +1432,7 @@ function signedAmount(entry, categories) {
   return findCategory(categories, entry.categoryId).kind === 'income' ? entry.amount : -entry.amount;
 }
 
-return { defaultCategory, defaultCategories, defaultCurrencies, createDefaultState, newId, slugify, createEntry, createCategory, createCurrency, convertAmount, findCurrency, findCategory, signedAmount, AppError, STATE_VERSION, LIMIT_PERIODS, DEFAULT_CATEGORY_ID, MAX_NOTE_LENGTH, MAX_NAME_LENGTH, ICON_CHOICES };
+return { defaultCategory, defaultCategories, defaultCurrencies, flagForCurrency, createDefaultState, newId, slugify, createEntry, createCategory, createCurrency, convertAmount, findCurrency, findCategory, signedAmount, AppError, STATE_VERSION, LIMIT_PERIODS, DEFAULT_CATEGORY_ID, MAX_NOTE_LENGTH, MAX_AMOUNT, MAX_NAME_LENGTH, ICON_CHOICES };
 };
 __modules["core/format.js"] = function () {
 /**
@@ -1354,6 +1483,8 @@ function parseAmount(text, decimals = 2) {
   if (typeof text !== 'string') return null;
   let cleaned = text.trim();
   if (!cleaned) return null;
+  // "1e15" would lose its exponent to the cleanup below and quietly become 115.
+  if (/\d\s*[eE][-+]?\s*\d/.test(cleaned)) return null;
   let negative = false;
   if (/^\(.*\)$/.test(cleaned)) {
     negative = true;
@@ -1531,8 +1662,20 @@ function previousPeriodStart(isoDate, period) {
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
-/** Human readable label for a period key, e.g. "Sep 2026" or "W38 2026". */
-function periodLabel(key, period, style = 'short') {
+/**
+ * The words period labels are built from. The interface passes a translated set
+ * (see periodTexts in i18n.js); English is the fallback, so this module stays
+ * usable - and testable - on its own.
+ */
+const PERIOD_TEXTS = {
+  months: MONTH_NAMES,
+  week: 'Week {week}, {year}',
+  weekShort: 'W{week}',
+};
+
+/** Human readable label for a period key, e.g. "Sep 26" or "September 2026". */
+function periodLabel(key, period, style = 'short', texts = PERIOD_TEXTS) {
+  const months = texts.months && texts.months.length === 12 ? texts.months : MONTH_NAMES;
   switch (period) {
     case 'day': {
       const [year, month, day] = key.split('-');
@@ -1540,12 +1683,16 @@ function periodLabel(key, period, style = 'short') {
     }
     case 'week': {
       const [year, week] = key.split('-W');
-      return style === 'short' ? `W${Number(week)}` : `Week ${Number(week)}, ${year}`;
+      const pattern = style === 'short'
+        ? (texts.weekShort || PERIOD_TEXTS.weekShort)
+        : (texts.week || PERIOD_TEXTS.week);
+      return pattern.replace('{week}', String(Number(week))).replace('{year}', year);
     }
     case 'month': {
       const [year, month] = key.split('-');
-      const name = MONTH_NAMES[Number(month) - 1];
-      return style === 'short' ? `${name.slice(0, 3)} ${year.slice(2)}` : `${name} ${year}`;
+      const name = months[Number(month) - 1];
+      // Three letters is a short month everywhere the app is translated into.
+      return style === 'short' ? `${[...name].slice(0, 3).join('')} ${year.slice(2)}` : `${name} ${year}`;
     }
     case 'year': return key;
     default: throw new Error(`Unknown period: ${period}`);
@@ -1559,14 +1706,14 @@ function formatDate(isoDate) {
   return `${day}.${month}.${year}`;
 }
 
-return { formatMoney, toPlainAmount, parseAmount, todayIso, toIsoDate, isIsoDate, parseDateLoose, addDays, addMonths, startOfWeek, isoWeek, periodKey, periodStart, periodEnd, previousPeriodStart, periodLabel, formatDate, GROUP_SEPARATOR, PERIODS };
+return { formatMoney, toPlainAmount, parseAmount, todayIso, toIsoDate, isIsoDate, parseDateLoose, addDays, addMonths, startOfWeek, isoWeek, periodKey, periodStart, periodEnd, previousPeriodStart, periodLabel, formatDate, GROUP_SEPARATOR, PERIODS, MONTH_NAMES, PERIOD_TEXTS };
 };
 __modules["core/version.js"] = function () {
 /**
  * The single place where the application version lives.
  * The build stamps it into the file name, the bundle banner and the page.
  */
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '3.4.0';
 
 /** Storage document version; raised when the saved shape changes. */
 const DATA_VERSION = 3;
@@ -1596,6 +1743,22 @@ const EN = {
   'app.title': 'Home Budget',
   'app.storedIn': 'Stored in your browser ({storage}) · works offline',
   'nav.home': 'Home',
+  // Period names, so charts, statistics and the PDF speak the interface language.
+  'month.1': 'January',
+  'month.2': 'February',
+  'month.3': 'March',
+  'month.4': 'April',
+  'month.5': 'May',
+  'month.6': 'June',
+  'month.7': 'July',
+  'month.8': 'August',
+  'month.9': 'September',
+  'month.10': 'October',
+  'month.11': 'November',
+  'month.12': 'December',
+  'periodLabel.week': 'Week {week}, {year}',
+  'periodLabel.weekShort': 'W{week}',
+
   'nav.entries': 'Entries',
   'nav.stats': 'Stats',
   'nav.settings': 'Settings',
@@ -1611,6 +1774,8 @@ const EN = {
   'common.name': 'Name',
   'common.type': 'Type',
   'common.date': 'Date',
+  'common.datePlaceholder': 'dd.mm.yyyy',
+  'common.pickDate': 'Open the calendar',
   'common.amount': 'Amount',
   'common.category': 'Category',
   'common.currency': 'Currency',
@@ -1674,6 +1839,9 @@ const EN = {
   'entries.search': 'Search',
   'entries.searchHint': 'note or category',
   'entries.empty': 'No entries match these filters.',
+  'entries.showing': 'Showing {shown} of {total}',
+  'entries.showMore': 'Show {count} more',
+  'entries.showAll': 'Show all',
   'entries.newEntry': 'New entry',
   'entries.editEntry': 'Edit entry',
   'entries.deleted': 'Entry deleted',
@@ -1695,7 +1863,7 @@ const EN = {
   'stats.entryCount': 'Entries: {count}',
 
   'transfer.title': 'Export and import',
-  'transfer.exportTitle': 'Export the entries shown above',
+  'transfer.exportTitle': 'Export everything the filters match',
   'transfer.importTitle': 'Import from CSV or Excel',
   'transfer.importHint': 'Columns are detected automatically; you can correct them before importing.',
   'transfer.exported': 'Exported {count} entries to {format}',
@@ -1726,7 +1894,7 @@ const EN = {
   'settings.newCategory': '+ New category',
   'settings.editCategory': 'Edit category',
   'settings.createCategory': 'New category',
-  'settings.limit': 'Monthly limit',
+  'settings.limit': 'Limit',
   'settings.limitHint': 'Leave empty for no limit',
   'settings.confirmDeleteCategory': 'Delete this category?',
   'settings.moveEntries': '"{category}" has {count} entries. Move them to which category? Type its name, or cancel.',
@@ -1734,6 +1902,8 @@ const EN = {
   'settings.currencies': 'Currencies',
   'settings.currencyCode': 'Code',
   'settings.currencySymbol': 'Symbol',
+  'settings.currencyFlag': 'Flag',
+  'settings.currencyFlagHint': 'Emoji; picked for you if empty',
   'settings.currencyDecimals': 'Decimals',
   'settings.addCurrency': 'Add currency',
   'settings.data': 'Data',
@@ -1741,6 +1911,10 @@ const EN = {
   'settings.backup': 'Download backup (JSON)',
   'settings.restore': 'Restore backup',
   'settings.deleteAll': 'Delete all entries',
+  'settings.resetAll': 'Reset everything',
+  'settings.confirmResetAll': 'Reset everything? Entries, categories, currencies and settings all go back to the defaults.',
+  'settings.resetDone': 'Everything has been reset to the defaults',
+  'settings.deleteHint': 'Deleting the entries keeps your categories, currencies and settings. Resetting undoes all of it.',
   'settings.confirmDeleteAll': 'Delete all entries? The categories and settings stay.',
   'settings.deletedEntries': '{count} entries deleted',
   'settings.backupDownloaded': 'Backup downloaded',
@@ -1778,6 +1952,10 @@ const EN = {
   'category.budget': 'Budget',
   'error.amountRequired': 'Enter an amount, for example 12.50',
   'error.unknownCategory': 'Unknown category',
+  'error.amountTooLarge': 'This amount is too large',
+  'error.amountTooSmall': 'This amount is too small for this currency',
+  'error.amountZero': 'The amount cannot be zero',
+  'error.badDate': 'Enter a date like 23.09.2026',
 };
 
 /** Russian texts. */
@@ -1785,6 +1963,22 @@ const RU = {
   'app.title': 'Домашний бюджет',
   'app.storedIn': 'Хранится в вашем браузере ({storage}) · работает офлайн',
   'nav.home': 'Главная',
+  // Period names, so charts, statistics and the PDF speak the interface language.
+  'month.1': 'Январь',
+  'month.2': 'Февраль',
+  'month.3': 'Март',
+  'month.4': 'Апрель',
+  'month.5': 'Май',
+  'month.6': 'Июнь',
+  'month.7': 'Июль',
+  'month.8': 'Август',
+  'month.9': 'Сентябрь',
+  'month.10': 'Октябрь',
+  'month.11': 'Ноябрь',
+  'month.12': 'Декабрь',
+  'periodLabel.week': '{week}-я неделя, {year}',
+  'periodLabel.weekShort': 'Н{week}',
+
   'nav.entries': 'Записи',
   'nav.stats': 'Статистика',
   'nav.settings': 'Настройки',
@@ -1800,6 +1994,8 @@ const RU = {
   'common.name': 'Название',
   'common.type': 'Тип',
   'common.date': 'Дата',
+  'common.datePlaceholder': 'дд.мм.гггг',
+  'common.pickDate': 'Открыть календарь',
   'common.amount': 'Сумма',
   'common.category': 'Категория',
   'common.currency': 'Валюта',
@@ -1863,6 +2059,9 @@ const RU = {
   'entries.search': 'Поиск',
   'entries.searchHint': 'заметка или категория',
   'entries.empty': 'Нет записей по этим фильтрам.',
+  'entries.showing': 'Показано {shown} из {total}',
+  'entries.showMore': 'Показать ещё {count}',
+  'entries.showAll': 'Показать все',
   'entries.newEntry': 'Новая запись',
   'entries.editEntry': 'Изменить запись',
   'entries.deleted': 'Запись удалена',
@@ -1884,7 +2083,7 @@ const RU = {
   'stats.entryCount': 'Записей: {count}',
 
   'transfer.title': 'Экспорт и импорт',
-  'transfer.exportTitle': 'Экспорт показанных записей',
+  'transfer.exportTitle': 'Экспорт всех записей по фильтру',
   'transfer.importTitle': 'Импорт из CSV или Excel',
   'transfer.importHint': 'Колонки определяются автоматически, перед импортом их можно поправить.',
   'transfer.exported': 'Экспортировано записей: {count} ({format})',
@@ -1915,7 +2114,7 @@ const RU = {
   'settings.newCategory': '+ Новая категория',
   'settings.editCategory': 'Изменить категорию',
   'settings.createCategory': 'Новая категория',
-  'settings.limit': 'Месячный лимит',
+  'settings.limit': 'Лимит',
   'settings.limitHint': 'Пусто — без лимита',
   'settings.confirmDeleteCategory': 'Удалить эту категорию?',
   'settings.moveEntries': 'В категории «{category}» записей: {count}. В какую категорию их перенести? Введите название или отмените.',
@@ -1923,6 +2122,8 @@ const RU = {
   'settings.currencies': 'Валюты',
   'settings.currencyCode': 'Код',
   'settings.currencySymbol': 'Символ',
+  'settings.currencyFlag': 'Флаг',
+  'settings.currencyFlagHint': 'Эмодзи; подберётся само',
   'settings.currencyDecimals': 'Знаков',
   'settings.addCurrency': 'Добавить валюту',
   'settings.data': 'Данные',
@@ -1930,6 +2131,10 @@ const RU = {
   'settings.backup': 'Скачать резервную копию (JSON)',
   'settings.restore': 'Восстановить из копии',
   'settings.deleteAll': 'Удалить все записи',
+  'settings.resetAll': 'Сбросить всё',
+  'settings.confirmResetAll': 'Сбросить всё? Записи, категории, валюты и настройки вернутся к значениям по умолчанию.',
+  'settings.resetDone': 'Всё сброшено к значениям по умолчанию',
+  'settings.deleteHint': 'Удаление записей сохраняет категории, валюты и настройки. Сброс отменяет и их.',
   'settings.confirmDeleteAll': 'Удалить все записи? Категории и настройки останутся.',
   'settings.deletedEntries': 'Удалено записей: {count}',
   'settings.backupDownloaded': 'Копия скачана',
@@ -1967,6 +2172,10 @@ const RU = {
   'category.budget': 'Покупки',
   'error.amountRequired': 'Введите сумму, например 12.50',
   'error.unknownCategory': 'Неизвестная категория',
+  'error.amountTooLarge': 'Слишком большая сумма',
+  'error.amountTooSmall': 'Слишком маленькая сумма для этой валюты',
+  'error.amountZero': 'Сумма не может быть нулём',
+  'error.badDate': 'Введите дату, например 23.09.2026',
 };
 
 /** German texts. */
@@ -1974,6 +2183,22 @@ const DE = {
   'app.title': 'Haushaltsbudget',
   'app.storedIn': 'Im Browser gespeichert ({storage}) · funktioniert offline',
   'nav.home': 'Start',
+  // Period names, so charts, statistics and the PDF speak the interface language.
+  'month.1': 'Januar',
+  'month.2': 'Februar',
+  'month.3': 'März',
+  'month.4': 'April',
+  'month.5': 'Mai',
+  'month.6': 'Juni',
+  'month.7': 'Juli',
+  'month.8': 'August',
+  'month.9': 'September',
+  'month.10': 'Oktober',
+  'month.11': 'November',
+  'month.12': 'Dezember',
+  'periodLabel.week': 'Woche {week}, {year}',
+  'periodLabel.weekShort': 'W{week}',
+
   'nav.entries': 'Einträge',
   'nav.stats': 'Statistik',
   'nav.settings': 'Einstellungen',
@@ -1989,6 +2214,8 @@ const DE = {
   'common.name': 'Name',
   'common.type': 'Art',
   'common.date': 'Datum',
+  'common.datePlaceholder': 'tt.mm.jjjj',
+  'common.pickDate': 'Kalender öffnen',
   'common.amount': 'Betrag',
   'common.category': 'Kategorie',
   'common.currency': 'Währung',
@@ -2052,6 +2279,9 @@ const DE = {
   'entries.search': 'Suche',
   'entries.searchHint': 'Notiz oder Kategorie',
   'entries.empty': 'Keine Einträge für diese Filter.',
+  'entries.showing': '{shown} von {total} angezeigt',
+  'entries.showMore': '{count} weitere anzeigen',
+  'entries.showAll': 'Alle anzeigen',
   'entries.newEntry': 'Neuer Eintrag',
   'entries.editEntry': 'Eintrag bearbeiten',
   'entries.deleted': 'Eintrag gelöscht',
@@ -2073,7 +2303,7 @@ const DE = {
   'stats.entryCount': 'Einträge: {count}',
 
   'transfer.title': 'Export und Import',
-  'transfer.exportTitle': 'Die oben gezeigten Einträge exportieren',
+  'transfer.exportTitle': 'Alles exportieren, was die Filter treffen',
   'transfer.importTitle': 'Import aus CSV oder Excel',
   'transfer.importHint': 'Die Spalten werden automatisch erkannt und können vor dem Import geändert werden.',
   'transfer.exported': '{count} Einträge als {format} exportiert',
@@ -2104,7 +2334,7 @@ const DE = {
   'settings.newCategory': '+ Neue Kategorie',
   'settings.editCategory': 'Kategorie bearbeiten',
   'settings.createCategory': 'Neue Kategorie',
-  'settings.limit': 'Monatslimit',
+  'settings.limit': 'Limit',
   'settings.limitHint': 'Leer lassen für kein Limit',
   'settings.confirmDeleteCategory': 'Diese Kategorie löschen?',
   'settings.moveEntries': '„{category}" hat {count} Einträge. In welche Kategorie sollen sie? Namen eingeben oder abbrechen.',
@@ -2112,6 +2342,8 @@ const DE = {
   'settings.currencies': 'Währungen',
   'settings.currencyCode': 'Code',
   'settings.currencySymbol': 'Symbol',
+  'settings.currencyFlag': 'Flagge',
+  'settings.currencyFlagHint': 'Emoji; sonst automatisch',
   'settings.currencyDecimals': 'Nachkommastellen',
   'settings.addCurrency': 'Währung hinzufügen',
   'settings.data': 'Daten',
@@ -2119,6 +2351,10 @@ const DE = {
   'settings.backup': 'Sicherung laden (JSON)',
   'settings.restore': 'Sicherung einspielen',
   'settings.deleteAll': 'Alle Einträge löschen',
+  'settings.resetAll': 'Alles zurücksetzen',
+  'settings.confirmResetAll': 'Alles zurücksetzen? Einträge, Kategorien, Währungen und Einstellungen gehen auf die Standardwerte zurück.',
+  'settings.resetDone': 'Alles wurde auf die Standardwerte zurückgesetzt',
+  'settings.deleteHint': 'Das Löschen der Einträge behält Kategorien, Währungen und Einstellungen. Das Zurücksetzen nimmt auch die zurück.',
   'settings.confirmDeleteAll': 'Alle Einträge löschen? Kategorien und Einstellungen bleiben.',
   'settings.deletedEntries': '{count} Einträge gelöscht',
   'settings.backupDownloaded': 'Sicherung geladen',
@@ -2156,6 +2392,10 @@ const DE = {
   'category.budget': 'Einkäufe',
   'error.amountRequired': 'Betrag eingeben, zum Beispiel 12.50',
   'error.unknownCategory': 'Unbekannte Kategorie',
+  'error.amountTooLarge': 'Dieser Betrag ist zu groß',
+  'error.amountTooSmall': 'Dieser Betrag ist für diese Währung zu klein',
+  'error.amountZero': 'Der Betrag darf nicht null sein',
+  'error.badDate': 'Datum eingeben, zum Beispiel 23.09.2026',
 };
 
 const BUNDLED = { en: EN, ru: RU, de: DE };
@@ -2193,6 +2433,18 @@ function createTranslator(language, custom = {}) {
   };
 }
 
+/**
+ * The month and week names periodLabel needs, in the current language.
+ * @param {(key: string) => string} t a translator from createTranslator
+ */
+function periodTexts(t) {
+  return {
+    months: Array.from({ length: 12 }, (unused, index) => t(`month.${index + 1}`)),
+    week: t('periodLabel.week'),
+    weekShort: t('periodLabel.weekShort'),
+  };
+}
+
 /** Replaces {name} placeholders. */
 function fill(template, params) {
   return String(template).replace(/\{(\w+)\}/g, (match, name) => (
@@ -2211,7 +2463,7 @@ function sanitizeTranslation(raw) {
   return clean;
 }
 
-return { translationKeys, bundledTexts, detectLanguage, createTranslator, fill, sanitizeTranslation, DEFAULT_LANGUAGE, LANGUAGES, CUSTOM_LANGUAGE, EN, RU, DE };
+return { translationKeys, bundledTexts, detectLanguage, createTranslator, periodTexts, fill, sanitizeTranslation, DEFAULT_LANGUAGE, LANGUAGES, CUSTOM_LANGUAGE, EN, RU, DE };
 };
 __modules["core/storage.js"] = function () {
 /**
@@ -2219,7 +2471,7 @@ __modules["core/storage.js"] = function () {
  * which is small enough for localStorage (5 MB holds roughly 60 000 entries).
  */
 
-const { createDefaultState, defaultCategories, defaultCurrencies, LIMIT_PERIODS, STATE_VERSION } = __require("core/model.js");
+const { createDefaultState, defaultCategories, defaultCurrencies, flagForCurrency, LIMIT_PERIODS, STATE_VERSION } = __require("core/model.js");
 const { APP_VERSION } = __require("core/version.js");
 const { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } = __require("core/i18n.js");
 
@@ -2295,6 +2547,9 @@ function migrateState(raw) {
   ).map((currency) => ({
     ...currency,
     rate: Number.isFinite(Number(currency.rate)) && Number(currency.rate) > 0 ? Number(currency.rate) : 1,
+    flag: typeof currency.flag === 'string' && currency.flag
+      ? currency.flag
+      : flagForCurrency(String(currency.code).toUpperCase()),
   }));
   const entries = Array.isArray(raw.entries)
     ? raw.entries.filter((e) => e && typeof e.id === 'string' && typeof e.date === 'string'
@@ -2366,6 +2621,8 @@ return { pickStorage, migrateState, loadState, saveState, MemoryStorage, STORAGE
 __modules["ui/dom.js"] = function () {
 /** Tiny DOM helpers - the app builds its interface with plain JavaScript. */
 
+const { formatDate, parseDateLoose } = __require("core/format.js");
+
 /**
  * Creates an element.
  * @param {string} tag tag name, optionally with classes: "div.card.wide"
@@ -2420,8 +2677,11 @@ function byId(id) {
 
 /** A labelled form field. */
 function field(labelText, control, hint) {
-  return el('label.field', {}, [el('span.field-label', { text: labelText }), control,
-    hint ? el('span.field-hint', { text: hint }) : null]);
+  // has-hint lets a row of fields reserve room for the hint underneath, so the
+  // hint neither grows the field nor overlaps the one next to it.
+  return el(hint ? 'label.field.has-hint' : 'label.field', {},
+    [el('span.field-label', { text: labelText }), control,
+      hint ? el('span.field-hint', { text: hint }) : null]);
 }
 
 /** An <option> list for a <select>. */
@@ -2433,15 +2693,87 @@ function options(items, selected) {
   }));
 }
 
-return { el, append, clear, render, byId, field, options };
+/**
+ * A date field that shows the date the way the rest of the app does (23.09.2026).
+ *
+ * `<input type="date">` looks tempting, but the format it displays comes from the
+ * browser's language setting alone - not from the page, not from the `lang`
+ * attribute and not from the chosen interface language - so a browser set to
+ * American English shows 09/23/2026 in an otherwise Russian or German app. This
+ * field types and shows the date in the app's own format, and the button still
+ * opens the browser's native calendar, which is what makes it usable on a phone.
+ *
+ * @param {{value: string, onChange: (iso: string) => void, t: (key: string) => string,
+ *          required?: boolean, clearable?: boolean}} options
+ */
+function dateField({ value, onChange, t, required = false, clearable = false }) {
+  const text = el('input.date-text', {
+    type: 'text', inputmode: 'numeric', autocomplete: 'off', spellcheck: false,
+    placeholder: t('common.datePlaceholder'), value: value ? formatDate(value) : '',
+    required, 'aria-label': t('common.date'),
+  });
+  const native = el('input.date-native', { type: 'date', value: value || '', tabindex: '-1', 'aria-hidden': 'true' });
+  const button = el('button.date-button', {
+    type: 'button', text: '📅', title: t('common.pickDate'), 'aria-label': t('common.pickDate'),
+  });
+
+  const apply = (iso) => {
+    text.value = iso ? formatDate(iso) : '';
+    text.classList.remove('invalid');
+    native.value = iso || '';
+    onChange(iso);
+  };
+
+  text.addEventListener('change', () => {
+    const typed = text.value.trim();
+    if (!typed) {
+      if (clearable || !required) apply('');
+      else text.classList.add('invalid');
+      return;
+    }
+    const iso = parseDateLoose(typed);
+    if (iso) apply(iso);
+    else text.classList.add('invalid'); // keep what was typed so it can be corrected
+  });
+  text.addEventListener('input', () => text.classList.remove('invalid'));
+  native.addEventListener('change', () => apply(native.value));
+  button.addEventListener('click', () => {
+    // showPicker is the supported way to open the calendar; older browsers focus instead.
+    if (typeof native.showPicker === 'function') {
+      try {
+        native.showPicker();
+        return;
+      } catch {
+        // not allowed in this context, fall through
+      }
+    }
+    native.focus();
+    native.click();
+  });
+
+  const wrap = el('div.date-input', {}, [text, button, native]);
+  // `.value` reads what is typed right now, so a form can be submitted without
+  // leaving the field first; it is the ISO date, or '' when the text is not one.
+  Object.defineProperty(wrap, 'value', {
+    get: () => (text.value.trim() ? parseDateLoose(text.value.trim()) || '' : ''),
+  });
+  wrap.dateText = text;
+  return wrap;
+}
+
+return { el, append, clear, render, byId, field, options, dateField };
 };
 __modules["ui/views/entries.js"] = function () {
 /** Entries screen: filters, the list itself, and the export / import panel. */
 
 const { formatDate, formatMoney, periodStart, todayIso } = __require("core/format.js");
+const { AppError, MAX_AMOUNT } = __require("core/model.js");
 const { totals } = __require("core/stats.js");
-const { el, field, options, render } = __require("ui/dom.js");
+const { dateField, el, field, options, render } = __require("ui/dom.js");
 const { transferPanel } = __require("ui/transfer.js");
+
+/** Entries drawn before the list asks whether to show more. */
+const PAGE_SIZE = 200;
 
 function entriesView(app) {
   const store = app.store;
@@ -2450,13 +2782,17 @@ function entriesView(app) {
   const entries = store.list(filter);
   const currency = store.currency(app.viewCurrency());
   const sums = totals(entries, store.categories);
+  // The summary, the exports and the statistics always cover every matching entry;
+  // only the table itself is cut, because drawing it is what costs the time.
+  const shown = entries.slice(0, app.ui.shownEntries);
+  const hidden = entries.length - shown.length;
 
   const categoryOptions = [{ value: '', label: t('entries.allCategories') },
     ...store.categories.map((category) => ({
       value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
     }))];
   const currencyOptions = [{ value: '', label: t('entries.allCurrencies') },
-    ...store.currencies.map((item) => ({ value: item.code, label: item.code }))];
+    ...store.currencies.map((item) => ({ value: item.code, label: `${item.flag || ''} ${item.code}`.trim() }))];
 
   const update = (changes) => app.setUi({ filter: { ...filter, ...changes } });
 
@@ -2469,11 +2805,11 @@ function entriesView(app) {
       el('details.filters-box', { open: app.isDesktop() }, [
         el('summary', { text: t('entries.filters') }),
         el('div.filters', {}, [
-          field(t('entries.from'), el('input', {
-            type: 'date', value: filter.from || '', on: { change: (event) => update({ from: event.target.value }) },
+          field(t('entries.from'), dateField({
+            value: filter.from || '', t, clearable: true, onChange: (iso) => update({ from: iso }),
           })),
-          field(t('entries.to'), el('input', {
-            type: 'date', value: filter.to || '', on: { change: (event) => update({ to: event.target.value }) },
+          field(t('entries.to'), dateField({
+            value: filter.to || '', t, clearable: true, onChange: (iso) => update({ to: iso }),
           })),
           field(t('common.category'), el('select', {
             on: { change: (event) => update({ categoryId: event.target.value }) },
@@ -2505,9 +2841,19 @@ function entriesView(app) {
             el('th', { text: t('common.date') }), el('th', { text: t('common.category') }),
             el('th.hide-sm', { text: t('common.note') }), el('th.num', { text: t('common.amount') }), el('th', {}),
           ])),
-          el('tbody', {}, entries.map((entry) => entryRow(app, entry))),
+          el('tbody', {}, shown.map((entry) => entryRow(app, entry))),
         ]))
         : el('p.muted', { text: t('entries.empty') }),
+      hidden > 0 ? el('div.more-row', {}, [
+        el('span.muted', { text: t('entries.showing', { shown: shown.length, total: entries.length }) }),
+        el('button', {
+          type: 'button', text: t('entries.showMore', { count: Math.min(hidden, PAGE_SIZE) }),
+          on: { click: () => app.showMoreEntries() },
+        }),
+        el('button.link', {
+          type: 'button', text: t('entries.showAll'), on: { click: () => app.showMoreEntries(true) },
+        }),
+      ]) : null,
     ]),
     transferPanel(app, entries),
   ];
@@ -2545,10 +2891,11 @@ function entryForm(app, entry) {
   const message = el('p.error');
   const decimals = store.currency(entry ? entry.currency : store.settings.defaultCurrency).decimals;
   const amountInput = el('input', {
-    type: 'number', step: '0.01', min: '0', required: true,
+    type: 'number', step: '0.01', min: '0', max: String(MAX_AMOUNT / 10 ** decimals), required: true,
     value: entry ? (entry.amount / 10 ** decimals).toFixed(decimals) : '',
   });
-  const dateInput = el('input', { type: 'date', required: true, value: entry ? entry.date : todayIso(new Date()) });
+  const dateInput = dateField({ value: entry ? entry.date : todayIso(new Date()), t, required: true,
+    onChange: () => {} });
   const categorySelect = el('select', {}, options(
     store.categories.map((category) => ({
       value: category.id,
@@ -2557,7 +2904,9 @@ function entryForm(app, entry) {
     entry ? entry.categoryId : store.settings.defaultCategoryId,
   ));
   const currencySelect = el('select', {}, options(
-    store.currencies.map((item) => ({ value: item.code, label: `${item.code} ${item.symbol}` })),
+    store.currencies.map((item) => ({
+      value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
+    })),
     entry ? entry.currency : store.settings.defaultCurrency,
   ));
   const noteInput = el('input', { type: 'text', maxlength: '200', value: entry ? entry.note : '' });
@@ -2569,6 +2918,8 @@ function entryForm(app, entry) {
         try {
           const currency = store.currency(currencySelect.value);
           const amount = Math.round(Number(amountInput.value) * 10 ** currency.decimals);
+          // An unreadable date must not quietly become today.
+          if (!dateInput.value) throw new AppError('Enter a date like 23.09.2026');
           const data = {
             amount: Math.abs(amount),
             date: dateInput.value,
@@ -2604,7 +2955,7 @@ function entryForm(app, entry) {
   return { title: entry ? t('entries.editEntry') : t('entries.newEntry'), body: form, focus: amountInput };
 }
 
-return { entriesView, entryForm };
+return { entriesView, entryForm, PAGE_SIZE };
 };
 __modules["core/stats.js"] = function () {
 /**
@@ -2641,7 +2992,7 @@ function groupByPeriod(entries, period) {
  * Figures for the period that contains `today`, plus the average per period
  * over all periods that have data (the current one included).
  */
-function periodSummary(entries, categories, period, today = todayIso()) {
+function periodSummary(entries, categories, period, today = todayIso(), texts = undefined) {
   const currentKey = periodKey(today, period);
   const groups = groupByPeriod(entries, period);
   const current = totals(groups.get(currentKey) || [], categories);
@@ -2656,7 +3007,7 @@ function periodSummary(entries, categories, period, today = todayIso()) {
   return {
     period,
     key: currentKey,
-    label: periodLabel(currentKey, period, 'long'),
+    label: periodLabel(currentKey, period, 'long', texts),
     current,
     periodsWithData,
     averageExpense: periodsWithData ? Math.round(expenseSum / periodsWithData) : 0,
@@ -2667,8 +3018,8 @@ function periodSummary(entries, categories, period, today = todayIso()) {
 }
 
 /** One summary per period type: day, week, month, year. */
-function overview(entries, categories, today = todayIso()) {
-  return PERIODS.map((period) => periodSummary(entries, categories, period, today));
+function overview(entries, categories, today = todayIso(), texts = undefined) {
+  return PERIODS.map((period) => periodSummary(entries, categories, period, today, texts));
 }
 
 /** Start dates of the last `count` periods, oldest first, ending with the one holding `today`. */
@@ -2691,15 +3042,15 @@ function periodStarts(period, count, today = todayIso()) {
  * Series for the bar chart: the last `count` periods with expense, income and net,
  * including periods without entries.
  */
-function series(entries, categories, period, count, today = todayIso()) {
+function series(entries, categories, period, count, today = todayIso(), texts = undefined) {
   const groups = groupByPeriod(entries, period);
   return periodStarts(period, count, today).map((start) => {
     const key = periodKey(start, period);
     const groupTotals = totals(groups.get(key) || [], categories);
     return {
       key,
-      label: periodLabel(key, period),
-      fullLabel: periodLabel(key, period, 'long'),
+      label: periodLabel(key, period, 'short', texts),
+      fullLabel: periodLabel(key, period, 'long', texts),
       ...groupTotals,
     };
   });
@@ -2803,8 +3154,15 @@ function context(app) {
     chartCurrency: app.viewCurrency(),
     chartPeriod: app.ui.statsPeriod,
     chartCount: 12,
+    periodTexts: app.periodTexts(),
     labels: {
       expenses: app.t('common.expenses'),
+      income: app.t('common.income'),
+      balance: app.t('common.balance'),
+      date: app.t('common.date'),
+      category: app.t('common.category'),
+      note: app.t('common.note'),
+      amount: app.t('common.amount'),
       average: app.t('stats.averageColumn'),
       statistics: app.t('nav.stats'),
       period: app.t('stats.periodColumn'),
@@ -3096,6 +3454,7 @@ function chartData(entries, context) {
     context.chartPeriod || 'month',
     context.chartCount || 12,
     context.today,
+    context.periodTexts,
   ).map((point) => ({ label: point.label, value: Number(toPlainAmount(point.expense, currency.decimals)) }));
   const withData = points.filter((point) => point.value > 0);
   const average = withData.length
@@ -3148,18 +3507,26 @@ function buildPdfExport(entries, context) {
     } : null,
     title: 'Home Budget',
     subtitle: context.subtitle || `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`,
+    // The PDF is meant to be read, so its labels follow the interface language.
+    // The CSV and the spreadsheet keep English headers, because they get imported again.
     summary: summary.flatMap((item) => {
       const code = item.currency.code;
-      const lines = [{ label: `Expenses (${code})`, value: formatMoney(item.expense, item.currency) }];
-      if (item.income) lines.push({ label: `Income (${code})`, value: formatMoney(item.income, item.currency) });
-      lines.push({ label: `Balance (${code})`, value: formatMoney(item.net, item.currency, { sign: true }) });
+      const label = (name, fallback) => `${context.labels?.[name] || fallback} (${code})`;
+      const lines = [{ label: label('expenses', 'Expenses'), value: formatMoney(item.expense, item.currency) }];
+      if (item.income) {
+        lines.push({ label: label('income', 'Income'), value: formatMoney(item.income, item.currency) });
+      }
+      lines.push({
+        label: label('balance', 'Balance'),
+        value: formatMoney(item.net, item.currency, { sign: true }),
+      });
       return lines;
     }),
     columns: [
-      { key: 'date', title: 'Date', width: 70 },
-      { key: 'category', title: 'Category', width: 110 },
-      { key: 'note', title: 'Note', width: 230 },
-      { key: 'amount', title: 'Amount', width: 90, align: 'right' },
+      { key: 'date', title: context.labels?.date || 'Date', width: 70 },
+      { key: 'category', title: context.labels?.category || 'Category', width: 110 },
+      { key: 'note', title: context.labels?.note || 'Note', width: 230 },
+      { key: 'amount', title: context.labels?.amount || 'Amount', width: 90, align: 'right' },
     ],
     rows: rows.map((row) => ({
       date: formatDate(row.date),
@@ -3182,51 +3549,76 @@ return { exportRows, exportFileName, buildCsvExport, chartData, buildXlsxExport,
 };
 __modules["core/pdf.js"] = function () {
 /**
- * Minimal PDF writer: one built-in font (Helvetica), a title block, a summary
- * and a paginated table. Enough for a readable export without any library.
+ * Minimal PDF writer: a title block, a summary, a vector chart and a paginated
+ * table, with no library involved.
+ *
+ * The document embeds a subset of DejaVu Sans (see font-data.js) as a
+ * CIDFontType2 with Identity-H encoding, so Cyrillic, Greek and accented Latin
+ * text prints correctly instead of turning into question marks. Text is written
+ * as glyph ids, and a /ToUnicode map is attached so the text can still be
+ * selected, copied and searched in a PDF reader.
  */
+
+const { FONT_DATA, FONT_LENGTH, FONT_METRICS, FONT_NAME, glyphFor, glyphWidth } = __require("core/font-data.js");
 
 const PAGE = { width: 595.28, height: 841.89, margin: 40 }; // A4 portrait, points
 
-function escapeText(text) {
-  return String(text).replace(/[\\()]/g, (char) => `\\${char}`);
-}
+/** Characters the subset does not contain but that have an obvious stand-in. */
+const SUBSTITUTES = {
+  ' ': ' ', ' ': ' ', ' ': ' ', '​': '', '️': '',
+  '  ': ' ',
+};
 
-/** PDF's standard encoding is Latin-1; anything else is transliterated or dropped. */
-function toLatin1(text) {
-  const replacements = {
-    '−': '-', '–': '-', '—': '-', '‘': "'", '’': "'",
-    '“': '"', '”': '"', '…': '...', ' ': ' ', ' ': ' ', '€': '\u0080',
-  };
-  let result = '';
-  for (const char of String(text)) {
-    const replacement = replacements[char];
-    if (replacement !== undefined) result += replacement;
-    else if (char.codePointAt(0) <= 0xff) result += char;
-    else result += '?';
+/** Glyph ids used in the document, mapped back to their code point for /ToUnicode. */
+const used = new Map();
+
+/**
+ * Drops what the font cannot show (emoji, for instance) and replaces the few
+ * characters that have a plain equivalent.
+ * @returns {number[]} code points that all have a glyph
+ */
+function supported(value) {
+  const result = [];
+  for (const char of String(value)) {
+    const replacement = SUBSTITUTES[char];
+    const text = replacement === undefined ? char : replacement;
+    for (const final of text) {
+      const code = final.codePointAt(0);
+      if (!glyphFor(code)) continue;
+      // Dropping an emoji must not leave a double space or a leading one behind.
+      if (code === 32 && (result.length === 0 || result[result.length - 1] === 32)) continue;
+      result.push(code);
+    }
   }
+  while (result.length && result[result.length - 1] === 32) result.pop();
   return result;
 }
 
-/** Rough text width in points for Helvetica; good enough for column fitting. */
-function textWidth(text, fontSize) {
-  let units = 0;
-  for (const char of String(text)) {
-    if ('iljt.,:;|!\'`'.includes(char)) units += 0.28;
-    else if ('fr()[]-'.includes(char)) units += 0.36;
-    else if ('MW@'.includes(char)) units += 0.9;
-    else if (char === ' ') units += 0.28;
-    else if (char >= 'A' && char <= 'Z') units += 0.68;
-    else units += 0.55;
+/** Encodes text as a hexadecimal Identity-H string, remembering the glyphs used. */
+function encodeText(value) {
+  let hex = '';
+  for (const code of supported(value)) {
+    const glyph = glyphFor(code);
+    used.set(glyph, code);
+    hex += glyph.toString(16).padStart(4, '0');
   }
-  return units * fontSize;
+  return hex;
 }
 
-function fit(text, fontSize, maxWidth) {
-  let value = toLatin1(text);
-  if (textWidth(value, fontSize) <= maxWidth) return value;
-  while (value.length > 1 && textWidth(`${value}...`, fontSize) > maxWidth) value = value.slice(0, -1);
-  return `${value}...`;
+/** Width of the text in points, from the real advance widths of the font. */
+function textWidth(value, fontSize) {
+  let units = 0;
+  for (const code of supported(value)) units += glyphWidth(glyphFor(code));
+  return (units / 1000) * fontSize;
+}
+
+/** Cuts text down to maxWidth, adding an ellipsis when something was dropped. */
+function fit(value, fontSize, maxWidth) {
+  const codes = supported(value);
+  let text = String.fromCodePoint(...codes);
+  if (textWidth(text, fontSize) <= maxWidth) return text;
+  while (text.length > 1 && textWidth(`${text}...`, fontSize) > maxWidth) text = text.slice(0, -1);
+  return `${text}...`;
 }
 
 /**
@@ -3239,6 +3631,7 @@ function fit(text, fontSize, maxWidth) {
  * @returns {Uint8Array}
  */
 function buildPdf(document) {
+  used.clear();
   const columns = document.columns;
   const totalWidth = columns.reduce((sum, column) => sum + column.width, 0);
   const usable = PAGE.width - PAGE.margin * 2;
@@ -3328,9 +3721,8 @@ function drawChart(content, chart, top) {
         + `${Math.max(barHeight, 1).toFixed(2)} re f`);
     }
     if (points.length <= 20 || index % 2 === 0) {
-      const label = toLatin1(point.label);
-      const labelX = x + barWidth / 2 - textWidth(label, 7) / 2;
-      content.push(text(labelX, baseline - 10, label, 7, false, 0.45));
+      const labelX = x + barWidth / 2 - textWidth(point.label, 7) / 2;
+      content.push(text(labelX, baseline - 10, point.label, 7, false, 0.45));
     }
   });
 
@@ -3344,61 +3736,186 @@ function drawChart(content, chart, top) {
   return baseline - 28;
 }
 
+/**
+ * One line of text. There is a single embedded font, so bold is drawn by
+ * stroking the outline as well as filling it (PDF text render mode 2).
+ */
 function text(x, y, value, size = 10, bold = false, grey = 0) {
-  return `BT /${bold ? 'F2' : 'F1'} ${size} Tf ${grey ? `${grey} ${grey} ${grey} rg` : '0 0 0 rg'} `
-    + `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm (${escapeText(toLatin1(value))}) Tj ET`;
+  const tone = grey ? `${grey} ${grey} ${grey}` : '0 0 0';
+  const weight = bold ? `${tone} RG ${(size * 0.03).toFixed(2)} w 2 Tr` : '0 Tr';
+  return `BT /F1 ${size} Tf ${tone} rg ${weight} `
+    + `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm <${encodeText(value)}> Tj ET`;
 }
 
 function line(x1, y1, x2, y2) {
   return `0.8 0.8 0.85 RG 0.7 w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`;
 }
 
+/** The /ToUnicode CMap that makes the glyph ids searchable text again. */
+function toUnicodeCMap() {
+  const entries = [...used.entries()].sort((a, b) => a[0] - b[0]);
+  let body = '';
+  for (let at = 0; at < entries.length; at += 100) {
+    const chunk = entries.slice(at, at + 100);
+    body += `${chunk.length} beginbfchar\n`;
+    for (const [glyph, code] of chunk) {
+      const target = code > 0xffff
+        ? `${(0xd800 + ((code - 0x10000) >> 10)).toString(16).padStart(4, '0')}`
+          + `${(0xdc00 + ((code - 0x10000) & 0x3ff)).toString(16).padStart(4, '0')}`
+        : code.toString(16).padStart(4, '0');
+      body += `<${glyph.toString(16).padStart(4, '0')}> <${target}>\n`;
+    }
+    body += 'endbfchar\n';
+  }
+  return '/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n'
+    + '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n'
+    + '/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n'
+    + '1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n'
+    + `${body}endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n`;
+}
+
+/** The widths array (/W) for the glyphs this document actually uses. */
+function widthsArray() {
+  const glyphs = [...used.keys()].sort((a, b) => a - b);
+  const parts = [];
+  let index = 0;
+  while (index < glyphs.length) {
+    const start = index;
+    while (index + 1 < glyphs.length && glyphs[index + 1] === glyphs[index] + 1) index += 1;
+    const run = glyphs.slice(start, index + 1).map((glyph) => glyphWidth(glyph));
+    parts.push(`${glyphs[start]} [${run.join(' ')}]`);
+    index += 1;
+  }
+  return parts.join(' ');
+}
+
 function assemble(pages, footer) {
   const objects = [];
-  const pageIds = pages.map((unused, index) => 4 + index * 2);
-  objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
-  objects[2] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>`;
-  objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
-  const boldFontId = 3 + pages.length * 2 + 1;
+  const add = (object) => {
+    objects.push(object);
+    return objects.length; // object numbers start at 1
+  };
+  const reserve = () => add(null);
+  const set = (id, object) => { objects[id - 1] = object; };
+
+  const catalogId = reserve();
+  const pagesId = reserve();
+  const fontId = reserve();
+  const cidFontId = reserve();
+  const descriptorId = reserve();
+  const fontFileId = reserve();
+  const toUnicodeId = reserve();
+
+  const pageIds = [];
   pages.forEach((content, index) => {
-    const pageId = pageIds[index];
-    const streamId = pageId + 1;
+    const pageId = reserve();
+    const streamId = reserve();
+    pageIds.push(pageId);
     const withFooter = [...content, text(PAGE.margin, PAGE.margin - 12,
-      `${footer}${footer ? '   ' : ''}Page ${index + 1} of ${pages.length}`, 8, false, 0.5)].join('\n');
-    objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE.width.toFixed(2)} ${PAGE.height.toFixed(2)}] `
-      + `/Resources << /Font << /F1 3 0 R /F2 ${boldFontId} 0 R >> >> /Contents ${streamId} 0 R >>`;
-    objects[streamId] = { stream: withFooter };
+      `${footer}${footer ? ' \u00b7 ' : ''}Page ${index + 1} of ${pages.length}`, 8, false, 0.5)].join('\n');
+    set(pageId, `<< /Type /Page /Parent ${pagesId} 0 R `
+      + `/MediaBox [0 0 ${PAGE.width.toFixed(2)} ${PAGE.height.toFixed(2)}] `
+      + `/Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${streamId} 0 R >>`);
+    set(streamId, { stream: withFooter });
   });
-  objects[boldFontId] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+
+  // The font has to be written last: only now is it known which glyphs are used.
+  const fontBytes = base64ToBinary(FONT_DATA);
+  set(catalogId, `<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+  set(pagesId, `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>`);
+  set(fontId, `<< /Type /Font /Subtype /Type0 /BaseFont /${FONT_NAME} /Encoding /Identity-H `
+    + `/DescendantFonts [${cidFontId} 0 R] /ToUnicode ${toUnicodeId} 0 R >>`);
+  set(cidFontId, `<< /Type /Font /Subtype /CIDFontType2 /BaseFont /${FONT_NAME} `
+    + '/CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> '
+    + `/FontDescriptor ${descriptorId} 0 R /DW 1000 /W [${widthsArray()}] /CIDToGIDMap /Identity >>`);
+  set(descriptorId, `<< /Type /FontDescriptor /FontName /${FONT_NAME} /Flags 4 `
+    + `/FontBBox [${FONT_METRICS.bbox.join(' ')}] /ItalicAngle 0 /Ascent ${FONT_METRICS.ascent} `
+    + `/Descent ${FONT_METRICS.descent} /CapHeight ${FONT_METRICS.capHeight} /StemV ${FONT_METRICS.stemV} `
+    + `/FontFile2 ${fontFileId} 0 R >>`);
+  set(fontFileId, { stream: fontBytes, dict: `/Length1 ${FONT_LENGTH} /Filter /FlateDecode` });
+  set(toUnicodeId, { stream: toUnicodeCMap() });
 
   let pdf = '%PDF-1.4\n';
   const offsets = [];
-  for (let id = 1; id < objects.length; id += 1) {
-    const object = objects[id];
-    if (object === undefined) continue;
+  objects.forEach((object, index) => {
+    const id = index + 1;
     offsets[id] = pdf.length;
     if (typeof object === 'string') {
       pdf += `${id} 0 obj\n${object}\nendobj\n`;
     } else {
-      pdf += `${id} 0 obj\n<< /Length ${object.stream.length} >>\nstream\n${object.stream}\nendstream\nendobj\n`;
+      pdf += `${id} 0 obj\n<< /Length ${object.stream.length}${object.dict ? ` ${object.dict}` : ''} >>\n`
+        + `stream\n${object.stream}\nendstream\nendobj\n`;
     }
-  }
+  });
+
   const xrefOffset = pdf.length;
-  const count = objects.length;
+  const count = objects.length + 1;
   pdf += `xref\n0 ${count}\n0000000000 65535 f \n`;
   for (let id = 1; id < count; id += 1) {
-    pdf += offsets[id] === undefined
-      ? '0000000000 65535 f \n'
-      : `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
+    pdf += `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
   }
-  pdf += `trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+  pdf += `trailer\n<< /Size ${count} /Root ${catalogId} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
 
   const bytes = new Uint8Array(pdf.length);
   for (let index = 0; index < pdf.length; index += 1) bytes[index] = pdf.charCodeAt(index) & 0xff;
   return bytes;
 }
 
-return { toLatin1, textWidth, buildPdf };
+/** base64 -> a string with one character per byte, which is what the writer works with. */
+function base64ToBinary(value) {
+  if (typeof atob === 'function') return atob(value);
+  return Buffer.from(value, 'base64').toString('latin1');
+}
+
+return { supported, encodeText, textWidth, buildPdf };
+};
+__modules["core/font-data.js"] = function () {
+/**
+ * Generated by tools/make-font.mjs - do not edit.
+ *
+ * A subset of DejaVu Sans (Bitstream Vera / public domain licence, see
+ * https://dejavu-fonts.github.io/License.html) covering Latin, Latin
+ * Extended-A, Greek, Cyrillic, punctuation and currency signs, so the PDF
+ * export can print every language the interface offers.
+ *
+ * FONT_DATA is the subset already deflate compressed, base64 encoded: the PDF
+ * embeds those bytes unchanged as a /FlateDecode stream, so nothing has to be
+ * decompressed while the app runs.
+ */
+
+/** Deflate compressed TrueType subset, base64 encoded (23108 bytes compressed). */
+const FONT_DATA = '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';
+
+/** Size of the font once decompressed; the PDF needs it as /Length1. */
+const FONT_LENGTH = 37268;
+
+const FONT_NAME = 'DejaVuSans-Subset';
+
+/** Glyph advance widths in 1/1000 em, indexed by glyph id. */
+const GLYPH_WIDTHS = [600,318,401,460,838,636,950,780,275,390,390,500,838,318,361,318,337,636,636,636,636,636,636,636,636,636,636,337,337,838,838,838,531,1000,684,686,698,770,632,575,775,752,295,295,656,557,863,748,787,603,787,695,635,611,732,684,989,685,611,685,390,337,390,838,500,500,613,635,550,635,615,352,635,634,278,278,579,278,974,634,612,635,635,411,521,392,634,592,818,592,592,525,636,337,636,838,318,401,636,636,636,636,337,500,500,1000,471,612,838,361,1000,500,500,838,401,401,500,636,636,318,500,401,471,612,969,969,969,531,684,684,684,684,684,684,974,698,632,632,632,632,295,295,295,295,775,748,787,787,787,787,787,838,787,732,732,732,732,611,605,630,613,613,613,613,613,613,982,550,615,615,615,615,278,278,278,278,612,634,612,612,612,612,612,838,612,634,634,634,634,592,635,592,684,613,684,613,684,613,698,550,698,550,698,550,698,550,770,635,775,635,632,615,632,615,632,615,632,615,632,615,775,635,775,635,775,635,775,635,752,634,916,695,295,278,295,278,295,278,295,278,295,278,590,556,295,278,656,579,579,557,278,557,278,557,375,557,342,562,284,748,634,748,634,748,634,813,748,634,787,612,787,612,787,612,1070,1023,695,411,695,411,695,411,635,521,635,521,635,521,635,521,611,392,611,392,611,392,732,634,732,634,732,634,732,634,732,634,732,634,989,818,611,592,611,685,525,685,525,685,525,352,787,666,278,615,318,500,500,500,500,500,500,500,500,0,0,0,0,500,500,692,318,746,871,408,813,825,826,338,684,686,557,684,632,685,752,787,295,656,684,863,748,632,787,752,603,632,611,611,787,685,787,764,295,611,659,541,634,338,579,659,638,592,612,541,544,634,612,338,589,592,636,559,558,612,602,635,587,634,602,579,660,578,660,837,338,579,612,579,837,632,632,786,610,698,635,295,295,295,1094,1045,786,710,748,609,752,684,686,686,610,781,632,1077,641,748,748,710,752,863,752,787,752,603,698,611,609,861,685,776,686,1069,1094,833,882,686,698,1080,695,613,617,589,525,691,615,901,532,650,650,604,639,754,654,612,654,635,550,583,592,855,592,681,591,915,942,707,790,589,549,842,602,615,615,625,525,549,521,278,278,278,902,898,652,604,650,592,654,610,525,361,361,636,500,1000,1000,500,500,318,318,318,318,518,518,518,518,500,500,590,590,334,667,1000,318,1342,400,400,167,401,877,636,636,636,636,974,636,1272,1074,989,784,636,636,636,636,1272,636,636,636,636,774,636,636,636,636,636,1040,838,838,838,838,838,838,838,838,945,945,838,1025,0,0,0,0,0,0,0,0,0,0];
+
+/** Metrics for the PDF font descriptor, in 1/1000 em. */
+const FONT_METRICS = {"bbox":[-1021,-463,1793,1232],"ascent":928,"descent":-236,"capHeight":928,"stemV":80};
+
+/** Code point -> glyph id, packed as [firstCode, firstGlyph, count] runs. */
+const RANGES = [[32,1,95],[160,96,224],[399,320,1],[439,321,1],[601,323,1],[902,339,5],[908,344,1],[910,345,20],[931,365,44],[1024,409,96],[1168,505,2],[8208,507,24],[8240,531,1],[8249,532,2],[8260,534,1],[8352,536,22],[8376,558,3],[8381,561,1],[8470,562,1],[8592,563,4],[8722,567,1],[8800,568,1],[8804,569,2],[9632,571,2],[10003,573,1],[65533,574,1]];
+
+const BY_CODE = new Map();
+for (const [code, glyph, count] of RANGES) {
+  for (let step = 0; step < count; step += 1) BY_CODE.set(code + step, glyph + step);
+}
+
+/** Glyph id for a code point, or 0 when the font has no glyph for it. */
+function glyphFor(codePoint) {
+  return BY_CODE.get(codePoint) || 0;
+}
+
+/** Width of a glyph in 1/1000 em. */
+function glyphWidth(glyph) {
+  return GLYPH_WIDTHS[glyph] || 0;
+}
+
+return { glyphFor, glyphWidth, FONT_DATA, FONT_LENGTH, FONT_NAME, GLYPH_WIDTHS, FONT_METRICS };
 };
 __modules["core/xlsx.js"] = function () {
 /**
@@ -4151,6 +4668,7 @@ __modules["ui/views/home.js"] = function () {
 /** Home screen: quick add, key figures, budgets, charts and the latest entries. */
 
 const { barChart, donutChart } = __require("core/charts.js");
+const { MAX_AMOUNT } = __require("core/model.js");
 const { formatDate, formatMoney, PERIODS } = __require("core/format.js");
 const { byCategory, overview, series } = __require("core/stats.js");
 const { el, field, options } = __require("ui/dom.js");
@@ -4168,9 +4686,9 @@ function homeView(app) {
   const currency = store.currency(currencyCode);
   const entries = store.entriesIn(currencyCode);
   const today = store.today();
-  const summaries = overview(entries, store.categories, today);
+  const summaries = overview(entries, store.categories, today, app.periodTexts());
   const period = app.ui.homePeriod;
-  const points = series(entries, store.categories, period, CHART_LENGTH[period], today);
+  const points = series(entries, store.categories, period, CHART_LENGTH[period], today, app.periodTexts());
   const breakdown = byCategory(entries, store.categories);
   const recent = (store.settings.convertToDefault ? store.list() : store.list({ currency: currencyCode })).slice(0, 8);
   const budgets = store.budgets(currencyCode, today);
@@ -4258,7 +4776,7 @@ function toggle(app, key, label) {
 function quickAddCard(app, currency) {
   const t = app.t;
   const input = el('input.quick-input', {
-    type: 'number', step: '0.01', min: '0', inputmode: 'decimal',
+    type: 'number', step: '0.01', min: '0', max: String(MAX_AMOUNT / 10 ** currency.decimals), inputmode: 'decimal',
     placeholder: '0.00', 'aria-label': t('common.amount'), id: 'quick-amount',
   });
   const submit = (event) => {
@@ -4523,7 +5041,9 @@ function settingsView(app) {
         })), store.settings.defaultCategoryId))),
         field(t('common.currency'), el('select', {
           on: { change: (event) => app.run(() => store.updateSettings({ defaultCurrency: event.target.value })) },
-        }, options(store.currencies.map((item) => ({ value: item.code, label: `${item.code} ${item.symbol}` })),
+        }, options(store.currencies.map((item) => ({
+          value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
+        })),
           store.settings.defaultCurrency))),
         field(t('settings.language'), el('select', {
           on: { change: (event) => app.run(() => store.updateSettings({ language: event.target.value })) },
@@ -4608,6 +5128,7 @@ function settingsView(app) {
         ])),
         el('tbody', {}, store.currencies.map((item) => el('tr', {}, [
           el('td', {}, [
+            el('span.currency-flag', { text: item.flag || '' }),
             el('strong', { text: item.code }),
             item.code === store.settings.defaultCurrency ? el('span.badge', { text: t('common.default') }) : null,
           ]),
@@ -4652,7 +5173,9 @@ function settingsView(app) {
           }),
         ]),
         el('button.danger', { type: 'button', text: t('settings.deleteAll'), on: { click: () => app.clearEntries() } }),
+        el('button.danger', { type: 'button', text: t('settings.resetAll'), on: { click: () => app.resetAll() } }),
       ]),
+      el('p.muted', { text: t('settings.deleteHint') }),
     ]),
   ];
 }
@@ -4733,6 +5256,7 @@ function currencyForm(app) {
   const t = app.t;
   const code = el('input', { type: 'text', placeholder: 'SEK', maxlength: '5', size: '6' });
   const symbol = el('input', { type: 'text', placeholder: 'kr', maxlength: '4', size: '4' });
+  const flag = el('input', { type: 'text', placeholder: '\ud83c\uddf8\ud83c\uddea', maxlength: '8', size: '3' });
   const decimals = el('input', { type: 'number', min: '0', max: '4', value: '2', size: '2' });
   const rate = el('input', { type: 'number', min: '0.0001', step: '0.0001', value: '1', size: '4' });
   const message = el('p.error');
@@ -4744,11 +5268,13 @@ function currencyForm(app) {
           app.store.addCurrency({
             code: code.value,
             symbol: symbol.value,
+            flag: flag.value,
             decimals: Number(decimals.value),
             rate: Number(rate.value),
           });
           code.value = '';
           symbol.value = '';
+          flag.value = '';
         } catch (error) {
           render(message, app.errorText(error));
         }
@@ -4757,6 +5283,7 @@ function currencyForm(app) {
   }, [
     field(t('settings.currencyCode'), code),
     field(t('settings.currencySymbol'), symbol),
+    field(t('settings.currencyFlag'), flag, t('settings.currencyFlagHint')),
     field(t('settings.currencyDecimals'), decimals),
     field(t('settings.rate'), rate, t('settings.rateHint', { currency: app.store.settings.defaultCurrency })),
     el('button', { type: 'submit', text: t('settings.addCurrency') }),
@@ -4875,9 +5402,9 @@ function statsView(app) {
   const currency = store.currency(code);
   const entries = store.entriesIn(code);
   const today = store.today();
-  const summaries = overview(entries, store.categories, today);
+  const summaries = overview(entries, store.categories, today, app.periodTexts());
   const period = app.ui.statsPeriod;
-  const points = series(entries, store.categories, period, LENGTHS[period], today);
+  const points = series(entries, store.categories, period, LENGTHS[period], today, app.periodTexts());
   const facts = highlights(entries, store.categories);
   const breakdown = byCategory(entries, store.categories);
   const used = store.usedCurrencies();

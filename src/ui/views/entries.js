@@ -1,9 +1,9 @@
 /** Entries screen: filters, the list itself, and the export / import panel. */
 
 import { formatDate, formatMoney, periodStart, todayIso } from '../../core/format.js';
-import { MAX_AMOUNT } from '../../core/model.js';
+import { AppError, MAX_AMOUNT } from '../../core/model.js';
 import { totals } from '../../core/stats.js';
-import { el, field, options, render } from '../dom.js';
+import { dateField, el, field, options, render } from '../dom.js';
 import { transferPanel } from '../transfer.js';
 
 /** Entries drawn before the list asks whether to show more. */
@@ -39,11 +39,11 @@ export function entriesView(app) {
       el('details.filters-box', { open: app.isDesktop() }, [
         el('summary', { text: t('entries.filters') }),
         el('div.filters', {}, [
-          field(t('entries.from'), el('input', {
-            type: 'date', value: filter.from || '', on: { change: (event) => update({ from: event.target.value }) },
+          field(t('entries.from'), dateField({
+            value: filter.from || '', t, clearable: true, onChange: (iso) => update({ from: iso }),
           })),
-          field(t('entries.to'), el('input', {
-            type: 'date', value: filter.to || '', on: { change: (event) => update({ to: event.target.value }) },
+          field(t('entries.to'), dateField({
+            value: filter.to || '', t, clearable: true, onChange: (iso) => update({ to: iso }),
           })),
           field(t('common.category'), el('select', {
             on: { change: (event) => update({ categoryId: event.target.value }) },
@@ -128,7 +128,8 @@ export function entryForm(app, entry) {
     type: 'number', step: '0.01', min: '0', max: String(MAX_AMOUNT / 10 ** decimals), required: true,
     value: entry ? (entry.amount / 10 ** decimals).toFixed(decimals) : '',
   });
-  const dateInput = el('input', { type: 'date', required: true, value: entry ? entry.date : todayIso(new Date()) });
+  const dateInput = dateField({ value: entry ? entry.date : todayIso(new Date()), t, required: true,
+    onChange: () => {} });
   const categorySelect = el('select', {}, options(
     store.categories.map((category) => ({
       value: category.id,
@@ -151,6 +152,8 @@ export function entryForm(app, entry) {
         try {
           const currency = store.currency(currencySelect.value);
           const amount = Math.round(Number(amountInput.value) * 10 ** currency.decimals);
+          // An unreadable date must not quietly become today.
+          if (!dateInput.value) throw new AppError('Enter a date like 23.09.2026');
           const data = {
             amount: Math.abs(amount),
             date: dateInput.value,

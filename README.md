@@ -1,4 +1,4 @@
-# Home Budget 3.3.0 (browser version)
+# Home Budget 3.4.0 (browser version)
 
 A home budget app that is **one HTML file**. All JavaScript, CSS and even the PDF font are inlined,
 there are no external requests, no frameworks and no build-time dependencies. Open the file from a
@@ -16,7 +16,8 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
   a colour and an optional **limit with its own period** (per day, week, month or year); the limits show
   up as progress bars on the home screen and turn red when exceeded.
 - **Entries:** full form for date, category, currency and note; filter by period, category,
-  currency or text; tap a row (or click *Edit*) to change it.
+  currency or text; tap a row (or click *Edit*) to change it. Dates are written the same way
+  everywhere - **23.09.2026** - in the list, in the form, in the filters and in the PDF.
 - **Statistics:** sums and averages per **day, week, month and year**, a bar chart of the last
   periods (days / weeks / months / years) with an **average line**, a donut chart and a ranking per
   category, plus highlights such as the largest single expense. Month and week names follow the
@@ -69,7 +70,7 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 | Note | 200 characters |
 | Category name | 40 characters |
 | Currency | code 2-5 letters, 0-4 decimals, rate above zero |
-| Date | any real date, `yyyy-mm-dd` |
+| Date | any real date; typed as 23.09.2026, also accepts 3/9/2026 and 2026-09-23 |
 | Entries | no fixed limit; about **30 000** fit in the 5 MB a browser gives one page |
 
 Amounts are integer minor units, and the ceiling is what keeps them exact: a thousand million per
@@ -78,6 +79,20 @@ where JavaScript integers are exact, so no single entry can turn the totals into
 more is refused with a message rather than silently stored at reduced precision. An amount that
 rounds away in its currency (`0.001` in euros) says it is too small instead of claiming it is zero,
 and scientific notation is refused outright - `1e15` used to come out as 115.00 without a word.
+
+### Why the date field is not `<input type="date">`
+
+A native date input displays whatever format the **browser's** language setting says - not the
+page's, not the `lang` attribute's, and certainly not the interface language chosen in the settings.
+A browser set to American English shows `09/23/2026` in an otherwise Russian app, next to a list that
+says `23.09.2026`, and nothing in the page can change that (tested: `lang="ru"`, `lang="de"` and
+`lang="en-GB"` on the element all still render the American order in Chrome).
+
+So the field is the app's own: it shows and takes `23.09.2026`, it also understands `3/9/2026` and
+`2026-09-23` when typed or pasted, it marks the text red rather than guessing when it cannot read it,
+and the button next to it opens the browser's **native calendar** through `showPicker()` - which is
+what keeps it comfortable on a phone. An unreadable date is refused on save instead of quietly
+becoming today.
 
 The entry list draws **200 rows at a time**, with *Show 200 more* and *Show all* underneath; the
 summary, the statistics and the exports always cover every matching entry - the export panel says so -
@@ -97,7 +112,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.3.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.4.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -126,7 +141,7 @@ file yourself, send that same header.
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.3.0` is pushed.
+built files to a release when a tag like `v3.4.0` is pushed.
 
 ## Building
 
@@ -229,7 +244,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (38 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (40 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
@@ -240,7 +255,9 @@ confirms that deleting the entries keeps the settings while resetting really res
 **measures every row of form controls** - in the cards, in the filters and in the dialogs - and fails
 when a label of a different length or a hint under one field pushes its control off the line its
 neighbours sit on, adds five thousand entries at once to check that the list pages instead of drawing
-them all, refuses the amounts that would break the totals, and takes the screenshots in this README. It fails if anything logs an error to the console.
+them all, refuses the amounts that would break the totals, checks that no native date input is left in the page
+and that dates are shown, typed and refused in the app's own format, and takes the screenshots in this
+README. It fails if anything logs an error to the console.
 
 `tools/site-check.mjs` serves `site/` over HTTP, checks the manifest and the icons, waits for the
 service worker to fill its cache, then **switches the network off and reloads** to prove the published

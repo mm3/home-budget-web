@@ -51,6 +51,8 @@ export const EN = {
   'common.name': 'Name',
   'common.type': 'Type',
   'common.date': 'Date',
+  'common.datePlaceholder': 'dd.mm.yyyy',
+  'common.pickDate': 'Open the calendar',
   'common.amount': 'Amount',
   'common.category': 'Category',
   'common.currency': 'Currency',
@@ -230,6 +232,7 @@ export const EN = {
   'error.amountTooLarge': 'This amount is too large',
   'error.amountTooSmall': 'This amount is too small for this currency',
   'error.amountZero': 'The amount cannot be zero',
+  'error.badDate': 'Enter a date like 23.09.2026',
 };
 
 /** Russian texts. */
@@ -268,6 +271,8 @@ export const RU = {
   'common.name': 'Название',
   'common.type': 'Тип',
   'common.date': 'Дата',
+  'common.datePlaceholder': 'дд.мм.гггг',
+  'common.pickDate': 'Открыть календарь',
   'common.amount': 'Сумма',
   'common.category': 'Категория',
   'common.currency': 'Валюта',
@@ -447,6 +452,7 @@ export const RU = {
   'error.amountTooLarge': 'Слишком большая сумма',
   'error.amountTooSmall': 'Слишком маленькая сумма для этой валюты',
   'error.amountZero': 'Сумма не может быть нулём',
+  'error.badDate': 'Введите дату, например 23.09.2026',
 };
 
 /** German texts. */
@@ -485,6 +491,8 @@ export const DE = {
   'common.name': 'Name',
   'common.type': 'Art',
   'common.date': 'Datum',
+  'common.datePlaceholder': 'tt.mm.jjjj',
+  'common.pickDate': 'Kalender öffnen',
   'common.amount': 'Betrag',
   'common.category': 'Kategorie',
   'common.currency': 'Währung',
@@ -664,6 +672,7 @@ export const DE = {
   'error.amountTooLarge': 'Dieser Betrag ist zu groß',
   'error.amountTooSmall': 'Dieser Betrag ist für diese Währung zu klein',
   'error.amountZero': 'Der Betrag darf nicht null sein',
+  'error.badDate': 'Datum eingeben, zum Beispiel 23.09.2026',
 };
 
 const BUNDLED = { en: EN, ru: RU, de: DE };

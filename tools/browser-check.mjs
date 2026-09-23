@@ -388,6 +388,43 @@ async function main() {
   check('a Russian PDF holds real cyrillic text, not question marks',
     russianPdf.cyrillic && russianPdf.questionMarks === 0, JSON.stringify(russianPdf));
 
+  const dates = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    store.updateSettings({ language: 'en' });
+    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Entries')).click();
+    await new Promise((done) => setTimeout(done, 250));
+    const result = { nativeDateInputs: document.querySelectorAll('input[type=date]:not(.date-native)').length };
+    const filter = document.querySelector('.filters .date-text');
+    result.placeholder = filter.placeholder;
+    filter.value = '01.09.2026';
+    filter.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((done) => setTimeout(done, 200));
+    result.typed = window.homeBudget.ui.filter.from;
+    document.querySelector('.entries-table tbody tr').click();
+    await new Promise((done) => setTimeout(done, 250));
+    const field = document.querySelector('.dialog .date-text');
+    result.shown = field.value;
+    field.value = '3/9/2026';
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    result.loose = field.value;
+    field.value = 'nonsense';
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    result.invalidMarked = field.classList.contains('invalid');
+    document.querySelector('.dialog button[type=submit]').click();
+    await new Promise((done) => setTimeout(done, 200));
+    const error = document.querySelector('.dialog .error');
+    result.refused = !!document.querySelector('.dialog') && !!error && error.textContent.length > 0;
+    window.homeBudget.closeDialog();
+    window.homeBudget.setUi({ filter: {} });
+    return result;
+  `);
+  check('dates are shown and typed in the app\'s own format, not the browser\'s',
+    dates.placeholder === 'dd.mm.yyyy' && dates.shown.match(/^\d{2}\.\d{2}\.\d{4}$/)
+      && dates.typed === '2026-09-01' && dates.loose === '03.09.2026' && dates.nativeDateInputs === 0,
+    JSON.stringify(dates));
+  check('an unreadable date is refused instead of becoming today',
+    dates.invalidMarked && dates.refused, JSON.stringify(dates));
+
   const bulk = await cdp.evaluate(`
     const store = window.homeBudget.store;
     const before = store.entries.length;

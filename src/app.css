@@ -285,6 +285,13 @@ tbody tr:last-child td { border-bottom: 0; }
 .legend-icon { font-size: 1em; }
 .small { font-size: .78rem; }
 .row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.date-input { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.date-input .date-text { width: 120px; font-variant-numeric: tabular-nums; }
+.date-input .date-text.invalid { border-color: var(--danger); }
+.date-button { height: var(--control-height); padding: 0 8px; font-size: 1rem; }
+/* The native control only exists to open the browser's calendar; it is never shown. */
+.date-native { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; padding: 0;
+  border: 0; opacity: 0; pointer-events: none; }
 .icon-input { width: 64px; font-size: 1.2rem; text-align: center; }
 .rate-input { width: 110px; text-align: right; }
 .converted-note { margin-top: -6px; }

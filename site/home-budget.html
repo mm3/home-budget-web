@@ -6,10 +6,10 @@
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="Offline home budget: entries, categories, statistics, CSV/XLSX/PDF export and import.">
 <meta name="application-name" content="Home Budget">
-<meta name="application-version" content="3.3.0">
-<meta name="generator" content="Home Budget 3.3.0">
+<meta name="application-version" content="3.4.0">
+<meta name="generator" content="Home Budget 3.4.0">
 <meta name="robots" content="index, follow">
-<title>Home Budget 3.3.0</title>
+<title>Home Budget 3.4.0</title>
 
 <!-- The file never changes once it is built: its name carries the version, so any
      copy of it can be kept forever. Servers should send the same rule as a header;
@@ -31,7 +31,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M7 14l9-7 9 7v11H7z' fill='white'/%3E%3Ccircle cx='16' cy='18' r='3.4' fill='%2322c55e'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%234f46e5'/%3E%3Cpath d='M39 79l51-40 51 40v62H39z' fill='white'/%3E%3Ccircle cx='90' cy='101' r='19' fill='%2322c55e'/%3E%3C/svg%3E">
 
-<style>/*! Home Budget 3.3.0 */
+<style>/*! Home Budget 3.4.0 */
 /* Home Budget - light and dark theme, mobile and desktop layouts */
 
 :root {
@@ -319,6 +319,13 @@ tbody tr:last-child td { border-bottom: 0; }
 .legend-icon { font-size: 1em; }
 .small { font-size: .78rem; }
 .row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.date-input { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.date-input .date-text { width: 120px; font-variant-numeric: tabular-nums; }
+.date-input .date-text.invalid { border-color: var(--danger); }
+.date-button { height: var(--control-height); padding: 0 8px; font-size: 1rem; }
+/* The native control only exists to open the browser's calendar; it is never shown. */
+.date-native { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; padding: 0;
+  border: 0; opacity: 0; pointer-events: none; }
 .icon-input { width: 64px; font-size: 1.2rem; text-align: center; }
 .rate-input { width: 110px; text-align: right; }
 .converted-note { margin-top: -6px; }
@@ -467,7 +474,7 @@ body[data-mode="desktop"] .grid { grid-template-columns: 1.3fr 1fr; }
 <body data-mode="auto">
 <div id="app"></div>
 <noscript>This app needs JavaScript. Everything runs locally in your browser; nothing is sent anywhere.</noscript>
-<script>/*! Home Budget 3.3.0 - offline single file build, https://github.com/ (no dependencies) */
+<script>/*! Home Budget 3.4.0 - offline single file build, https://github.com/ (no dependencies) */
 (function () {
 'use strict';
 const __cache = {};
@@ -589,6 +596,7 @@ class App {
       'This amount is too large': 'error.amountTooLarge',
       'This amount is too small': 'error.amountTooSmall',
       'Amount cannot be zero': 'error.amountZero',
+      'Enter a date like 23.09.2026': 'error.badDate',
     };
     return map[error.message] ? this.t(map[error.message]) : error.message;
   }
@@ -1705,7 +1713,7 @@ __modules["core/version.js"] = function () {
  * The single place where the application version lives.
  * The build stamps it into the file name, the bundle banner and the page.
  */
-const APP_VERSION = '3.3.0';
+const APP_VERSION = '3.4.0';
 
 /** Storage document version; raised when the saved shape changes. */
 const DATA_VERSION = 3;
@@ -1766,6 +1774,8 @@ const EN = {
   'common.name': 'Name',
   'common.type': 'Type',
   'common.date': 'Date',
+  'common.datePlaceholder': 'dd.mm.yyyy',
+  'common.pickDate': 'Open the calendar',
   'common.amount': 'Amount',
   'common.category': 'Category',
   'common.currency': 'Currency',
@@ -1945,6 +1955,7 @@ const EN = {
   'error.amountTooLarge': 'This amount is too large',
   'error.amountTooSmall': 'This amount is too small for this currency',
   'error.amountZero': 'The amount cannot be zero',
+  'error.badDate': 'Enter a date like 23.09.2026',
 };
 
 /** Russian texts. */
@@ -1983,6 +1994,8 @@ const RU = {
   'common.name': 'Название',
   'common.type': 'Тип',
   'common.date': 'Дата',
+  'common.datePlaceholder': 'дд.мм.гггг',
+  'common.pickDate': 'Открыть календарь',
   'common.amount': 'Сумма',
   'common.category': 'Категория',
   'common.currency': 'Валюта',
@@ -2162,6 +2175,7 @@ const RU = {
   'error.amountTooLarge': 'Слишком большая сумма',
   'error.amountTooSmall': 'Слишком маленькая сумма для этой валюты',
   'error.amountZero': 'Сумма не может быть нулём',
+  'error.badDate': 'Введите дату, например 23.09.2026',
 };
 
 /** German texts. */
@@ -2200,6 +2214,8 @@ const DE = {
   'common.name': 'Name',
   'common.type': 'Art',
   'common.date': 'Datum',
+  'common.datePlaceholder': 'tt.mm.jjjj',
+  'common.pickDate': 'Kalender öffnen',
   'common.amount': 'Betrag',
   'common.category': 'Kategorie',
   'common.currency': 'Währung',
@@ -2379,6 +2395,7 @@ const DE = {
   'error.amountTooLarge': 'Dieser Betrag ist zu groß',
   'error.amountTooSmall': 'Dieser Betrag ist für diese Währung zu klein',
   'error.amountZero': 'Der Betrag darf nicht null sein',
+  'error.badDate': 'Datum eingeben, zum Beispiel 23.09.2026',
 };
 
 const BUNDLED = { en: EN, ru: RU, de: DE };
@@ -2604,6 +2621,8 @@ return { pickStorage, migrateState, loadState, saveState, MemoryStorage, STORAGE
 __modules["ui/dom.js"] = function () {
 /** Tiny DOM helpers - the app builds its interface with plain JavaScript. */
 
+const { formatDate, parseDateLoose } = __require("core/format.js");
+
 /**
  * Creates an element.
  * @param {string} tag tag name, optionally with classes: "div.card.wide"
@@ -2674,15 +2693,83 @@ function options(items, selected) {
   }));
 }
 
-return { el, append, clear, render, byId, field, options };
+/**
+ * A date field that shows the date the way the rest of the app does (23.09.2026).
+ *
+ * `<input type="date">` looks tempting, but the format it displays comes from the
+ * browser's language setting alone - not from the page, not from the `lang`
+ * attribute and not from the chosen interface language - so a browser set to
+ * American English shows 09/23/2026 in an otherwise Russian or German app. This
+ * field types and shows the date in the app's own format, and the button still
+ * opens the browser's native calendar, which is what makes it usable on a phone.
+ *
+ * @param {{value: string, onChange: (iso: string) => void, t: (key: string) => string,
+ *          required?: boolean, clearable?: boolean}} options
+ */
+function dateField({ value, onChange, t, required = false, clearable = false }) {
+  const text = el('input.date-text', {
+    type: 'text', inputmode: 'numeric', autocomplete: 'off', spellcheck: false,
+    placeholder: t('common.datePlaceholder'), value: value ? formatDate(value) : '',
+    required, 'aria-label': t('common.date'),
+  });
+  const native = el('input.date-native', { type: 'date', value: value || '', tabindex: '-1', 'aria-hidden': 'true' });
+  const button = el('button.date-button', {
+    type: 'button', text: '📅', title: t('common.pickDate'), 'aria-label': t('common.pickDate'),
+  });
+
+  const apply = (iso) => {
+    text.value = iso ? formatDate(iso) : '';
+    text.classList.remove('invalid');
+    native.value = iso || '';
+    onChange(iso);
+  };
+
+  text.addEventListener('change', () => {
+    const typed = text.value.trim();
+    if (!typed) {
+      if (clearable || !required) apply('');
+      else text.classList.add('invalid');
+      return;
+    }
+    const iso = parseDateLoose(typed);
+    if (iso) apply(iso);
+    else text.classList.add('invalid'); // keep what was typed so it can be corrected
+  });
+  text.addEventListener('input', () => text.classList.remove('invalid'));
+  native.addEventListener('change', () => apply(native.value));
+  button.addEventListener('click', () => {
+    // showPicker is the supported way to open the calendar; older browsers focus instead.
+    if (typeof native.showPicker === 'function') {
+      try {
+        native.showPicker();
+        return;
+      } catch {
+        // not allowed in this context, fall through
+      }
+    }
+    native.focus();
+    native.click();
+  });
+
+  const wrap = el('div.date-input', {}, [text, button, native]);
+  // `.value` reads what is typed right now, so a form can be submitted without
+  // leaving the field first; it is the ISO date, or '' when the text is not one.
+  Object.defineProperty(wrap, 'value', {
+    get: () => (text.value.trim() ? parseDateLoose(text.value.trim()) || '' : ''),
+  });
+  wrap.dateText = text;
+  return wrap;
+}
+
+return { el, append, clear, render, byId, field, options, dateField };
 };
 __modules["ui/views/entries.js"] = function () {
 /** Entries screen: filters, the list itself, and the export / import panel. */
 
 const { formatDate, formatMoney, periodStart, todayIso } = __require("core/format.js");
-const { MAX_AMOUNT } = __require("core/model.js");
+const { AppError, MAX_AMOUNT } = __require("core/model.js");
 const { totals } = __require("core/stats.js");
-const { el, field, options, render } = __require("ui/dom.js");
+const { dateField, el, field, options, render } = __require("ui/dom.js");
 const { transferPanel } = __require("ui/transfer.js");
 
 /** Entries drawn before the list asks whether to show more. */
@@ -2718,11 +2805,11 @@ function entriesView(app) {
       el('details.filters-box', { open: app.isDesktop() }, [
         el('summary', { text: t('entries.filters') }),
         el('div.filters', {}, [
-          field(t('entries.from'), el('input', {
-            type: 'date', value: filter.from || '', on: { change: (event) => update({ from: event.target.value }) },
+          field(t('entries.from'), dateField({
+            value: filter.from || '', t, clearable: true, onChange: (iso) => update({ from: iso }),
           })),
-          field(t('entries.to'), el('input', {
-            type: 'date', value: filter.to || '', on: { change: (event) => update({ to: event.target.value }) },
+          field(t('entries.to'), dateField({
+            value: filter.to || '', t, clearable: true, onChange: (iso) => update({ to: iso }),
           })),
           field(t('common.category'), el('select', {
             on: { change: (event) => update({ categoryId: event.target.value }) },
@@ -2807,7 +2894,8 @@ function entryForm(app, entry) {
     type: 'number', step: '0.01', min: '0', max: String(MAX_AMOUNT / 10 ** decimals), required: true,
     value: entry ? (entry.amount / 10 ** decimals).toFixed(decimals) : '',
   });
-  const dateInput = el('input', { type: 'date', required: true, value: entry ? entry.date : todayIso(new Date()) });
+  const dateInput = dateField({ value: entry ? entry.date : todayIso(new Date()), t, required: true,
+    onChange: () => {} });
   const categorySelect = el('select', {}, options(
     store.categories.map((category) => ({
       value: category.id,
@@ -2830,6 +2918,8 @@ function entryForm(app, entry) {
         try {
           const currency = store.currency(currencySelect.value);
           const amount = Math.round(Number(amountInput.value) * 10 ** currency.decimals);
+          // An unreadable date must not quietly become today.
+          if (!dateInput.value) throw new AppError('Enter a date like 23.09.2026');
           const data = {
             amount: Math.abs(amount),
             date: dateInput.value,

@@ -1,5 +1,7 @@
 /** Tiny DOM helpers - the app builds its interface with plain JavaScript. */
 
+import { formatDate, parseDateLoose } from '../core/format.js';
+
 /**
  * Creates an element.
  * @param {string} tag tag name, optionally with classes: "div.card.wide"
@@ -68,4 +70,72 @@ export function options(items, selected) {
     text: item.label,
     selected: String(item.value) === String(selected),
   }));
+}
+
+/**
+ * A date field that shows the date the way the rest of the app does (23.09.2026).
+ *
+ * `<input type="date">` looks tempting, but the format it displays comes from the
+ * browser's language setting alone - not from the page, not from the `lang`
+ * attribute and not from the chosen interface language - so a browser set to
+ * American English shows 09/23/2026 in an otherwise Russian or German app. This
+ * field types and shows the date in the app's own format, and the button still
+ * opens the browser's native calendar, which is what makes it usable on a phone.
+ *
+ * @param {{value: string, onChange: (iso: string) => void, t: (key: string) => string,
+ *          required?: boolean, clearable?: boolean}} options
+ */
+export function dateField({ value, onChange, t, required = false, clearable = false }) {
+  const text = el('input.date-text', {
+    type: 'text', inputmode: 'numeric', autocomplete: 'off', spellcheck: false,
+    placeholder: t('common.datePlaceholder'), value: value ? formatDate(value) : '',
+    required, 'aria-label': t('common.date'),
+  });
+  const native = el('input.date-native', { type: 'date', value: value || '', tabindex: '-1', 'aria-hidden': 'true' });
+  const button = el('button.date-button', {
+    type: 'button', text: '📅', title: t('common.pickDate'), 'aria-label': t('common.pickDate'),
+  });
+
+  const apply = (iso) => {
+    text.value = iso ? formatDate(iso) : '';
+    text.classList.remove('invalid');
+    native.value = iso || '';
+    onChange(iso);
+  };
+
+  text.addEventListener('change', () => {
+    const typed = text.value.trim();
+    if (!typed) {
+      if (clearable || !required) apply('');
+      else text.classList.add('invalid');
+      return;
+    }
+    const iso = parseDateLoose(typed);
+    if (iso) apply(iso);
+    else text.classList.add('invalid'); // keep what was typed so it can be corrected
+  });
+  text.addEventListener('input', () => text.classList.remove('invalid'));
+  native.addEventListener('change', () => apply(native.value));
+  button.addEventListener('click', () => {
+    // showPicker is the supported way to open the calendar; older browsers focus instead.
+    if (typeof native.showPicker === 'function') {
+      try {
+        native.showPicker();
+        return;
+      } catch {
+        // not allowed in this context, fall through
+      }
+    }
+    native.focus();
+    native.click();
+  });
+
+  const wrap = el('div.date-input', {}, [text, button, native]);
+  // `.value` reads what is typed right now, so a form can be submitted without
+  // leaving the field first; it is the ISO date, or '' when the text is not one.
+  Object.defineProperty(wrap, 'value', {
+    get: () => (text.value.trim() ? parseDateLoose(text.value.trim()) || '' : ''),
+  });
+  wrap.dateText = text;
+  return wrap;
 }

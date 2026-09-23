@@ -102,6 +102,7 @@ export class App {
       'This amount is too large': 'error.amountTooLarge',
       'This amount is too small': 'error.amountTooSmall',
       'Amount cannot be zero': 'error.amountZero',
+      'Enter a date like 23.09.2026': 'error.badDate',
     };
     return map[error.message] ? this.t(map[error.message]) : error.message;
   }
