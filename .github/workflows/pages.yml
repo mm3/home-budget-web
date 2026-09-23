@@ -31,6 +31,19 @@ jobs:
         run: npm run coverage
       - name: Build the site
         run: npm run build:site
+      - name: Make sure a browser is installed
+        # The browser checks drive a real Chrome over the DevTools protocol. Hosted
+        # runners usually ship one; this installs one when they do not, and
+        # tools/cdp.mjs finds whichever is there (CHROME_PATH overrides it).
+        run: |
+          if command -v google-chrome >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1 \
+             || command -v chromium-browser >/dev/null 2>&1; then
+            echo "Using $(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          else
+            curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo apt-get update
+            sudo apt-get install -y /tmp/chrome.deb
+          fi
       - name: Check the published build
         run: npm run site-check
       - uses: actions/upload-pages-artifact@v3
