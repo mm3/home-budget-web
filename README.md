@@ -262,3 +262,9 @@ README. It fails if anything logs an error to the console.
 `tools/site-check.mjs` serves `site/` over HTTP, checks the manifest and the icons, waits for the
 service worker to fill its cache, then **switches the network off and reloads** to prove the published
 app really works offline.
+
+Both need a real browser. `tools/cdp.mjs` looks for one in this order: `CHROME_PATH`, then
+`google-chrome`, `chromium` or `chromium-browser` in the usual places, then a Chromium that
+Playwright has downloaded - so it works on a laptop, in a container and on a CI runner without
+anything being configured. If none is found it says so in one line instead of failing with a stack
+trace, and the workflows install Chrome when the runner does not already have one.
