@@ -1,5 +1,5 @@
-/* Home Budget 3.2.0 - offline cache for the GitHub Pages build. */
-const CACHE = 'home-budget-3.2.0';
+/* Home Budget 3.2.1 - offline cache for the GitHub Pages build. */
+const CACHE = 'home-budget-3.2.1';
 const ASSETS = ["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./apple-touch-icon.png"];
 
 self.addEventListener('install', (event) => {

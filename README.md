@@ -1,4 +1,4 @@
-# Home Budget 3.2.0 (browser version)
+# Home Budget 3.2.1 (browser version)
 
 A home budget app that is **one HTML file**. All JavaScript, CSS and even the PDF font are inlined,
 there are no external requests, no frameworks and no build-time dependencies. Open the file from a
@@ -63,7 +63,7 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 
 ## Using it
 
-Open `home-budget-3.2.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.2.1.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -92,7 +92,7 @@ file yourself, send that same header.
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.2.0` is pushed.
+built files to a release when a tag like `v3.2.1` is pushed.
 
 ## Building
 
@@ -164,6 +164,12 @@ test/            unit tests (node:test)
 The UI layer only reads from and calls into `core`; `core` has no reference to the DOM, which is why
 it can be tested in Node and why the same logic runs in the export/import code paths.
 
+Form rows follow one rule, which is what keeps controls from drifting out of line: every text-like
+control is exactly `--control-height` tall, every field label exactly `--label-height`, and a row is
+aligned to its **top**. A longer label, a hint underneath or a control the browser sizes differently -
+a colour picker, a select, a date field - then moves nothing else, and a button standing in such a row
+is pushed down by exactly one label height.
+
 ### How the PDF prints Cyrillic
 
 A PDF's built-in fonts only know Latin-1, which is why version 3.0 wrote `?` for every Russian letter.
@@ -189,7 +195,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (34 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (35 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
@@ -197,7 +203,9 @@ CSV, switches the interface between English, Russian, German and a user translat
 settings editor, checks the version stamp, the cache and web app metadata, the average line, the budget
 bars with their periods, the ruble, the currency flags and that no two currencies share a symbol,
 confirms that deleting the entries keeps the settings while resetting really restores the defaults,
-and takes the screenshots in this README. It fails if anything logs an error to the console.
+**measures every row of form controls** - in the cards, in the filters and in the dialogs - and fails
+when a label of a different length or a hint under one field pushes its control off the line its
+neighbours sit on, and takes the screenshots in this README. It fails if anything logs an error to the console.
 
 `tools/site-check.mjs` serves `site/` over HTTP, checks the manifest and the icons, waits for the
 service worker to fill its cache, then **switches the network off and reloads** to prove the published

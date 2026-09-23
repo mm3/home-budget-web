@@ -388,6 +388,75 @@ async function main() {
   check('a Russian PDF holds real cyrillic text, not question marks',
     russianPdf.cyrillic && russianPdf.questionMarks === 0, JSON.stringify(russianPdf));
 
+  // Every control in a row of fields has to sit on the same line: the distance from
+  // the top of its field must be the same everywhere, whatever the label's length or
+  // a hint underneath, and the controls must be equally tall. Wrapping to a second
+  // line is fine, which is why the offset inside the field is measured, not the page.
+  const aligned = await cdp.evaluate(`
+    const check = (where) => {
+      const problems = [];
+      for (const row of document.querySelectorAll('.inline-form, .row-2, .filters')) {
+        const items = [...row.querySelectorAll('.field')]
+          .map((field) => ({ field, control: field.querySelector('input:not([type=checkbox]), select') }))
+          .filter((item) => item.control)
+          .map((item) => ({ box: item.field.getBoundingClientRect(), control: item.control.getBoundingClientRect() }))
+          .sort((a, b) => a.box.top - b.box.top);
+        // Fields whose boxes overlap vertically are on the same visual line; a form
+        // that wrapped onto a second line is fine and must not count as a problem.
+        const lines = [];
+        for (const item of items) {
+          const line = lines[lines.length - 1];
+          if (line && item.box.top < line.bottom - 1) {
+            line.items.push(item);
+            line.bottom = Math.max(line.bottom, item.box.bottom);
+          } else {
+            lines.push({ bottom: item.box.bottom, items: [item] });
+          }
+        }
+        for (const line of lines) {
+          const tops = [...new Set(line.items.map((item) => Math.round(item.control.top)))];
+          const heights = [...new Set(line.items.map((item) => Math.round(item.control.height)))];
+          if (tops.length > 1 || heights.length > 1) {
+            problems.push(where + ' ' + row.className
+              + ' tops=' + tops.join('/') + ' heights=' + heights.join('/'));
+          }
+        }
+        const buttonHeights = [...new Set([...row.querySelectorAll('button')]
+          .map((button) => Math.round(button.getBoundingClientRect().height)))];
+        const controlHeight = items.length ? Math.round(items[0].control.height) : null;
+        if (buttonHeights.some((height) => height !== controlHeight) && controlHeight !== null) {
+          problems.push(where + ' ' + row.className
+            + ' buttons=' + buttonHeights.join('/') + ' controls=' + controlHeight);
+        }
+      }
+      return problems;
+    };
+    const found = [];
+    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Settings')).click();
+    await new Promise((done) => setTimeout(done, 200));
+    found.push(...check('settings'));
+    // the category dialog, with its colour/icon and limit/limit period rows
+    [...document.querySelectorAll('.entries-table button')].find((button) => button.textContent === 'Edit').click();
+    await new Promise((done) => setTimeout(done, 250));
+    found.push(...check('category dialog'));
+    window.homeBudget.closeDialog();
+    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Entries')).click();
+    await new Promise((done) => setTimeout(done, 200));
+    const box = document.querySelector('.filters-box');
+    if (box) box.open = true;
+    await new Promise((done) => setTimeout(done, 200));
+    found.push(...check('entry filters'));
+    const row = document.querySelector('.entries-table tbody tr');
+    if (row) {
+      row.click();
+      await new Promise((done) => setTimeout(done, 250));
+      found.push(...check('entry dialog'));
+      window.homeBudget.closeDialog();
+    }
+    return found;
+  `);
+  check('controls in a row of fields stay on one line', aligned.length === 0, aligned.join(' | '));
+
   // screenshots
   const shots = [
     { name: 'desktop-home', width: 1280, height: 900, mobile: false, mode: 'desktop', tab: 'Home' },
