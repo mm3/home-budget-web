@@ -4,15 +4,14 @@
  *
  *   node tools/make-icons.mjs
  *
- * PNG is written by hand - a deflate stream of raw scanlines - so this needs no
- * dependency either. The shapes are the same house that the inline SVG favicon
- * draws, sampled four times per pixel so the edges stay smooth.
+ * The shapes are the same house that the inline SVG favicon draws, sampled four
+ * times per pixel so the edges stay smooth; png.mjs turns them into a file.
  */
 
-import { deflateSync } from 'node:zlib';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { encodePng } from './png.mjs';
 
 const INDIGO = [79, 70, 229];
 const GREEN = [34, 197, 94];
@@ -51,10 +50,9 @@ function colourAt(x, y, { maskable }) {
 }
 
 function render(size, options) {
-  const pixels = Buffer.alloc(size * (size * 4 + 1)); // one filter byte per row
+  const pixels = Buffer.alloc(size * size * 4);
   for (let row = 0; row < size; row += 1) {
-    const rowStart = row * (size * 4 + 1);
-    pixels[rowStart] = 0; // filter: none
+    const rowStart = row * size * 4;
     for (let column = 0; column < size; column += 1) {
       let red = 0;
       let green = 0;
@@ -76,7 +74,7 @@ function render(size, options) {
         }
       }
       const taken = SAMPLES * SAMPLES;
-      const at = rowStart + 1 + column * 4;
+      const at = rowStart + column * 4;
       const weight = alpha === 0 ? 1 : alpha / 255;
       pixels[at] = Math.round(red / weight);
       pixels[at + 1] = Math.round(green / weight);
@@ -87,39 +85,8 @@ function render(size, options) {
   return pixels;
 }
 
-const CRC_TABLE = Array.from({ length: 256 }, (unused, index) => {
-  let value = index;
-  for (let bit = 0; bit < 8; bit += 1) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
-  return value >>> 0;
-});
-
-function crc32(buffer) {
-  let value = 0xffffffff;
-  for (const byte of buffer) value = CRC_TABLE[(value ^ byte) & 0xff] ^ (value >>> 8);
-  return (value ^ 0xffffffff) >>> 0;
-}
-
-function chunk(type, data) {
-  const head = Buffer.alloc(8);
-  head.writeUInt32BE(data.length, 0);
-  head.write(type, 4, 4, 'latin1');
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), data])), 0);
-  return Buffer.concat([head, data, crc]);
-}
-
 function png(size, options) {
-  const header = Buffer.alloc(13);
-  header.writeUInt32BE(size, 0);
-  header.writeUInt32BE(size, 4);
-  header[8] = 8; // bit depth
-  header[9] = 6; // colour type: RGBA
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', header),
-    chunk('IDAT', deflateSync(render(size, options), { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
+  return encodePng(size, size, render(size, options));
 }
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');

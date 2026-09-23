@@ -1,10 +1,27 @@
 # Home Budget 3.5.0 (browser version)
 
-**[Open the app](https://mm3.github.io/home-budget-web/)** &nbsp;·&nbsp;
-[Download the single file](https://mm3.github.io/home-budget-web/home-budget.html) &nbsp;·&nbsp;
+<table>
+<tr>
+<td>
+
+**[Open the app](https://mm3.github.io/home-budget-web/)**
+
+[Download the single file](https://mm3.github.io/home-budget-web/home-budget.html)
+
 [Source](https://github.com/mm3/home-budget-web)
 
 [![Pages](https://github.com/mm3/home-budget-web/actions/workflows/pages.yml/badge.svg)](https://github.com/mm3/home-budget-web/actions/workflows/pages.yml)
+
+</td>
+<td align="center">
+
+<a href="https://mm3.github.io/home-budget-web/"><img src="docs/qr-app.png" width="170" alt="QR code for https://mm3.github.io/home-budget-web/"></a>
+
+Point a phone at it
+
+</td>
+</tr>
+</table>
 
 A home budget app that is **one HTML file**. All JavaScript, CSS and even the PDF font are inlined,
 there are no external requests, no frameworks and no build-time dependencies. Open the file from a
@@ -185,14 +202,19 @@ Two generators produce checked-in source, so a normal build never needs them:
 ```bash
 npm run font    # src/core/font-data.js  - subsets DejaVu Sans for the PDF export
 npm run icons   # assets/*.png           - the app icons for the site build
+npm run qr      # docs/qr-app.png        - the QR code in this README
 ```
 
 `tools/make-font.mjs` is a small TrueType subsetter: it reads the system's DejaVu Sans, keeps the
 585 glyphs the interface can need (Latin, Latin Extended-A, Greek, Cyrillic, punctuation, currency
 signs), renumbers composite glyphs, drops the hinting programs and deflates the result. The 30 kB that
 lands in `font-data.js` is what the PDF embeds, compressed already, so nothing is unpacked at runtime.
-`tools/make-icons.mjs` draws the icons and writes the PNGs by hand (deflate plus CRC32) - again, no
-dependency.
+`tools/make-icons.mjs` draws the icons, `tools/make-qr.mjs` encodes the QR code above - byte mode,
+Reed-Solomon over GF(256), the mask picked by the penalty rules of the specification - and both write
+their PNG through `tools/png.mjs`, which is a deflate stream of raw scanlines plus a CRC. Again, no
+dependency. The QR code takes its address from `SITE_URL`, like every other link, so `npm run qr`
+after a move regenerates it; every version and correction level the encoder can produce was checked
+by decoding the result with an independent reader.
 
 ## Structure
 

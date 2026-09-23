@@ -16,6 +16,7 @@
     "build:site": "node tools/build.mjs --site",
     "icons": "node tools/make-icons.mjs",
     "font": "node tools/make-font.mjs",
-    "site-check": "node tools/site-check.mjs"
+    "site-check": "node tools/site-check.mjs",
+    "qr": "node tools/make-qr.mjs"
   }
 }
