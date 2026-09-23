@@ -2,7 +2,7 @@
 
 import { barChart, donutChart } from '../../core/charts.js';
 import { formatDate, formatMoney, PERIODS } from '../../core/format.js';
-import { byCategory, ofCurrency, overview, series } from '../../core/stats.js';
+import { byCategory, overview, series } from '../../core/stats.js';
 import { el, field, options } from '../dom.js';
 
 const PERIOD_TITLES = {
@@ -16,17 +16,20 @@ export function homeView(app) {
   const t = app.t;
   const currencyCode = app.viewCurrency();
   const currency = store.currency(currencyCode);
-  const entries = ofCurrency(store.entries, currencyCode);
+  const entries = store.entriesIn(currencyCode);
   const today = store.today();
   const summaries = overview(entries, store.categories, today);
   const period = app.ui.homePeriod;
   const points = series(entries, store.categories, period, CHART_LENGTH[period], today);
   const breakdown = byCategory(entries, store.categories);
-  const recent = store.list({ currency: currencyCode }).slice(0, 8);
+  const recent = (store.settings.convertToDefault ? store.list() : store.list({ currency: currencyCode })).slice(0, 8);
   const budgets = store.budgets(currencyCode, today);
 
   return [
     quickAddCard(app, currency),
+    store.settings.convertToDefault && store.usedCurrencies().length > 1
+      ? el('p.muted.converted-note', { text: t('home.converted', { currency: currency.code }) })
+      : null,
     el('section.cards', {}, summaries.map((summary) => statCard(app, summary, currency))),
     el('section.grid', {}, [
       el('article.card', {}, [
@@ -144,7 +147,7 @@ function quickAddCard(app, currency) {
 
 function currencySelector(app) {
   const used = app.store.usedCurrencies();
-  if (used.length < 2) return null;
+  if (used.length < 2 || app.store.settings.convertToDefault) return null;
   return field(app.t('common.currency'), el('select', {
     on: { change: (event) => app.setUi({ currency: event.target.value }) },
   }, options(used.map((code) => ({ value: code, label: code })), app.viewCurrency())));
@@ -185,10 +188,10 @@ function budgetCard(app, budgets, currency) {
         ]),
         el('span.num', {
           class: budget.over ? 'expense' : '',
-          text: t('home.budgetOf', {
+          text: `${t('home.budgetOf', {
             spent: formatMoney(budget.spent, currency),
             limit: formatMoney(budget.limit, currency),
-          }),
+          })} · ${t('home.budgetPeriod', { period: t(`period.${budget.period}`).toLowerCase() })}`,
         }),
       ]),
       el('div.track', {}, el('div', {
@@ -206,15 +209,22 @@ function budgetCard(app, budgets, currency) {
 
 function entryRow(app, entry, currency) {
   const category = app.store.category(entry.categoryId);
+  const shownCurrency = app.store.settings.convertToDefault ? currency : app.store.currency(entry.currency);
+  const amount = app.store.settings.convertToDefault && entry.currency !== currency.code
+    ? app.store.convert(entry.amount, entry.currency, currency.code)
+    : entry.amount;
   return el('li.entry', { on: { click: () => app.editEntry(entry.id) } }, [
     el('span.category-icon', { text: category.icon }),
     el('span.entry-main', {}, [
       el('span.entry-title', { text: entry.note || app.categoryName(category) }),
-      el('span.entry-sub', { text: `${formatDate(entry.date)} · ${app.categoryName(category)}` }),
+      el('span.entry-sub', {
+        text: `${formatDate(entry.date)} · ${app.categoryName(category)}`
+          + (app.store.settings.convertToDefault && entry.currency !== currency.code ? ` · ${entry.currency}` : ''),
+      }),
     ]),
     el('span', {
       class: `entry-amount ${category.kind === 'income' ? 'income' : 'expense'}`,
-      text: formatMoney(category.kind === 'income' ? entry.amount : -entry.amount, currency, { sign: true }),
+      text: formatMoney(category.kind === 'income' ? amount : -amount, shownCurrency, { sign: true }),
     }),
   ]);
 }

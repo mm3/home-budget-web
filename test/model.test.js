@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  AppError, createCategory, createCurrency, createDefaultState, createEntry, defaultCategory,
-  findCategory, findCurrency, ICON_CHOICES, newId, signedAmount, slugify,
+  AppError, convertAmount, createCategory, createCurrency, createDefaultState, createEntry, defaultCategory,
+  defaultCurrencies, findCategory, findCurrency, ICON_CHOICES, LIMIT_PERIODS, newId, signedAmount, slugify,
 } from '../src/core/model.js';
+import { APP_VERSION } from '../src/core/version.js';
 
 const NOW = new Date('2026-09-22T10:00:00Z');
 
@@ -18,9 +19,9 @@ test('the default state has the Daily category and EUR', () => {
   assert.deepEqual(state.entries, []);
 });
 
-test('the predefined categories cover daily, monthly and yearly spending', () => {
+test('the predefined categories cover daily, monthly and yearly spending and planned shopping', () => {
   const ids = createDefaultState().settings.categories.map((category) => category.id);
-  assert.deepEqual(ids.slice(0, 3), ['daily', 'monthly', 'yearly']);
+  assert.deepEqual(ids.slice(0, 4), ['daily', 'monthly', 'yearly', 'budget']);
   for (const category of createDefaultState().settings.categories) {
     assert.ok(category.icon, `${category.id} has an icon`);
     assert.equal(category.nameKey, `category.${category.id}`);
@@ -41,6 +42,9 @@ test('categories carry an icon and an optional limit', () => {
   assert.equal(createCategory({ name: 'Daily', nameKey: 'category.daily' }).nameKey, 'category.daily');
   assert.equal(createCategory({ name: 'Mine', nameKey: 'category.daily', keepNameKey: false }).nameKey, undefined);
   assert.equal(ICON_CHOICES.length > 10, true);
+  assert.equal(createCategory({ name: 'X', limitPeriod: 'week' }).limitPeriod, 'week');
+  assert.equal(createCategory({ name: 'X', limitPeriod: 'century' }).limitPeriod, 'month', 'unknown periods fall back');
+  assert.deepEqual(LIMIT_PERIODS, ['day', 'week', 'month', 'year']);
 });
 
 test('createEntry validates and normalizes', () => {
@@ -65,16 +69,44 @@ test('createEntry rejects bad input', () => {
 
 test('categories and currencies are validated', () => {
   assert.deepEqual(createCategory({ name: ' Eating out ' }),
-    { id: 'eating-out', name: 'Eating out', kind: 'expense', color: '#4f46e5', icon: '💸', limit: null });
+    { id: 'eating-out', name: 'Eating out', kind: 'expense', color: '#4f46e5', icon: '💸', limit: null, limitPeriod: 'month' });
   assert.equal(createCategory({ name: 'Pay', kind: 'income', color: '#ABCDEF' }).color, '#abcdef');
   assert.equal(createCategory({ name: 'X', color: 'red' }).color, '#4f46e5');
   assert.throws(() => createCategory({ name: '  ' }), /name is required/);
   assert.throws(() => createCategory({ name: 'x'.repeat(41) }), /at most 40/);
 
-  assert.deepEqual(createCurrency({ code: 'sek', symbol: ' kr ' }), { code: 'SEK', symbol: 'kr', decimals: 2 });
+  assert.deepEqual(createCurrency({ code: 'sek', symbol: ' kr ' }), { code: 'SEK', symbol: 'kr', decimals: 2, rate: 1 });
+  assert.equal(createCurrency({ code: 'SEK', rate: '0.09' }).rate, 0.09);
+  assert.throws(() => createCurrency({ code: 'SEK', rate: 0 }), /positive number/);
+  assert.throws(() => createCurrency({ code: 'SEK', rate: 'abc' }), /positive number/);
   assert.equal(createCurrency({ code: 'JPY', decimals: 0 }).symbol, 'JPY');
   assert.throws(() => createCurrency({ code: 'e' }), /2-5 letters/);
   assert.throws(() => createCurrency({ code: 'EUR', decimals: 9 }), /between 0 and 4/);
+});
+
+test('the default currencies carry rates and the state carries the app version', () => {
+  const currencies = defaultCurrencies();
+  assert.ok(currencies.length >= 10, 'a useful set of currencies ships with the app');
+  assert.equal(currencies[0].code, 'EUR');
+  assert.equal(currencies[0].rate, 1);
+  assert.ok(currencies.every((currency) => currency.rate > 0));
+  assert.ok(currencies.some((currency) => currency.decimals === 0), 'currencies without decimals exist');
+  assert.equal(createDefaultState().appVersion, APP_VERSION);
+});
+
+test('amounts convert through the default currency', () => {
+  const currencies = [
+    { code: 'EUR', symbol: '€', decimals: 2, rate: 1 },
+    { code: 'USD', symbol: '$', decimals: 2, rate: 0.5 },
+    { code: 'JPY', symbol: '¥', decimals: 0, rate: 0.01 },
+  ];
+  assert.equal(convertAmount(1000, 'USD', 'EUR', currencies), 500);
+  assert.equal(convertAmount(1000, 'EUR', 'USD', currencies), 2000);
+  assert.equal(convertAmount(1000, 'EUR', 'JPY', currencies), 1000, 'decimals are respected: 10 EUR = 1000 JPY');
+  assert.equal(convertAmount(100, 'JPY', 'EUR', currencies), 100);
+  assert.equal(convertAmount(1234, 'EUR', 'EUR', currencies), 1234);
+  assert.equal(convertAmount(1000, 'USD', 'XXX', currencies), 500, 'unknown currencies use rate 1');
+  assert.equal(convertAmount(1000, 'USD', 'EUR', [{ code: 'USD', symbol: '$', decimals: 2, rate: 0 }]), 1000);
 });
 
 test('slugify and newId produce usable identifiers', () => {

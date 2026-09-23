@@ -193,6 +193,21 @@ export function periodStart(isoDate, period) {
   }
 }
 
+/** Last day of the period that contains the date. */
+export function periodEnd(isoDate, period) {
+  switch (period) {
+    case 'day': return isoDate;
+    case 'week': return addDays(startOfWeek(isoDate), 6);
+    case 'month': {
+      const [year, month] = isoDate.split('-').map(Number);
+      const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      return `${isoDate.slice(0, 8)}${String(days).padStart(2, '0')}`;
+    }
+    case 'year': return `${isoDate.slice(0, 4)}-12-31`;
+    default: throw new Error(`Unknown period: ${period}`);
+  }
+}
+
 /** First day of the period before the one containing the date. */
 export function previousPeriodStart(isoDate, period) {
   const start = periodStart(isoDate, period);

@@ -87,16 +87,19 @@ test('categories can be created, renamed and deleted', () => {
   assert.equal(store.deleteCategory('home'), 0, 'an unused category is removed without moving entries');
 });
 
-test('currencies can be added and removed', () => {
+test('currencies can be added, changed and removed', () => {
   const store = makeStore();
-  store.addCurrency({ code: 'sek', symbol: 'kr' });
+  store.deleteCurrency('SEK');
+  store.addCurrency({ code: 'sek', symbol: 'kr', rate: 0.09 });
   assert.ok(store.currencies.some((currency) => currency.code === 'SEK'));
   assert.throws(() => store.addCurrency({ code: 'SEK' }), /already exists/);
   store.addEntry({ amount: 100, categoryId: 'daily', currency: 'SEK', date: '2026-09-22' });
   assert.throws(() => store.deleteCurrency('SEK'), /still used/);
   assert.throws(() => store.deleteCurrency('EUR'), /default currency/);
-  assert.throws(() => store.deleteCurrency('NOK'), /not found/);
+  assert.throws(() => store.deleteCurrency('XXX'), /not found/);
   store.deleteEntry(store.entries[0].id);
+  assert.equal(store.updateCurrency('SEK', { rate: 0.1 }).rate, 0.1);
+  assert.throws(() => store.updateCurrency('XXX', { rate: 1 }), /not found/);
   store.deleteCurrency('SEK');
   assert.ok(!store.currencies.some((currency) => currency.code === 'SEK'));
   assert.deepEqual(store.usedCurrencies(), ['EUR']);
@@ -147,10 +150,10 @@ test('categoryByNameOrCreate reuses existing names', () => {
   assert.equal(pickColor(8), pickColor(0));
 });
 
-test('budgets track the limits of the current month', () => {
+test('budgets track the limits of the current period', () => {
   const store = makeStore();
-  store.updateCategory('groceries', { limit: 40000 });
-  store.updateCategory('transport', { limit: 10000 });
+  store.updateCategory('groceries', { limit: 40000, limitPeriod: 'month' });
+  store.updateCategory('transport', { limit: 10000, limitPeriod: 'month' });
   store.addEntry({ amount: 12000, categoryId: 'groceries', currency: 'EUR', date: '2026-09-05' });
   store.addEntry({ amount: 35000, categoryId: 'groceries', currency: 'EUR', date: '2026-09-20' });
   store.addEntry({ amount: 9900, categoryId: 'groceries', currency: 'EUR', date: '2026-08-31', note: 'last month' });
@@ -168,12 +171,45 @@ test('budgets track the limits of the current month', () => {
   assert.deepEqual(makeStore().budgets('EUR'), [], 'without limits there is nothing to show');
 });
 
-test('month ends are calculated correctly', () => {
+test('each category can use its own limit period', () => {
   const store = makeStore();
-  assert.equal(store.monthEnd('2026-02-01'), '2026-02-28');
-  assert.equal(store.monthEnd('2024-02-01'), '2024-02-29');
-  assert.equal(store.monthEnd('2026-09-01'), '2026-09-30');
-  assert.equal(store.monthEnd('2026-12-01'), '2026-12-31');
+  store.updateCategory('groceries', { limit: 10000, limitPeriod: 'week' });
+  store.updateCategory('yearly', { limit: 200000, limitPeriod: 'year' });
+  store.updateCategory('daily', { limit: 2000, limitPeriod: 'day' });
+  store.addEntry({ amount: 6000, categoryId: 'groceries', currency: 'EUR', date: '2026-09-21' });
+  store.addEntry({ amount: 9000, categoryId: 'groceries', currency: 'EUR', date: '2026-09-14', note: 'week before' });
+  store.addEntry({ amount: 50000, categoryId: 'yearly', currency: 'EUR', date: '2026-03-01' });
+  store.addEntry({ amount: 500, categoryId: 'daily', currency: 'EUR', date: '2026-09-22' });
+
+  const byId = new Map(store.budgets('EUR').map((budget) => [budget.category.id, budget]));
+  assert.deepEqual(
+    { period: byId.get('groceries').period, from: byId.get('groceries').from, to: byId.get('groceries').to },
+    { period: 'week', from: '2026-09-21', to: '2026-09-27' },
+  );
+  assert.equal(byId.get('groceries').spent, 6000, 'the previous week does not count');
+  assert.equal(byId.get('yearly').spent, 50000);
+  assert.equal(byId.get('yearly').from, '2026-01-01');
+  assert.equal(byId.get('daily').from, '2026-09-22');
+  assert.equal(byId.get('daily').spent, 500);
+  assert.equal(byId.get('daily').percent, 25);
+});
+
+test('conversion folds every currency into the shown one', () => {
+  const store = makeStore();
+  store.updateCurrency('USD', { rate: 0.5 });
+  store.addEntry({ amount: 1000, categoryId: 'daily', currency: 'EUR', date: '2026-09-22' });
+  store.addEntry({ amount: 2000, categoryId: 'daily', currency: 'USD', date: '2026-09-22' });
+
+  assert.equal(store.entriesIn('EUR').length, 1, 'without conversion only one currency is shown');
+  store.updateSettings({ convertToDefault: true });
+  const converted = store.entriesIn('EUR');
+  assert.equal(converted.length, 2);
+  assert.equal(converted[1].amount, 1000, '20.00 USD at 0.5 is 10.00 EUR');
+  assert.equal(converted[1].currency, 'EUR');
+  assert.equal(converted[1].convertedFrom, 'USD');
+  assert.equal(store.convert(2000, 'USD', 'EUR'), 1000);
+  store.updateCategory('daily', { limit: 5000, limitPeriod: 'month' });
+  assert.equal(store.budgets('EUR')[0].spent, 2000, 'budgets use the converted amounts');
 });
 
 test('renaming a predefined category drops its translated name', () => {

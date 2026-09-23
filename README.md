@@ -1,4 +1,4 @@
-# Home Budget (browser version)
+# Home Budget 3.0.0 (browser version)
 
 A home budget app that is **one HTML file**. All JavaScript and CSS are inlined, there are no
 external requests, no frameworks and no build-time dependencies. Open the file from a USB stick,
@@ -6,13 +6,14 @@ a local folder or an offline laptop and it works.
 
 ![Dashboard](docs/desktop-home.png)
 
-## What it does (version 2)
+## What it does
 
 - **Quick add:** type an amount, press **Add**. The entry goes to the default category (**Daily**),
   with today's date and the default currency. Nothing else has to be filled in.
-- **Predefined categories** for the three spending rhythms - **Daily**, **Monthly**, **Yearly** - plus
-  Groceries, Transport, Home and Income. Every category has an emoji, a colour and an optional
-  **monthly limit**; the limits show up as progress bars on the home screen and turn red when exceeded.
+- **Predefined categories** for the spending rhythms - **Daily**, **Monthly**, **Yearly** - plus
+  **Budget** for planned shopping, Groceries, Transport, Home and Income. Every category has an emoji,
+  a colour and an optional **limit with its own period** (per day, week, month or year); the limits show
+  up as progress bars on the home screen and turn red when exceeded.
 - **Entries:** full form for date, category, currency and note; filter by period, category,
   currency or text; tap a row (or click *Edit*) to change it.
 - **Statistics:** sums and averages per **day, week, month and year**, a bar chart of the last
@@ -27,8 +28,12 @@ a local folder or an offline laptop and it works.
 - **Languages:** English, Russian and German, picked automatically from the browser or chosen in the
   settings. A built-in editor lets you write **your own translation** of every text; it is stored in the
   browser and can be downloaded and shared as a JSON file.
-- **Configurable:** categories (name, type, colour, emoji, limit) and currencies (code, symbol,
-  decimals), the default category and currency, light/dark theme and mobile/desktop layout.
+- **Currencies:** fourteen come with the app (EUR, USD, GBP, CHF, SEK, NOK, DKK, PLN, CZK, UAH, TRY,
+  CAD, AUD, JPY) and more can be added. Each has an editable **rate** against the default currency, and a
+  switch folds every currency into the default one for the dashboard, the statistics and the budgets.
+  Rates are typed in by hand - an offline app cannot fetch them, and the shipped values are only examples.
+- **Configurable:** categories (name, type, colour, emoji, limit, limit period) and currencies (code,
+  symbol, decimals, rate), the default category and currency, light/dark theme and mobile/desktop layout.
 - **Storage:** everything stays in the browser's `localStorage` (about 60 000 entries fit).
   `sessionStorage` and an in-memory store are used as fallbacks when a browser blocks storage,
   so the app still runs in private mode. A JSON backup can be downloaded and restored.
@@ -41,12 +46,15 @@ a local folder or an offline laptop and it works.
 |---|---|
 | ![Statistics](docs/desktop-stats.png) | ![Settings](docs/desktop-settings.png) |
 
+![Currencies](docs/desktop-currencies.png)
+
 ## Using it
 
-Open `home-budget.html` in any modern browser (Chrome, Edge, Firefox, Safari). Nothing to install.
-Amounts are stored as whole cents, so no rounding errors creep in. Data saved by version 1 is upgraded
-automatically on first start: categories keep their entries and get icons, and the new settings appear
-with their defaults.
+Open `home-budget-3.0.0.html` in any modern browser (Chrome, Edge, Firefox, Safari). Nothing to install.
+Amounts are stored as whole cents, so no rounding errors creep in. Data saved by an older version is
+upgraded automatically on first start: entries and categories are kept, and anything new (icons, limit
+periods, currency rates) appears with sensible defaults. The version is visible in three places: the file
+name, the page footer and **Settings → About**; the saved data also records which version last wrote it.
 
 Data belongs to one browser profile on one device: a different browser or a private window starts
 empty. Use the JSON backup in **Settings → Data** to move data, and remember that clearing site data
@@ -59,12 +67,17 @@ everywhere.
 ## Building
 
 ```bash
-npm run build        # both files (readable ~185 kB, minified ~157 kB)
-npm run build:min    # dist/home-budget.min.html only
-npm test             # unit tests
-npm run coverage     # unit tests + coverage thresholds
-node tools/browser-check.mjs dist/home-budget.html   # end-to-end check in Chromium
+npm run build          # dist/home-budget-<version>.html and .min.html
+npm run build:min      # the minified file only
+npm test               # unit tests
+npm run coverage       # unit tests + coverage thresholds
+npm run browser-check  # end-to-end check of both builds in Chromium
+npm run check          # coverage + build + browser check
 ```
+
+The version lives in `src/core/version.js` and nowhere else: `package.json`, the file names, the bundle
+banner, the `<title>`, the meta tag, the footer, the About card, the PDF export footer and the saved data
+all take it from there, and a unit test fails if `package.json` drifts away from it.
 
 There are **no dependencies** — Node 22 (or newer) runs everything. `tools/bundle.mjs` contains a
 small ES module bundler and a conservative minifier: it strips comments and redundant whitespace but
@@ -76,9 +89,10 @@ are verified by the same browser check.
 ```
 src/
   core/          logic with no DOM, fully unit tested
+    version.js     the single version source
     format.js      money and date formatting, parsing, period keys
     i18n.js        English, Russian and German texts plus user translations
-    model.js       entries, categories, currencies, validation
+    model.js       entries, categories, currencies, limits, conversion
     store.js       application state and all operations on it
     storage.js     localStorage / sessionStorage / memory, migration and repair
     stats.js       sums, averages, series, budgets and category breakdowns
@@ -104,15 +118,16 @@ it can be tested in Node and why the same logic runs in the export/import code p
 npm run coverage
 ```
 
-96 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
-ZIP write → read), the PDF and chart structure, storage upgrades from version 1 data, budget
-calculations, translation completeness (every language has every key with the same placeholders), and
-the import detection for files with and without headers. The run **fails below 90%** line, branch and
+102 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+ZIP write → read), the PDF and chart structure, storage upgrades from older data, budget calculations
+per limit period, currency conversion, version consistency, translation completeness (every language has
+every key with the same placeholders), and the import detection for files with and without headers. The run **fails below 90%** line, branch and
 function coverage of `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (21 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (24 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts), imports a semicolon-separated German CSV,
 switches the interface between English, Russian, German and a user translation written in the settings
-editor, checks the average line and the budget bars, and takes the screenshots in this README. It fails
+editor, checks the version stamp, the average line, the budget bars with their periods and the currency
+conversion, and takes the screenshots in this README. It fails
 if anything logs an error to the console.

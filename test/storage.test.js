@@ -71,7 +71,11 @@ test('data from version 1 gains icons, limits and language settings', () => {
     },
     entries: [{ id: 'e', date: '2026-01-01', amount: 100, categoryId: 'daily', currency: 'EUR' }],
   });
-  assert.equal(upgraded.version, 2);
+  assert.equal(upgraded.version, 3);
+  assert.equal(upgraded.settings.categories[0].limitPeriod, 'month');
+  assert.equal(upgraded.settings.currencies[0].rate, 1, 'currencies without a rate get 1');
+  assert.equal(upgraded.settings.convertToDefault, false);
+  assert.ok(upgraded.appVersion);
   assert.equal(upgraded.settings.categories[0].icon, '☕');
   assert.equal(upgraded.settings.categories[0].nameKey, 'category.daily');
   assert.equal(upgraded.settings.categories[1].icon, '💸');
@@ -81,6 +85,25 @@ test('data from version 1 gains icons, limits and language settings', () => {
   assert.equal(upgraded.settings.customLanguageName, 'My language');
   assert.deepEqual(upgraded.settings.customTranslation, {});
   assert.equal(upgraded.entries.length, 1);
+});
+
+test('rates, limit periods and the conversion switch are validated when loading', () => {
+  const state = migrateState({
+    settings: {
+      categories: [{ id: 'pets', name: 'Pets', kind: 'expense', color: '#000000', limit: 500, limitPeriod: 'week' },
+        { id: 'x', name: 'X', kind: 'expense', color: '#000000', limitPeriod: 'century' }],
+      currencies: [{ code: 'EUR', symbol: '€', decimals: 2, rate: 1 }, { code: 'USD', symbol: '$', decimals: 2, rate: -3 },
+        { code: 'SEK', symbol: 'kr', decimals: 2, rate: '0.09' }],
+      convertToDefault: 'yes',
+    },
+    entries: [],
+  });
+  assert.equal(state.settings.categories[0].limitPeriod, 'week');
+  assert.equal(state.settings.categories[1].limitPeriod, 'month');
+  assert.equal(state.settings.currencies[1].rate, 1, 'a broken rate falls back to 1');
+  assert.equal(state.settings.currencies[2].rate, 0.09, 'a numeric string is accepted');
+  assert.equal(state.settings.convertToDefault, false, 'only true switches conversion on');
+  assert.equal(migrateState({ settings: { convertToDefault: true }, entries: [] }).settings.convertToDefault, true);
 });
 
 test('language settings are validated when loading', () => {

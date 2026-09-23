@@ -3,6 +3,7 @@
 import { BudgetStore } from '../core/store.js';
 import { AppError } from '../core/model.js';
 import { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES } from '../core/i18n.js';
+import { APP_VERSION } from '../core/version.js';
 import { loadState, migrateState, pickStorage, saveState } from '../core/storage.js';
 import { append, clear, el, render } from './dom.js';
 import { entriesView, entryForm } from './views/entries.js';
@@ -234,6 +235,7 @@ export class App {
       el('main.main', {}, view),
       el('footer.app-footer', {}, [
         el('span', { text: this.t('app.storedIn', { storage: this.storageKind }) }),
+        el('span.app-version', { text: ` · v${APP_VERSION}` }),
       ]),
     ]);
   }

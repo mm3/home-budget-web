@@ -7,13 +7,26 @@
  */
 
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
-const file = resolve(root, args.find((argument) => !argument.startsWith('--')) || 'dist/home-budget.html');
+/** Newest built file, so the check does not need to know the version number. */
+function latestBuild(minified) {
+  const dist = join(root, 'dist');
+  const names = readdirSync(dist)
+    .filter((name) => /^home-budget-.*\.html$/.test(name) && name.endsWith('.min.html') === minified)
+    .sort();
+  if (!names.length) throw new Error('No build found in dist - run npm run build first');
+  return join(dist, names[names.length - 1]);
+}
+
+// the value after --shots is a directory, not the file to check
+const positional = args.filter((argument, index) => !argument.startsWith('--') && args[index - 1] !== '--shots');
+const given = positional[0];
+const file = given ? resolve(root, given) : latestBuild(args.includes('--min'));
 const shotIndex = args.indexOf('--shots');
 const shotDir = shotIndex >= 0 ? resolve(args[shotIndex + 1]) : join(root, 'dist', 'screenshots');
 const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
@@ -145,6 +158,20 @@ async function main() {
   await sleep(700);
 
   check('the app renders', await cdp.evaluate('return !!document.querySelector(".app-bar") && document.querySelectorAll(".card").length > 2'));
+
+  const version = await cdp.evaluate(`
+    return {
+      meta: document.querySelector('meta[name=application-version]').content,
+      title: document.title,
+      footer: document.querySelector('.app-version').textContent.trim(),
+      banner: document.documentElement.outerHTML.includes('Home Budget ' + document.querySelector('meta[name=application-version]').content + ' -'),
+      state: JSON.parse(localStorage.getItem('home-budget/v1') || '{}').appVersion || null,
+    };
+  `);
+  check('the version is stamped into the page',
+    /^\d+\.\d+\.\d+$/.test(version.meta) && version.title.includes(version.meta)
+      && version.footer.includes(version.meta) && version.banner,
+    JSON.stringify(version));
   check('the quick form only asks for a number', await cdp.evaluate(
     'const inputs = document.querySelectorAll(".quick-form input"); return inputs.length === 1 && inputs[0].type === "number";',
   ));
@@ -202,9 +229,39 @@ async function main() {
     budgets.text.slice(0, 80));
 
   const predefined = await cdp.evaluate(
-    'return window.homeBudget.store.categories.map((category) => category.id).slice(0, 3).join(",");',
+    'return window.homeBudget.store.categories.map((category) => category.id).slice(0, 4).join(",");',
   );
-  check('daily, monthly and yearly are predefined', predefined === 'daily,monthly,yearly', predefined);
+  check('daily, monthly, yearly and budget are predefined', predefined === 'daily,monthly,yearly,budget', predefined);
+
+  const periods = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    store.updateCategory('daily', { limit: 2000, limitPeriod: 'day' });
+    store.updateCategory('groceries', { limit: 10000, limitPeriod: 'week' });
+    await new Promise((done) => setTimeout(done, 150));
+    const text = [...document.querySelectorAll('.bar-list li')].map((row) => row.textContent).join(' | ');
+    const budgets = store.budgets('EUR');
+    return { text, periods: budgets.map((budget) => budget.period).join(','), from: budgets[0].from };
+  `);
+  check('limits can use different periods per category',
+    /day|week/.test(periods.periods) && /per (day|week|month)/.test(periods.text), periods.text.slice(0, 90));
+
+  const conversion = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    const today = store.today();
+    store.updateCurrency('USD', { rate: 0.5 });
+    store.addEntry({ amount: 2000, categoryId: 'daily', currency: 'USD', date: today, note: 'in dollars' });
+    const before = document.querySelector('.stat-value').textContent;
+    store.updateSettings({ convertToDefault: true });
+    await new Promise((done) => setTimeout(done, 200));
+    const after = document.querySelector('.stat-value').textContent;
+    const note = document.querySelector('.converted-note');
+    store.updateSettings({ convertToDefault: false });
+    await new Promise((done) => setTimeout(done, 100));
+    return { before, after, note: note ? note.textContent : '', currencies: store.currencies.length };
+  `);
+  check('conversion folds other currencies into the default one',
+    conversion.before !== conversion.after && /EUR/.test(conversion.note) && conversion.currencies >= 10,
+    JSON.stringify(conversion));
 
   const languages = await cdp.evaluate(`
     const store = window.homeBudget.store;
@@ -258,6 +315,7 @@ async function main() {
       count: captured.length,
       csvHead: csv.split('\\r\\n')[0].replace('\\ufeff', ''),
       csvRows: csv.trim().split('\\r\\n').length,
+      shown: document.querySelectorAll('.entries-table tbody tr').length,
       xlsxMagic: String.fromCharCode(xlsx[0], xlsx[1]),
       xlsxSize: xlsx.length,
       xlsxHasChart: xlsxText.includes('charts/chart1.xml'),
@@ -266,7 +324,8 @@ async function main() {
     };
   `);
   check('CSV export has a header and one row per entry',
-    exported.csvHead === 'Date,Category,Type,Amount,Currency,Note' && exported.csvRows === 7, JSON.stringify(exported));
+    exported.csvHead === 'Date,Category,Type,Amount,Currency,Note' && exported.csvRows === exported.shown + 1,
+    JSON.stringify(exported));
   check('XLSX export is a zip archive', exported.xlsxMagic === 'PK' && exported.xlsxSize > 1000);
   check('PDF export starts with the PDF header', exported.pdfHead.startsWith('%PDF-1.4'));
   check('the spreadsheet contains a chart part', exported.xlsxHasChart);
@@ -335,6 +394,7 @@ async function main() {
     { name: 'mobile-entries', width: 390, height: 844, mobile: true, mode: 'mobile', tab: 'Entries' },
     { name: 'desktop-settings', width: 1280, height: 900, mobile: false, mode: 'desktop', tab: 'Settings' },
     { name: 'desktop-home-ru', width: 1280, height: 900, mobile: false, mode: 'desktop', tab: 'Home', language: 'ru' },
+    { name: 'desktop-currencies', width: 1280, height: 900, mobile: false, mode: 'desktop', tab: 'Settings', scrollTo: '.rate-input' },
   ];
   for (const shot of shots) {
     await cdp.send('Emulation.setDeviceMetricsOverride', {
@@ -344,7 +404,7 @@ async function main() {
       const app = window.homeBudget;
       app.store.updateSettings({ uiMode: '${shot.mode}', language: '${shot.language || 'en'}' });
       app.setTab('${shot.tab.toLowerCase()}');
-      window.scrollTo(0, 0);
+      ${shot.scrollTo ? `const anchor = document.querySelector('${shot.scrollTo}'); if (anchor) anchor.closest('.card').scrollIntoView({ block: 'start' }); else window.scrollTo(0, 0);` : 'window.scrollTo(0, 0);'}
     `);
     await sleep(250);
     const { data } = await cdp.send('Page.captureScreenshot', { format: 'png' });

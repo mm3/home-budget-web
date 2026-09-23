@@ -2,7 +2,8 @@
 
 import { CUSTOM_LANGUAGE, EN, LANGUAGES, sanitizeTranslation, translationKeys } from '../../core/i18n.js';
 import { formatMoney, parseAmount, toPlainAmount } from '../../core/format.js';
-import { ICON_CHOICES } from '../../core/model.js';
+import { ICON_CHOICES, LIMIT_PERIODS } from '../../core/model.js';
+import { APP_VERSION } from '../../core/version.js';
 import { el, field, options, render } from '../dom.js';
 import { download, MIME } from '../files.js';
 
@@ -63,7 +64,11 @@ export function settingsView(app) {
             category.id === store.settings.defaultCategoryId ? el('span.badge', { text: t('common.default') }) : null,
           ]),
           el('td', { text: t(`common.${category.kind}`) }),
-          el('td.num', { text: category.limit ? formatMoney(category.limit, currency) : '—' }),
+          el('td.num', {
+            text: category.limit
+              ? `${formatMoney(category.limit, currency)} / ${t(`period.${category.limitPeriod || 'month'}`).toLowerCase()}`
+              : '—',
+          }),
           el('td.num', { text: String(usage.get(category.id) || 0) }),
           el('td.row-actions', {}, [
             el('button.link', {
@@ -83,19 +88,57 @@ export function settingsView(app) {
     ]),
 
     el('section.card', {}, [
-      el('header.card-head', {}, [el('h2', { text: t('settings.currencies') })]),
-      el('ul.chips', {}, store.currencies.map((item) => el('li.chip', {}, [
-        `${item.code} ${item.symbol}`,
-        item.code === store.settings.defaultCurrency ? el('span.badge', { text: t('common.default') }) : null,
-        item.code === store.settings.defaultCurrency ? null : el('button.link.danger', {
-          type: 'button', text: '×', title: `${t('common.delete')} ${item.code}`,
-          on: { click: () => app.run(() => store.deleteCurrency(item.code)) },
-        }),
-      ]))),
+      el('header.card-head', {}, [
+        el('h2', { text: t('settings.currencies') }),
+        el('label.toggle', {}, [
+          el('input', {
+            type: 'checkbox', checked: store.settings.convertToDefault,
+            on: { change: (event) => app.run(() => store.updateSettings({ convertToDefault: event.target.checked })) },
+          }),
+          t('settings.conversion', { currency: store.settings.defaultCurrency }),
+        ]),
+      ]),
+      el('p.muted', { text: t('settings.conversionHint') }),
+      el('div.table-wrap', {}, el('table.entries-table', {}, [
+        el('thead', {}, el('tr', {}, [
+          el('th', { text: t('settings.currencyCode') }),
+          el('th', { text: t('settings.currencySymbol') }),
+          el('th.num', { text: t('settings.currencyDecimals') }),
+          el('th.num', { text: t('settings.rate') }),
+          el('th', {}),
+        ])),
+        el('tbody', {}, store.currencies.map((item) => el('tr', {}, [
+          el('td', {}, [
+            el('strong', { text: item.code }),
+            item.code === store.settings.defaultCurrency ? el('span.badge', { text: t('common.default') }) : null,
+          ]),
+          el('td', { text: item.symbol }),
+          el('td.num', { text: String(item.decimals) }),
+          el('td.num', {}, item.code === store.settings.defaultCurrency
+            ? el('span.muted', { text: '1' })
+            : el('input.rate-input', {
+              type: 'number', step: '0.0001', min: '0.0001', value: String(item.rate),
+              title: t('settings.rateHint', { currency: store.settings.defaultCurrency }),
+              on: {
+                change: (event) => app.run(() => store.updateCurrency(item.code, { rate: event.target.value })),
+              },
+            })),
+          el('td.row-actions', {}, item.code === store.settings.defaultCurrency ? null : el('button.link.danger', {
+            type: 'button', text: t('common.delete'),
+            on: { click: () => app.run(() => store.deleteCurrency(item.code)) },
+          })),
+        ]))),
+      ])),
       currencyForm(app),
     ]),
 
     translationCard(app),
+
+    el('section.card', {}, [
+      el('header.card-head', {}, [el('h2', { text: t('settings.about') })]),
+      el('p', { text: t('settings.version', { version: APP_VERSION }) }),
+      el('p.muted', { text: t('settings.aboutText') }),
+    ]),
 
     el('section.card', {}, [
       el('header.card-head', {}, [el('h2', { text: t('settings.data') })]),
@@ -192,13 +235,19 @@ function currencyForm(app) {
   const code = el('input', { type: 'text', placeholder: 'SEK', maxlength: '5', size: '6' });
   const symbol = el('input', { type: 'text', placeholder: 'kr', maxlength: '4', size: '4' });
   const decimals = el('input', { type: 'number', min: '0', max: '4', value: '2', size: '2' });
+  const rate = el('input', { type: 'number', min: '0.0001', step: '0.0001', value: '1', size: '4' });
   const message = el('p.error');
   return el('form.inline-form', {
     on: {
       submit: (event) => {
         event.preventDefault();
         try {
-          app.store.addCurrency({ code: code.value, symbol: symbol.value, decimals: Number(decimals.value) });
+          app.store.addCurrency({
+            code: code.value,
+            symbol: symbol.value,
+            decimals: Number(decimals.value),
+            rate: Number(rate.value),
+          });
           code.value = '';
           symbol.value = '';
         } catch (error) {
@@ -210,6 +259,7 @@ function currencyForm(app) {
     field(t('settings.currencyCode'), code),
     field(t('settings.currencySymbol'), symbol),
     field(t('settings.currencyDecimals'), decimals),
+    field(t('settings.rate'), rate, t('settings.rateHint', { currency: app.store.settings.defaultCurrency })),
     el('button', { type: 'submit', text: t('settings.addCurrency') }),
     message,
   ]);
@@ -233,6 +283,10 @@ export function categoryForm(app, category) {
     type: 'number', min: '0', step: '0.01', placeholder: t('common.none'),
     value: category && category.limit ? toPlainAmount(category.limit, currency.decimals) : '',
   });
+  const limitPeriod = el('select', {}, options(
+    LIMIT_PERIODS.map((period) => ({ value: period, label: t(`period.${period}`) })),
+    category && category.limitPeriod ? category.limitPeriod : 'month',
+  ));
   const iconInput = el('input.icon-input', {
     type: 'text', maxlength: '2', value: category ? category.icon : '💸', 'aria-label': t('common.icon'),
   });
@@ -255,6 +309,7 @@ export function categoryForm(app, category) {
             color: color.value,
             icon: iconInput.value,
             limit: limitValue,
+            limitPeriod: limitPeriod.value,
           };
           if (category) store.updateCategory(category.id, data);
           else store.addCategory(data);
@@ -269,7 +324,10 @@ export function categoryForm(app, category) {
     field(t('common.type'), kind),
     el('div.row-2', {}, [field(t('common.colour'), color), field(t('common.icon'), iconInput)]),
     iconPicker,
-    field(`${t('settings.limit')} (${currency.symbol})`, limit, t('settings.limitHint')),
+    el('div.row-2', {}, [
+      field(`${t('settings.limit')} (${currency.symbol})`, limit, t('settings.limitHint')),
+      field(t('settings.limitPeriod'), limitPeriod),
+    ]),
     message,
     el('div.dialog-actions', {}, [
       el('span.spacer'),

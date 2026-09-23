@@ -5,6 +5,7 @@ import { formatDate, formatMoney, toPlainAmount } from './format.js';
 import { findCategory, findCurrency } from './model.js';
 import { buildPdf } from './pdf.js';
 import { buildXlsx } from './xlsx.js';
+import { APP_VERSION } from './version.js';
 import { byCategory as categoryTotals, series, totals } from './stats.js';
 
 export const EXPORT_COLUMNS = [
@@ -131,7 +132,7 @@ export function buildPdfExport(entries, context) {
       note: row.note,
       amount: `${row.amount.toFixed(2)} ${row.currency}`,
     })),
-    footer: context.footer || '',
+    footer: `${context.footer || 'Home Budget'} ${APP_VERSION}`,
   });
 }
 

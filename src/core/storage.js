@@ -3,7 +3,10 @@
  * which is small enough for localStorage (5 MB holds roughly 60 000 entries).
  */
 
-import { createDefaultState, defaultCategories, defaultCurrencies, STATE_VERSION } from './model.js';
+import {
+  createDefaultState, defaultCategories, defaultCurrencies, LIMIT_PERIODS, STATE_VERSION,
+} from './model.js';
+import { APP_VERSION } from './version.js';
 import { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } from './i18n.js';
 
 export const STORAGE_KEY = 'home-budget/v1';
@@ -68,18 +71,24 @@ export function migrateState(raw) {
       ? category.icon
       : (LEGACY_ICONS[category.id] || '\ud83d\udcb8'),
     limit: Number.isFinite(category.limit) && category.limit > 0 ? Math.round(category.limit) : null,
+    limitPeriod: LIMIT_PERIODS.includes(category.limitPeriod) ? category.limitPeriod : 'month',
     nameKey: typeof category.nameKey === 'string' ? category.nameKey
       : (knownIds.has(category.id) ? `category.${category.id}` : undefined),
   }));
-  const currencies = Array.isArray(settings.currencies) && settings.currencies.length
+  const currencies = (Array.isArray(settings.currencies) && settings.currencies.length
     ? settings.currencies.filter((c) => c && typeof c.code === 'string')
-    : defaultCurrencies();
+    : defaultCurrencies()
+  ).map((currency) => ({
+    ...currency,
+    rate: Number.isFinite(Number(currency.rate)) && Number(currency.rate) > 0 ? Number(currency.rate) : 1,
+  }));
   const entries = Array.isArray(raw.entries)
     ? raw.entries.filter((e) => e && typeof e.id === 'string' && typeof e.date === 'string'
         && Number.isFinite(e.amount))
     : [];
   return {
     version: STATE_VERSION,
+    appVersion: APP_VERSION,
     settings: {
       categories: categories.length ? categories : defaultCategories(),
       currencies: currencies.length ? currencies : defaultCurrencies(),
@@ -88,6 +97,7 @@ export function migrateState(raw) {
       defaultCurrency: typeof settings.defaultCurrency === 'string'
         ? settings.defaultCurrency : fallback.settings.defaultCurrency,
       uiMode: ['auto', 'mobile', 'desktop'].includes(settings.uiMode) ? settings.uiMode : 'auto',
+      convertToDefault: settings.convertToDefault === true,
       theme: ['auto', 'light', 'dark'].includes(settings.theme) ? settings.theme : 'auto',
       language: typeof settings.language === 'string'
         && (settings.language === 'auto' || settings.language === CUSTOM_LANGUAGE

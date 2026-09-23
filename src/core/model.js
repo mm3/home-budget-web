@@ -1,11 +1,15 @@
 /** Domain objects: entries, categories, currencies, and the default application state. */
 
 import { isIsoDate, todayIso } from './format.js';
+import { APP_VERSION, DATA_VERSION } from './version.js';
 
 /** Error with a message meant to be shown to the user. */
 export class AppError extends Error {}
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = DATA_VERSION;
+
+/** Periods a spending limit can be set for. */
+export const LIMIT_PERIODS = ['day', 'week', 'month', 'year'];
 export const DEFAULT_CATEGORY_ID = 'daily';
 export const MAX_NOTE_LENGTH = 200;
 export const MAX_NAME_LENGTH = 40;
@@ -14,7 +18,7 @@ export const MAX_NAME_LENGTH = 40;
 export function defaultCategory() {
   return {
     id: DEFAULT_CATEGORY_ID, name: 'Daily', nameKey: 'category.daily',
-    kind: 'expense', color: '#4f46e5', icon: '\u2615', limit: null,
+    kind: 'expense', color: '#4f46e5', icon: '\u2615', limit: null, limitPeriod: 'month',
   };
 }
 
@@ -25,12 +29,13 @@ export function defaultCategory() {
 export function defaultCategories() {
   return [
     defaultCategory(),
-    { id: 'monthly', name: 'Monthly', nameKey: 'category.monthly', kind: 'expense', color: '#0f766e', icon: '\ud83d\udd01', limit: null },
-    { id: 'yearly', name: 'Yearly', nameKey: 'category.yearly', kind: 'expense', color: '#b45309', icon: '\ud83d\udcc5', limit: null },
-    { id: 'groceries', name: 'Groceries', nameKey: 'category.groceries', kind: 'expense', color: '#ea580c', icon: '\ud83d\uded2', limit: null },
-    { id: 'transport', name: 'Transport', nameKey: 'category.transport', kind: 'expense', color: '#0284c7', icon: '\ud83d\ude8c', limit: null },
-    { id: 'home', name: 'Home', nameKey: 'category.home', kind: 'expense', color: '#7c3aed', icon: '\ud83c\udfe0', limit: null },
-    { id: 'income', name: 'Income', nameKey: 'category.income', kind: 'income', color: '#16a34a', icon: '\ud83d\udcb0', limit: null },
+    { id: 'monthly', name: 'Monthly', nameKey: 'category.monthly', kind: 'expense', color: '#0f766e', icon: '\ud83d\udd01', limit: null, limitPeriod: 'month' },
+    { id: 'yearly', name: 'Yearly', nameKey: 'category.yearly', kind: 'expense', color: '#b45309', icon: '\ud83d\udcc5', limit: null, limitPeriod: 'year' },
+    { id: 'budget', name: 'Budget', nameKey: 'category.budget', kind: 'expense', color: '#be185d', icon: '\ud83d\udecd\ufe0f', limit: null, limitPeriod: 'month' },
+    { id: 'groceries', name: 'Groceries', nameKey: 'category.groceries', kind: 'expense', color: '#ea580c', icon: '\ud83d\uded2', limit: null, limitPeriod: 'week' },
+    { id: 'transport', name: 'Transport', nameKey: 'category.transport', kind: 'expense', color: '#0284c7', icon: '\ud83d\ude8c', limit: null, limitPeriod: 'month' },
+    { id: 'home', name: 'Home', nameKey: 'category.home', kind: 'expense', color: '#7c3aed', icon: '\ud83c\udfe0', limit: null, limitPeriod: 'month' },
+    { id: 'income', name: 'Income', nameKey: 'category.income', kind: 'income', color: '#16a34a', icon: '\ud83d\udcb0', limit: null, limitPeriod: 'month' },
   ];
 }
 
@@ -39,11 +44,27 @@ export const ICON_CHOICES = ['\u2615', '\ud83d\udd01', '\ud83d\udcc5', '\ud83d\u
   '\ud83d\udcb0', '\ud83c\udf74', '\ud83d\udc8a', '\ud83c\udfac', '\ud83d\udc55', '\ud83d\udcf1', '\u26a1', '\ud83d\udc36',
   '\ud83c\udf81', '\u2708\ufe0f', '\ud83d\udcda', '\ud83c\udfcb\ufe0f', '\ud83d\udc76', '\ud83d\udd27', '\ud83d\udcb3', '\u2753'];
 
+/**
+ * Currencies a new installation knows about. `rate` is how much one unit is worth in the
+ * default currency; these values are only a starting point and are meant to be edited in the
+ * settings, because an offline app cannot look rates up.
+ */
 export function defaultCurrencies() {
   return [
-    { code: 'EUR', symbol: '€', decimals: 2 },
-    { code: 'USD', symbol: '$', decimals: 2 },
-    { code: 'GBP', symbol: '£', decimals: 2 },
+    { code: 'EUR', symbol: '€', decimals: 2, rate: 1 },
+    { code: 'USD', symbol: '$', decimals: 2, rate: 0.92 },
+    { code: 'GBP', symbol: '£', decimals: 2, rate: 1.17 },
+    { code: 'CHF', symbol: 'Fr', decimals: 2, rate: 1.04 },
+    { code: 'SEK', symbol: 'kr', decimals: 2, rate: 0.088 },
+    { code: 'NOK', symbol: 'kr', decimals: 2, rate: 0.086 },
+    { code: 'DKK', symbol: 'kr', decimals: 2, rate: 0.134 },
+    { code: 'PLN', symbol: 'zł', decimals: 2, rate: 0.23 },
+    { code: 'CZK', symbol: 'Kč', decimals: 2, rate: 0.04 },
+    { code: 'UAH', symbol: '₴', decimals: 2, rate: 0.022 },
+    { code: 'TRY', symbol: '₺', decimals: 2, rate: 0.026 },
+    { code: 'CAD', symbol: 'C$', decimals: 2, rate: 0.66 },
+    { code: 'AUD', symbol: 'A$', decimals: 2, rate: 0.6 },
+    { code: 'JPY', symbol: '¥', decimals: 0, rate: 0.0059 },
   ];
 }
 
@@ -58,10 +79,12 @@ export function createDefaultState() {
       defaultCurrency: 'EUR',
       uiMode: 'auto',
       theme: 'auto',
+      convertToDefault: false,
       language: 'auto',
       customLanguageName: 'My language',
       customTranslation: {},
     },
+    appVersion: APP_VERSION,
     entries: [],
   };
 }
@@ -128,7 +151,8 @@ export function createCategory(input) {
     if (value < 0) throw new AppError('Limit cannot be negative');
     limit = value || null;
   }
-  const category = { id: input.id || slugify(name), name, kind, color, icon, limit };
+  const limitPeriod = LIMIT_PERIODS.includes(input.limitPeriod) ? input.limitPeriod : 'month';
+  const category = { id: input.id || slugify(name), name, kind, color, icon, limit, limitPeriod };
   if (input.nameKey && input.keepNameKey !== false) category.nameKey = input.nameKey;
   return category;
 }
@@ -140,18 +164,34 @@ export function createCurrency(input) {
   const decimals = Number.isInteger(input.decimals) ? input.decimals : 2;
   if (decimals < 0 || decimals > 4) throw new AppError('Decimals must be between 0 and 4');
   const symbol = String(input.symbol ?? '').trim() || code;
-  return { code, symbol, decimals };
+  const rate = input.rate === undefined || input.rate === null || input.rate === '' ? 1 : Number(input.rate);
+  if (!Number.isFinite(rate) || rate <= 0) throw new AppError('The rate must be a positive number');
+  return { code, symbol, decimals, rate };
+}
+
+/**
+ * Converts minor units from one currency to another using the stored rates.
+ * Rates are relative to the default currency, so the conversion goes through it.
+ */
+export function convertAmount(amount, fromCode, toCode, currencies) {
+  if (fromCode === toCode) return amount;
+  const from = findCurrency(currencies, fromCode);
+  const to = findCurrency(currencies, toCode);
+  const fromRate = Number(from.rate) > 0 ? Number(from.rate) : 1;
+  const toRate = Number(to.rate) > 0 ? Number(to.rate) : 1;
+  const major = (amount / 10 ** from.decimals) * (fromRate / toRate);
+  return Math.round(major * 10 ** to.decimals);
 }
 
 /** Looks up a currency, falling back to a 2-decimal placeholder. */
 export function findCurrency(currencies, code) {
-  return currencies.find((currency) => currency.code === code) || { code, symbol: code, decimals: 2 };
+  return currencies.find((currency) => currency.code === code) || { code, symbol: code, decimals: 2, rate: 1 };
 }
 
 /** Looks up a category, falling back to a placeholder for entries of a deleted category. */
 export function findCategory(categories, id) {
   return categories.find((category) => category.id === id)
-    || { id, name: id || 'Unknown', kind: 'expense', color: '#94a3b8', icon: '\u2753', limit: null };
+    || { id, name: id || 'Unknown', kind: 'expense', color: '#94a3b8', icon: '\u2753', limit: null, limitPeriod: 'month' };
 }
 
 /** Expenses count negative, income positive. */

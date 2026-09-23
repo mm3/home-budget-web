@@ -4,11 +4,12 @@
  */
 
 import {
-  AppError, createCategory, createCurrency, createEntry, createDefaultState,
+  AppError, convertAmount, createCategory, createCurrency, createEntry, createDefaultState,
   findCategory, findCurrency, slugify,
 } from './model.js';
-import { isIsoDate, parseAmount, periodStart, todayIso } from './format.js';
+import { isIsoDate, parseAmount, periodEnd, periodStart, todayIso } from './format.js';
 import { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } from './i18n.js';
+import { APP_VERSION } from './version.js';
 
 export class BudgetStore {
   /**
@@ -215,6 +216,15 @@ export class BudgetStore {
     return currency;
   }
 
+  /** Changes the symbol, decimals or rate of a currency. */
+  updateCurrency(code, changes) {
+    const index = this.currencies.findIndex((currency) => currency.code === code);
+    if (index < 0) throw new AppError('Currency not found');
+    this.currencies[index] = createCurrency({ ...this.currencies[index], ...changes, code });
+    this.#changed();
+    return this.currencies[index];
+  }
+
   deleteCurrency(code) {
     if (code === this.settings.defaultCurrency) throw new AppError('The default currency cannot be removed');
     const index = this.currencies.findIndex((currency) => currency.code === code);
@@ -257,6 +267,9 @@ export class BudgetStore {
       if (!['auto', 'mobile', 'desktop'].includes(changes.uiMode)) throw new AppError('Unknown display mode');
       settings.uiMode = changes.uiMode;
     }
+    if (changes.convertToDefault !== undefined) {
+      settings.convertToDefault = changes.convertToDefault === true;
+    }
     if (changes.theme !== undefined) {
       if (!['auto', 'light', 'dark'].includes(changes.theme)) throw new AppError('Unknown theme');
       settings.theme = changes.theme;
@@ -291,23 +304,47 @@ export class BudgetStore {
   }
 
   /**
-   * Spending against the monthly limits of the shown currency.
-   * @returns {Array<{category: object, spent: number, limit: number, percent: number, over: boolean, remaining: number}>}
+   * Entries shown for a currency: only that currency, or everything converted into it
+   * when "convert to the default currency" is switched on.
+   */
+  entriesIn(currencyCode) {
+    if (!this.settings.convertToDefault) {
+      return this.state.entries.filter((entry) => entry.currency === currencyCode);
+    }
+    return this.state.entries.map((entry) => (entry.currency === currencyCode ? entry : {
+      ...entry,
+      amount: convertAmount(entry.amount, entry.currency, currencyCode, this.currencies),
+      currency: currencyCode,
+      convertedFrom: entry.currency,
+    }));
+  }
+
+  /** Converts an amount between two of the configured currencies. */
+  convert(amount, fromCode, toCode) {
+    return convertAmount(amount, fromCode, toCode, this.currencies);
+  }
+
+  /**
+   * Spending against each category's limit, measured over that category's own period.
+   * @returns {Array<{category: object, spent: number, limit: number, period: string,
+   *                  from: string, to: string, percent: number, over: boolean, remaining: number}>}
    */
   budgets(currencyCode, today = this.today()) {
-    const from = periodStart(today, 'month');
-    const to = this.monthEnd(from);
-    const spent = new Map();
-    for (const entry of this.state.entries) {
-      if (entry.currency !== currencyCode || entry.date < from || entry.date > to) continue;
-      spent.set(entry.categoryId, (spent.get(entry.categoryId) || 0) + entry.amount);
-    }
+    const entries = this.entriesIn(currencyCode);
     return this.categories
       .filter((category) => category.kind === 'expense' && category.limit)
       .map((category) => {
-        const used = spent.get(category.id) || 0;
+        const period = category.limitPeriod || 'month';
+        const from = periodStart(today, period);
+        const to = periodEnd(today, period);
+        const used = entries
+          .filter((entry) => entry.categoryId === category.id && entry.date >= from && entry.date <= to)
+          .reduce((sum, entry) => sum + entry.amount, 0);
         return {
           category,
+          period,
+          from,
+          to,
           spent: used,
           limit: category.limit,
           percent: Math.round((used / category.limit) * 100),
@@ -316,13 +353,6 @@ export class BudgetStore {
         };
       })
       .sort((a, b) => b.percent - a.percent);
-  }
-
-  /** Last day of the month that starts on `monthStart`. */
-  monthEnd(monthStart) {
-    const [year, month] = monthStart.split('-').map(Number);
-    const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    return `${monthStart.slice(0, 8)}${String(days).padStart(2, '0')}`;
   }
 
   /** Finds a category by name (case-insensitive) or creates one. */
@@ -335,6 +365,7 @@ export class BudgetStore {
   }
 
   #changed() {
+    this.state.appVersion = APP_VERSION; // the file that last wrote this data
     this.lastError = this.persist(this.state);
     for (const listener of this.listeners) listener(this.state);
   }

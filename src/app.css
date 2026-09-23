@@ -266,6 +266,9 @@ tbody tr:last-child td { border-bottom: 0; }
 .small { font-size: .78rem; }
 .row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; }
 .icon-input { width: 64px; font-size: 1.2rem; text-align: center; }
+.rate-input { width: 110px; text-align: right; }
+.converted-note { margin-top: -6px; }
+.app-version { opacity: .8; }
 .icon-picker { display: flex; flex-wrap: wrap; gap: 4px; }
 .icon-choice { padding: 4px 7px; font-size: 1.05rem; border-radius: 8px; }
 .card-summary { font-weight: 700; font-size: 1.05rem; cursor: pointer; }

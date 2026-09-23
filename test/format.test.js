@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   addDays, addMonths, formatDate, formatMoney, GROUP_SEPARATOR, isIsoDate, isoWeek, parseAmount,
-  parseDateLoose, periodKey, periodLabel, periodStart, previousPeriodStart, startOfWeek, toIsoDate,
-  todayIso, toPlainAmount,
+  parseDateLoose, periodEnd, periodKey, periodLabel, periodStart, previousPeriodStart, startOfWeek,
+  toIsoDate, todayIso, toPlainAmount,
 } from '../src/core/format.js';
 
 const EUR = { code: 'EUR', symbol: '€', decimals: 2 };
@@ -96,6 +96,14 @@ test('period keys, starts and labels', () => {
   assert.equal(periodStart('2026-09-22', 'month'), '2026-09-01');
   assert.equal(periodStart('2026-09-22', 'year'), '2026-01-01');
   assert.throws(() => periodStart('2026-09-22', 'decade'), /Unknown period/);
+
+  assert.equal(periodEnd('2026-09-22', 'day'), '2026-09-22');
+  assert.equal(periodEnd('2026-09-22', 'week'), '2026-09-27');
+  assert.equal(periodEnd('2026-09-22', 'month'), '2026-09-30');
+  assert.equal(periodEnd('2026-02-10', 'month'), '2026-02-28');
+  assert.equal(periodEnd('2024-02-10', 'month'), '2024-02-29');
+  assert.equal(periodEnd('2026-09-22', 'year'), '2026-12-31');
+  assert.throws(() => periodEnd('2026-09-22', 'decade'), /Unknown period/);
 
   assert.equal(previousPeriodStart('2026-09-22', 'day'), '2026-09-21');
   assert.equal(previousPeriodStart('2026-09-22', 'week'), '2026-09-14');

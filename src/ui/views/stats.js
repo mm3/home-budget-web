@@ -1,7 +1,7 @@
 /** Statistics screen: sums and averages per day, week, month and year. */
 
 import { formatDate, formatMoney, PERIODS } from '../../core/format.js';
-import { byCategory, highlights, ofCurrency, overview, series } from '../../core/stats.js';
+import { byCategory, highlights, overview, series } from '../../core/stats.js';
 import { el, field, options } from '../dom.js';
 import { chartLegend, chartMarkup } from './home.js';
 
@@ -12,7 +12,7 @@ export function statsView(app) {
   const t = app.t;
   const code = app.viewCurrency();
   const currency = store.currency(code);
-  const entries = ofCurrency(store.entries, code);
+  const entries = store.entriesIn(code);
   const today = store.today();
   const summaries = overview(entries, store.categories, today);
   const period = app.ui.statsPeriod;
@@ -25,7 +25,7 @@ export function statsView(app) {
     el('section.card', {}, [
       el('header.card-head', {}, [
         el('h2', { text: t('stats.sums') }),
-        used.length > 1 ? field(t('common.currency'), el('select', {
+        used.length > 1 && !store.settings.convertToDefault ? field(t('common.currency'), el('select', {
           on: { change: (event) => app.setUi({ currency: event.target.value }) },
         }, options(used.map((item) => ({ value: item, label: item })), code))) : null,
       ]),
