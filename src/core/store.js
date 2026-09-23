@@ -384,6 +384,8 @@ export class BudgetStore {
   }
 }
 
+// Eight hues far enough apart to tell a chart's slices apart. These are data,
+// not interface: they stay varied whatever colour the interface itself is.
 const PALETTE = ['#4f46e5', '#ea580c', '#0284c7', '#16a34a', '#db2777', '#ca8a04', '#7c3aed', '#0d9488'];
 
 /** Colour for a newly created category. */

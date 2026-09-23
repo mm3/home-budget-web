@@ -1,4 +1,4 @@
-# Home Budget 3.7.0 (browser version)
+# Home Budget 3.8.0 (browser version)
 
 <table>
 <tr>
@@ -7,8 +7,9 @@
 **[Open the app](https://mm3.github.io/home-budget-web/)**
 
 [Download the single file](https://mm3.github.io/home-budget-web/home-budget.html)
+(readable, not minified - it is meant to be read)
 
-[Source](https://github.com/mm3/home-budget-web)
+[Source on GitHub](https://github.com/mm3/home-budget-web)
 
 [![Pages](https://github.com/mm3/home-budget-web/actions/workflows/pages.yml/badge.svg)](https://github.com/mm3/home-budget-web/actions/workflows/pages.yml)
 
@@ -86,8 +87,6 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 |---|---|
 | ![Statistics](docs/desktop-stats.png) | ![Settings](docs/desktop-settings.png) |
 
-![Dashboard](docs/desktop-home.png)
-
 ![Currencies](docs/desktop-currencies.png)
 
 ## Limits
@@ -140,7 +139,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.7.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.8.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -180,7 +179,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.7.0` is pushed.
+built files to a release when a tag like `v3.8.0` is pushed.
 
 ## Building
 

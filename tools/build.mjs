@@ -52,7 +52,7 @@ function manifest(version) {
     display: 'standalone',
     orientation: 'any',
     background_color: '#f6f7fb',
-    theme_color: '#4f46e5',
+    theme_color: '#15803d',
     categories: ['finance', 'productivity', 'utilities'],
     icons: [
       { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
@@ -113,6 +113,16 @@ if ('serviceWorker' in navigator) {
 }
 </script>`;
 
+/**
+ * iOS ignores an SVG apple-touch-icon, so the PNG the manifest uses is inlined
+ * as well - a file opened from disk and added to a home screen then gets the
+ * icon rather than a screenshot of the page.
+ */
+function appleIcon() {
+  const png = readFileSync(join(root, 'assets', 'apple-touch-icon.png'));
+  return `data:image/png;base64,${png.toString('base64')}`;
+}
+
 function render({ minify, head = '' }) {
   const version = readVersion();
   const { code, moduleCount } = bundle('main.js', source);
@@ -122,6 +132,7 @@ function render({ minify, head = '' }) {
     + ` * ${readConstant('REPO_URL')} */\n`;
   const html = template
     .replaceAll('/*VERSION*/', version)
+    .replace('/*APPLE_ICON*/', () => appleIcon())
     .replace('<!--MANIFEST-->', () => head)
     .replace('/*STYLES*/', () => `/*! Home Budget ${version} */\n${minify ? minifyCss(css) : css}`)
     .replace('/*SCRIPT*/', () => banner + (minify ? minifyJs(code) : code));

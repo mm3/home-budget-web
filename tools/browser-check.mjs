@@ -207,7 +207,8 @@ async function main() {
   check('statistics show day, week, month and year', stats.rows.length === 4 && stats.hasChart, stats.rows.join(' '));
 
   const localized = await cdp.evaluate(`
-    const read = () => [...document.querySelectorAll('.period-summary h3, .summary-card h3, .stats-row')]
+    // What the statistics table actually shows, which is where the names appear.
+    const read = () => [...document.querySelectorAll('.entries-table tbody td strong, .stat-title')]
       .map((node) => node.textContent).join(' | ');
     const store = window.homeBudget.store;
     const labels = (language) => {
@@ -343,7 +344,7 @@ async function main() {
     head.cache.includes('immutable') && head.cache.includes('max-age=31536000') && !!head.expires,
     head.cache);
   check('the page carries the single page app metadata',
-    head.theme === '#4f46e5' && head.webApp === 'yes' && head.appleApp === 'yes'
+    head.theme === '#15803d' && head.webApp === 'yes' && head.appleApp === 'yes'
       && head.appleBar === 'black-translucent' && head.appleTitle === 'Home Budget' && head.appleIcon,
     JSON.stringify(head));
 

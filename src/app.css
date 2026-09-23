@@ -7,17 +7,20 @@
   --border: #e2e5ea;
   --text: #171a21;
   --muted: #667085;
-  --accent: #4f46e5;
+  /* The icon's green carries the whole interface: buttons, links, focus rings
+     and the income figures are the same colour, because they mean the same
+     thing here - money coming in, and the thing you press to record it. */
+  --green: #15803d;
+  --accent: var(--green);
   --accent-text: #ffffff;
-  --income: #15803d;
+  --income: var(--green);
   --expense: #c2410c;
   --danger: #dc2626;
   --warn: #b45309;
   --bar-expense: #f97316;
   --bar-income: #22c55e;
   --radius: 14px;
-  /* The icon's colours, reused by the logo in the app bar. */
-  --coin-green: #15803d;
+  /* The coin on the logo, the one colour the interface does not otherwise use. */
   --coin-gold: #fbbf24;
   /* Every control in a form row is exactly this tall, and every field label exactly
      that high, so controls next to each other always sit on the same line. */
@@ -35,9 +38,10 @@ body.dark {
   --border: #2a2f3a;
   --text: #e7e9ee;
   --muted: #98a2b3;
-  --accent: #818cf8;
+  --green: #4ade80;
+  --accent: var(--green);
   --accent-text: #0f1116;
-  --income: #4ade80;
+  --income: var(--green);
   --expense: #fb923c;
   --danger: #f87171;
   --warn: #fbbf24;
@@ -90,7 +94,7 @@ button, input, select { font: inherit; color: inherit; }
   height: 28px;
   border-radius: 8px;
   /* The same coin the app icon shows, so the tab and the home screen match. */
-  background: var(--coin-green);
+  background: var(--green);
   color: var(--coin-gold);
   font-weight: 700;
 }
@@ -238,8 +242,10 @@ input, select {
   background: var(--surface);
   max-width: 100%;
 }
-/* Checkboxes keep their own size; only the text-like controls share a height. */
-input[type="checkbox"], input[type="radio"] { height: auto; }
+/* Checkboxes keep their own size; only the text-like controls share a height.
+   accent-color makes the browser draw them in the app's colour rather than its
+   own blue, which is the one place the interface used to disagree with itself. */
+input[type="checkbox"], input[type="radio"] { height: auto; accent-color: var(--accent); }
 input[type="color"] { padding: 2px; width: 48px; }
 input:focus-visible, select:focus-visible, button:focus-visible {
   outline: 2px solid var(--accent);
