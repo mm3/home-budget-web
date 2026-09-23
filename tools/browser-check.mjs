@@ -347,6 +347,41 @@ async function main() {
       && head.appleBar === 'black-translucent' && head.appleTitle === 'Home Budget' && head.appleIcon,
     JSON.stringify(head));
 
+  // The install offer must be taken from the browser and used only when the
+  // button is pressed - never automatically, and never twice.
+  const install = await cdp.evaluate(`
+    const app = window.homeBudget;
+    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Settings')).click();
+    await new Promise((done) => setTimeout(done, 200));
+    const before = document.querySelector('.install-row').textContent;
+    const hasButtonBefore = !!document.querySelector('.install-row button');
+
+    let prompted = 0;
+    let defaultPrevented = false;
+    const offer = new Event('beforeinstallprompt', { cancelable: true });
+    offer.prompt = () => { prompted += 1; };
+    offer.userChoice = Promise.resolve({ outcome: 'accepted' });
+    window.dispatchEvent(offer);
+    defaultPrevented = offer.defaultPrevented;
+    await new Promise((done) => setTimeout(done, 200));
+
+    const button = document.querySelector('.install-row button');
+    const promptedBeforeClick = prompted;
+    button.click();
+    await new Promise((done) => setTimeout(done, 250));
+    const promptedAfterClick = prompted;
+    const gone = !document.querySelector('.install-row button');
+    const toast = document.querySelector('.toast');
+    return { before: before.slice(0, 40), hasButtonBefore, defaultPrevented, promptedBeforeClick,
+      promptedAfterClick, gone, toast: toast ? toast.textContent : '' };
+  `);
+  check('the install button appears only when the browser offers one',
+    !install.hasButtonBefore && /published page|Safari/.test(install.before), JSON.stringify(install));
+  check('the install prompt is shown on the click and not before',
+    install.defaultPrevented && install.promptedBeforeClick === 0 && install.promptedAfterClick === 1
+      && install.gone && /Installed/i.test(install.toast),
+    JSON.stringify(install));
+
   const links = await cdp.evaluate(`
     [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Settings')).click();
     await new Promise((done) => setTimeout(done, 200));

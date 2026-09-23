@@ -133,6 +133,7 @@ button, input, select { font: inherit; color: inherit; }
   font-weight: 600;
 }
 .toast.error { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+.toast.info { background: var(--surface-2); color: var(--muted); }
 
 /* ---------- cards ---------- */
 .card {
@@ -264,6 +265,8 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 /* ---------- lists and tables ---------- */
 .summary { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; font-size: .9rem; font-weight: 600; }
 .table-wrap { overflow-x: auto; }
+.install-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; }
+.install-row .muted { margin: 0; }
 .about-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; }
 .about-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .about-links a:hover { text-decoration: underline; }

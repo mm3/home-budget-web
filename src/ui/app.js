@@ -48,6 +48,55 @@ export class App {
     };
     this.store.subscribe(() => this.render());
     this.t = (key, params) => this.translator()(key, params);
+    this.watchInstall();
+  }
+
+  /**
+   * Keeps the browser's install offer for the button in the settings.
+   *
+   * preventDefault() is the point of this: without it the browser decides when
+   * to show its own banner. The offer is only ever used when the person presses
+   * the button, and a prompt can be used once, so it is dropped after use.
+   */
+  watchInstall() {
+    this.installPrompt = null;
+    if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return;
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      this.installPrompt = event;
+      this.render();
+    });
+    window.addEventListener('appinstalled', () => {
+      this.installPrompt = null;
+      this.notify(this.t('settings.installDone'));
+    });
+  }
+
+  /** True once the app runs from the home screen rather than in a browser tab. */
+  isInstalled() {
+    if (typeof window === 'undefined') return false;
+    const standalone = typeof window.matchMedia === 'function'
+      && window.matchMedia('(display-mode: standalone)').matches;
+    return standalone || window.navigator.standalone === true;
+  }
+
+  /** iOS never offers an install prompt; there the settings show the manual steps. */
+  isIos() {
+    return typeof navigator === 'object' && /iPad|iPhone|iPod/.test(navigator.userAgent || '')
+      && !window.MSStream;
+  }
+
+  /** Shows the browser's install dialog. Only ever called from the button. */
+  async install() {
+    const prompt = this.installPrompt;
+    if (!prompt) return;
+    this.installPrompt = null; // an offer can only be used once
+    this.render();
+    prompt.prompt();
+    const choice = await prompt.userChoice;
+    const accepted = choice && choice.outcome === 'accepted';
+    this.notify(this.t(accepted ? 'settings.installDone' : 'settings.installDismissed'),
+      accepted ? 'ok' : 'info');
   }
 
   /** Translator for the language chosen in the settings. */

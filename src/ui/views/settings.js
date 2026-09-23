@@ -141,6 +141,7 @@ export function settingsView(app) {
       el('header.card-head', {}, [el('h2', { text: t('settings.about') })]),
       el('p', { text: t('settings.version', { version: APP_VERSION }) }),
       el('p.muted', { text: t('settings.aboutText') }),
+      installRow(app),
       el('p.about-links', {}, [
         el('a', { href: SITE_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.webApp') }),
         el('a', { href: REPO_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.sourceCode') }),
@@ -276,6 +277,23 @@ function currencyForm(app) {
     el('button', { type: 'submit', text: t('settings.addCurrency') }),
     message,
   ]);
+}
+
+/**
+ * The install offer. The browser hands one over only on the published page, and
+ * only when the app is not installed yet; everywhere else this explains what to
+ * do instead of showing a button that could not work.
+ */
+function installRow(app) {
+  const t = app.t;
+  if (app.isInstalled()) return el('p.muted.install-row', { text: t('settings.installed') });
+  if (app.installPrompt) {
+    return el('div.install-row', {}, [
+      el('button.primary', { type: 'button', text: t('settings.install'), on: { click: () => app.install() } }),
+      el('span.muted', { text: t('settings.installHint') }),
+    ]);
+  }
+  return el('p.muted.install-row', { text: app.isIos() ? t('settings.installIos') : t('settings.installWhere') });
 }
 
 /** Dialog contents for creating or editing a category. */
