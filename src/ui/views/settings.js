@@ -145,6 +145,7 @@ export function settingsView(app) {
       el('p.about-links', {}, [
         el('a', { href: SITE_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.webApp') }),
         el('a', { href: REPO_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.sourceCode') }),
+        el('button.link', { type: 'button', text: t('settings.share'), on: { click: () => app.openShare() } }),
       ]),
     ]),
 

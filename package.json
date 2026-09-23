@@ -1,6 +1,6 @@
 {
   "name": "home-budget-web",
-  "version": "3.6.1",
+  "version": "3.7.0",
   "private": true,
   "type": "module",
   "description": "Offline single-file home budget app for the browser",
@@ -17,6 +17,7 @@
     "icons": "node tools/make-icons.mjs",
     "font": "node tools/make-font.mjs",
     "site-check": "node tools/site-check.mjs",
-    "qr": "node tools/make-qr.mjs"
+    "qr": "node tools/make-qr.mjs",
+    "demo": "node tools/make-demo.mjs"
   }
 }

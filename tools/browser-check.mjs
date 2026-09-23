@@ -408,6 +408,7 @@ async function main() {
       count: anchors.length,
       hrefs: anchors.map((anchor) => anchor.getAttribute('href')),
       texts: anchors.map((anchor) => anchor.textContent),
+      sourceNamesGitHub: anchors.some((anchor) => /GitHub/i.test(anchor.textContent)),
       safe: anchors.every((anchor) => anchor.rel.includes('noopener') && anchor.target === '_blank'),
       external: [...document.querySelectorAll('link[rel=stylesheet], script[src], img[src^=http]')].length,
     };
@@ -415,9 +416,28 @@ async function main() {
   check('About links to the published page and to the repository',
     links.count === 2 && links.hrefs.every((href) => /^https:\/\//.test(href))
       && links.hrefs.some((href) => href.includes('github.io'))
-      && links.hrefs.some((href) => href.includes('github.com')) && links.safe,
+      && links.hrefs.some((href) => href.includes('github.com')) && links.safe
+      && links.sourceNamesGitHub,
     JSON.stringify(links));
   check('the page still loads nothing from the network', links.external === 0, String(links.external));
+
+  const share = await cdp.evaluate(`
+    [...document.querySelectorAll('.about-links button')]
+      .find((button) => /Share|\u041f\u043e\u0434\u0435\u043b/.test(button.textContent)).click();
+    await new Promise((done) => setTimeout(done, 250));
+    const svg = document.querySelector('.qr-box svg');
+    const dark = svg ? svg.querySelectorAll('path').length : 0;
+    const modules = svg ? Number(svg.getAttribute('viewBox').split(' ')[2]) : 0;
+    const address = (document.querySelector('.qr-address') || {}).textContent || '';
+    window.homeBudget.closeDialog();
+    return { drawn: !!svg, dark, modules, address, label: svg ? svg.getAttribute('aria-label') : '' };
+  `);
+  check('sharing draws the address as a QR code, offline',
+    share.drawn && share.dark === 1
+      // viewBox = symbol (4 * version + 17) plus the quiet zone on both sides
+      && (share.modules - 6 - 17) % 4 === 0 && share.modules >= 27
+      && share.address.startsWith('https://') && share.label === share.address,
+    JSON.stringify(share));
 
   const currencies = await cdp.evaluate(`
     const store = window.homeBudget.store;

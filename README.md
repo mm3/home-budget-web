@@ -1,4 +1,4 @@
-# Home Budget 3.6.1 (browser version)
+# Home Budget 3.7.0 (browser version)
 
 <table>
 <tr>
@@ -28,7 +28,7 @@ there are no external requests, no frameworks and no build-time dependencies. Op
 USB stick, a local folder or an offline laptop and it works. The same file is also published as an
 **installable web app** on GitHub Pages.
 
-![Dashboard](docs/desktop-home.png)
+![Type an amount, press Add, and the figures and the chart move](docs/demo.gif)
 
 ## What it does
 
@@ -71,6 +71,9 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 - **Storage:** everything stays in the browser's `localStorage`, which holds roughly **30 000 entries**
   (see *Limits* below). `sessionStorage` and an in-memory store are used as fallbacks when a browser
   blocks storage, so the app still runs in private mode. A JSON backup can be downloaded and restored.
+- **Share it:** **Settings → About → Share** draws the app's address as a QR code, offline, with the
+  same encoder that made the one at the top of this README - point a phone at the screen, or copy the
+  link.
 - **Two ways to start over**, and the difference is spelled out in the settings: **Delete all entries**
   removes the entries and keeps your categories, currencies, rates and settings, while **Reset
   everything** puts the app back to how it ships. Both ask first.
@@ -82,6 +85,8 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 | Statistics | Settings |
 |---|---|
 | ![Statistics](docs/desktop-stats.png) | ![Settings](docs/desktop-settings.png) |
+
+![Dashboard](docs/desktop-home.png)
 
 ![Currencies](docs/desktop-currencies.png)
 
@@ -135,7 +140,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.6.1.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.7.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -175,7 +180,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.6.1` is pushed.
+built files to a release when a tag like `v3.7.0` is pushed.
 
 ## Building
 
@@ -211,13 +216,17 @@ Two generators produce checked-in source, so a normal build never needs them:
 npm run font    # src/core/font-data.js  - subsets DejaVu Sans for the PDF export
 npm run icons   # assets/*.png           - the app icons for the site build
 npm run qr      # docs/qr-app.png        - the QR code in this README
+npm run demo    # docs/demo.gif          - the animation at the top of this README
 ```
 
 `tools/make-font.mjs` is a small TrueType subsetter: it reads the system's DejaVu Sans, keeps the
 585 glyphs the interface can need (Latin, Latin Extended-A, Greek, Cyrillic, punctuation, currency
 signs), renumbers composite glyphs, drops the hinting programs and deflates the result. The 30 kB that
 lands in `font-data.js` is what the PDF embeds, compressed already, so nothing is unpacked at runtime.
-`tools/make-icons.mjs` draws the icons, `tools/make-qr.mjs` encodes the QR code above - byte mode,
+`tools/make-demo.mjs` records the animation: it drives the built file in Chromium, screenshots each
+step and writes them through `tools/gif.mjs` - popularity based colour quantisation and the format's
+own LZW, since a flat interface holds few distinct colours. `tools/make-icons.mjs` draws the icons,
+`tools/make-qr.mjs` encodes the QR code above - byte mode,
 Reed-Solomon over GF(256), the mask picked by the penalty rules of the specification - and both write
 their PNG through `tools/png.mjs`, which is a deflate stream of raw scanlines plus a CRC. Again, no
 dependency. The QR code takes its address from `SITE_URL`, like every other link, so `npm run qr`
@@ -276,7 +285,7 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-114 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+119 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
 budget calculations per limit period, currency conversion, unique flags and symbols, localized period
@@ -285,7 +294,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (45 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (46 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German

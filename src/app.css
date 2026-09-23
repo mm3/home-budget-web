@@ -16,6 +16,9 @@
   --bar-expense: #f97316;
   --bar-income: #22c55e;
   --radius: 14px;
+  /* The icon's colours, reused by the logo in the app bar. */
+  --coin-green: #15803d;
+  --coin-gold: #fbbf24;
   /* Every control in a form row is exactly this tall, and every field label exactly
      that high, so controls next to each other always sit on the same line. */
   --control-height: 40px;
@@ -86,8 +89,9 @@ button, input, select { font: inherit; color: inherit; }
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--accent);
-  color: var(--accent-text);
+  /* The same coin the app icon shows, so the tab and the home screen match. */
+  background: var(--coin-green);
+  color: var(--coin-gold);
   font-weight: 700;
 }
 .tabs { display: flex; gap: 4px; }
@@ -265,6 +269,12 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 /* ---------- lists and tables ---------- */
 .summary { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; font-size: .9rem; font-weight: 600; }
 .table-wrap { overflow-x: auto; }
+.share-body { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.qr-box { width: 220px; max-width: 70vw; }
+/* White quiet zone around the code, so it scans on the dark theme too. */
+.qr-box svg { display: block; width: 100%; height: auto; border-radius: 8px; }
+.qr-address { margin: 0; font-size: .85rem; color: var(--muted); word-break: break-all; text-align: center; }
+.share-body .dialog-actions { align-self: stretch; }
 .install-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; }
 .install-row .muted { margin: 0; }
 .about-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; }

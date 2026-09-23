@@ -109,3 +109,23 @@ function point(cx, cy, radius, angle) {
 function round(value) {
   return Math.round(value * 100) / 100;
 }
+
+/**
+ * A QR symbol as SVG: one path for every dark module, so the whole code is a
+ * single element and scales to any size without a picture file.
+ * @param {boolean[][]} modules from encodeQr
+ */
+export function qrSvg(modules, { quiet = 3, title = '' } = {}) {
+  const size = modules.length;
+  const side = size + quiet * 2;
+  let path = '';
+  for (let row = 0; row < size; row += 1) {
+    for (let column = 0; column < size; column += 1) {
+      if (modules[row][column]) path += `M${column + quiet} ${row + quiet}h1v1h-1z`;
+    }
+  }
+  return `<svg viewBox="0 0 ${side} ${side}" class="qr" role="img" aria-label="${escapeXml(title)}" `
+    + 'xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'
+    + `<rect width="${side}" height="${side}" fill="#ffffff"/>`
+    + `<path d="${path}" fill="#171a21"/></svg>`;
+}

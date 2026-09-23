@@ -5,8 +5,10 @@ import { AppError } from '../core/model.js';
 import {
   createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES, periodTexts,
 } from '../core/i18n.js';
-import { APP_VERSION } from '../core/version.js';
+import { APP_VERSION, SITE_URL } from '../core/version.js';
 import { loadState, migrateState, pickStorage, saveState } from '../core/storage.js';
+import { qrSvg } from '../core/charts.js';
+import { encodeQr } from '../core/qr.js';
 import { append, clear, el, render } from './dom.js';
 import { entriesView, entryForm, PAGE_SIZE } from './views/entries.js';
 import { homeView } from './views/home.js';
@@ -280,6 +282,43 @@ export class App {
     if (!window.confirm(this.t('settings.confirmResetAll'))) return;
     this.store.resetAll();
     this.notify(this.t('settings.resetDone'));
+  }
+
+  /**
+   * Shows the app's own address as a QR code, so a phone can be pointed at the
+   * screen. The code is drawn here, offline, from the same address the links use.
+   */
+  openShare() {
+    const t = this.t;
+    const code = el('div.qr-box', { html: qrSvg(encodeQr(SITE_URL, 'M').modules, { title: SITE_URL }) });
+    const address = el('p.qr-address', { text: SITE_URL });
+    const copy = el('button', {
+      type: 'button',
+      text: t('settings.copyLink'),
+      on: {
+        click: async () => {
+          try {
+            await navigator.clipboard.writeText(SITE_URL);
+            this.notify(t('settings.linkCopied'));
+          } catch {
+            this.notify(t('settings.copyFailed'), 'error');
+          }
+        },
+      },
+    });
+    this.openDialog({
+      title: t('settings.share'),
+      body: el('div.share-body', {}, [
+        code,
+        address,
+        el('p.muted', { text: t('settings.shareHint') }),
+        el('div.dialog-actions', {}, [
+          el('span.spacer'),
+          copy,
+          el('button.primary', { type: 'button', text: t('common.close'), on: { click: () => this.closeDialog() } }),
+        ]),
+      ]),
+    });
   }
 
   restore(rawState) {
