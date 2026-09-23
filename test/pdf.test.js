@@ -54,6 +54,40 @@ test('long reports are paginated and long cells are cut', () => {
   assert.match(text, /\.\.\./, 'text that does not fit is cut');
 });
 
+test('the chart is drawn above the table', () => {
+  const text = decode(buildPdf({
+    title: 'Home Budget',
+    summary: [{ label: 'Expenses', value: '12.50 EUR' }],
+    chart: {
+      title: 'Expenses (EUR)',
+      points: [{ label: 'Jul 26', value: 0 }, { label: 'Aug 26', value: 80 }, { label: 'Sep 26', value: 120 }],
+      average: 100,
+      averageLabel: 'average',
+      format: (value) => `${value.toFixed(2)} EUR`,
+    },
+    columns,
+    rows: [{ date: '22.09.2026', note: 'Coffee', amount: '12.50 EUR' }],
+  }));
+  assert.match(text, /Expenses \\\(EUR\\\)/, 'the chart title is written');
+  assert.match(text, /Jul 26/);
+  assert.match(text, /average 100\.00 EUR/);
+  assert.match(text, /re f/, 'bars are filled rectangles');
+  assert.match(text, /\[4 3\] 0 d/, 'the average is a dashed line');
+  assert.ok(!text.includes('NaN'));
+});
+
+test('a chart without an average or with many points still works', () => {
+  const many = Array.from({ length: 30 }, (unused, index) => ({ label: `d${index}`, value: index }));
+  const text = decode(buildPdf({
+    title: 'Home Budget',
+    chart: { title: 'Days', points: many },
+    columns,
+    rows: [],
+  }));
+  assert.match(text, /Days/);
+  assert.ok(!text.includes('[4 3] 0 d'), 'no dashed line without an average');
+});
+
 test('a report without rows still works', () => {
   const text = decode(buildPdf({ title: 'Empty', columns, rows: [] }));
   assert.match(text, /\/Count 1/);

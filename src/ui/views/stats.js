@@ -1,16 +1,15 @@
 /** Statistics screen: sums and averages per day, week, month and year. */
 
-import { barChart } from '../../core/charts.js';
 import { formatDate, formatMoney, PERIODS } from '../../core/format.js';
-import { highlights, ofCurrency, overview, series } from '../../core/stats.js';
-import { byCategory } from '../../core/stats.js';
-import { el, options, field } from '../dom.js';
+import { byCategory, highlights, ofCurrency, overview, series } from '../../core/stats.js';
+import { el, field, options } from '../dom.js';
+import { chartLegend, chartMarkup } from './home.js';
 
 const LENGTHS = { day: 30, week: 16, month: 12, year: 6 };
-const TITLES = { day: 'Day', week: 'Week', month: 'Month', year: 'Year' };
 
 export function statsView(app) {
   const store = app.store;
+  const t = app.t;
   const code = app.viewCurrency();
   const currency = store.currency(code);
   const entries = ofCurrency(store.entries, code);
@@ -25,76 +24,76 @@ export function statsView(app) {
   return [
     el('section.card', {}, [
       el('header.card-head', {}, [
-        el('h2', { text: 'Sums and averages' }),
-        used.length > 1 ? field('Currency', el('select', {
+        el('h2', { text: t('stats.sums') }),
+        used.length > 1 ? field(t('common.currency'), el('select', {
           on: { change: (event) => app.setUi({ currency: event.target.value }) },
         }, options(used.map((item) => ({ value: item, label: item })), code))) : null,
       ]),
       el('div.table-wrap', {}, el('table.stats-table', {}, [
         el('thead', {}, el('tr', {}, [
-          el('th', { text: 'Period' }), el('th', { text: 'Current' }), el('th', { text: 'Average' }),
-          el('th', { text: 'Total' }), el('th', { text: 'Periods' }),
+          el('th', { text: t('stats.periodColumn') }),
+          el('th.num', { text: t('stats.current') }),
+          el('th.num', { text: t('stats.averageColumn') }),
+          el('th.num', { text: t('stats.total') }),
+          el('th.num', { text: t('stats.periods') }),
         ])),
         el('tbody', {}, summaries.map((summary) => el('tr', {}, [
-          el('td', {}, [el('strong', { text: TITLES[summary.period] }), el('span.muted.block', { text: summary.label })]),
+          el('td', {}, [
+            el('strong', { text: t(`period.${summary.period}`) }),
+            el('span.muted.block', { text: summary.label }),
+          ]),
           el('td.num', { text: formatMoney(summary.current.expense, currency) }),
           el('td.num', { text: formatMoney(summary.averageExpense, currency) }),
           el('td.num', { text: formatMoney(summary.totalExpense, currency) }),
           el('td.num', { text: String(summary.periodsWithData) }),
         ]))),
       ])),
-      el('p.muted', { text: 'Averages count only the periods that have entries.' }),
+      el('p.muted', { text: t('stats.averagesHint') }),
     ]),
     el('section.card', {}, [
       el('header.card-head', {}, [
-        el('h2', { text: 'History' }),
+        el('h2', { text: t('stats.history') }),
         el('div.segmented', {}, PERIODS.map((item) => el('button', {
           type: 'button',
           class: item === period ? 'active' : '',
-          text: `${TITLES[item]}s`,
+          text: t(`period.${item}s`),
           on: { click: () => app.setUi({ statsPeriod: item }) },
         }))),
       ]),
-      el('div.chart-box.tall', {
-        html: barChart(points, {
-          formatValue: (value) => formatMoney(value, currency),
-          showIncome: app.ui.showIncome,
-        }),
-      }),
-      el('p.legend', {}, [
-        el('span.key.expense', { text: 'Expenses' }),
-        app.ui.showIncome ? el('span.key.income', { text: 'Income' }) : null,
-        el('label.toggle', {}, [
-          el('input', {
-            type: 'checkbox', checked: app.ui.showIncome,
-            on: { change: (event) => app.setUi({ showIncome: event.target.checked }) },
-          }),
-          'show income',
-        ]),
-      ]),
+      el('div.chart-box.tall', { html: chartMarkup(app, points, currency) }),
+      chartLegend(app, points),
     ]),
     el('section.grid', {}, [
       el('article.card', {}, [
-        el('header.card-head', {}, [el('h2', { text: 'Categories' })]),
+        el('header.card-head', {}, [el('h2', { text: t('stats.categories') })]),
         breakdown.length ? el('ul.bar-list', {}, breakdown.map((item) => el('li', {}, [
           el('div.bar-head', {}, [
-            el('span', {}, [el('span.dot', { style: `background:${item.color}` }), item.name]),
+            el('span', {}, [
+              el('span.category-icon', { text: store.category(item.id).icon }),
+              app.categoryName(store.category(item.id)),
+            ]),
             el('span.num', { text: `${formatMoney(item.amount, currency)} · ${item.share}%` }),
           ]),
           el('div.track', {}, el('div.fill', { style: `width:${item.share}%;background:${item.color}` })),
-        ]))) : el('p.muted', { text: 'No expenses yet.' }),
+        ]))) : el('p.muted', { text: t('home.noExpenses') }),
       ]),
       el('article.card', {}, [
-        el('header.card-head', {}, [el('h2', { text: 'Highlights' })]),
+        el('header.card-head', {}, [el('h2', { text: t('stats.highlights') })]),
         el('ul.facts', {}, [
-          el('li', { text: `Days with spending: ${facts.daysWithSpending}` }),
+          el('li', { text: t('stats.daysWithSpending', { count: facts.daysWithSpending }) }),
           facts.largest ? el('li', {
-            text: `Largest single expense: ${formatMoney(facts.largest.amount, currency)} on ${formatDate(facts.largest.date)}`,
+            text: t('stats.largest', {
+              amount: formatMoney(facts.largest.amount, currency),
+              date: formatDate(facts.largest.date),
+            }),
           }) : null,
           facts.busiestDay ? el('li', {
-            text: `Most spent in one day: ${formatMoney(facts.busiestDay.amount, currency)} on ${formatDate(facts.busiestDay.date)}`,
+            text: t('stats.busiest', {
+              amount: formatMoney(facts.busiestDay.amount, currency),
+              date: formatDate(facts.busiestDay.date),
+            }),
           }) : null,
-          el('li', { text: `Entries: ${entries.length}` }),
+          el('li', { text: t('stats.entryCount', { count: entries.length }) }),
         ]),
       ]),
     ]),

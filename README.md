@@ -6,33 +6,47 @@ a local folder or an offline laptop and it works.
 
 ![Dashboard](docs/desktop-home.png)
 
-## What it does
+## What it does (version 2)
 
 - **Quick add:** type an amount, press **Add**. The entry goes to the default category (**Daily**),
   with today's date and the default currency. Nothing else has to be filled in.
+- **Predefined categories** for the three spending rhythms - **Daily**, **Monthly**, **Yearly** - plus
+  Groceries, Transport, Home and Income. Every category has an emoji, a colour and an optional
+  **monthly limit**; the limits show up as progress bars on the home screen and turn red when exceeded.
 - **Entries:** full form for date, category, currency and note; filter by period, category,
   currency or text; tap a row (or click *Edit*) to change it.
 - **Statistics:** sums and averages per **day, week, month and year**, a bar chart of the last
-  periods (days / weeks / months / years), a donut chart and a ranking per category, plus highlights
-  such as the largest single expense.
-- **Export:** CSV, Excel (.xlsx) and PDF of exactly the entries the filters show.
+  periods (days / weeks / months / years) with an **average line**, a donut chart and a ranking per
+  category, plus highlights such as the largest single expense.
+- **Export:** CSV, Excel (.xlsx) and PDF of exactly the entries the filters show. The PDF starts with a
+  drawn bar chart (vector graphics, average line included) and the spreadsheet gets a second sheet with
+  the chart data and a **real Excel chart** - so the chart stays editable in Excel, LibreOffice or Numbers.
 - **Import:** CSV and .xlsx files. The column layout is **detected automatically** — by header names
   (English, German, Estonian, Spanish, Russian and more) or, when there is no header, by what the
   columns contain. The detected mapping is shown and can be corrected before importing.
-- **Configurable:** categories (name, type, colour) and currencies (code, symbol, decimals), the
-  default category and currency, light/dark theme and mobile/desktop layout.
+- **Languages:** English, Russian and German, picked automatically from the browser or chosen in the
+  settings. A built-in editor lets you write **your own translation** of every text; it is stored in the
+  browser and can be downloaded and shared as a JSON file.
+- **Configurable:** categories (name, type, colour, emoji, limit) and currencies (code, symbol,
+  decimals), the default category and currency, light/dark theme and mobile/desktop layout.
 - **Storage:** everything stays in the browser's `localStorage` (about 60 000 entries fit).
   `sessionStorage` and an in-memory store are used as fallbacks when a browser blocks storage,
   so the app still runs in private mode. A JSON backup can be downloaded and restored.
 
-| Mobile | Statistics |
+| Mobile | Russian interface |
 |---|---|
-| ![Mobile](docs/mobile-home.png) | ![Statistics](docs/desktop-stats.png) |
+| ![Mobile](docs/mobile-home.png) | ![Russian](docs/desktop-home-ru.png) |
+
+| Statistics | Settings |
+|---|---|
+| ![Statistics](docs/desktop-stats.png) | ![Settings](docs/desktop-settings.png) |
 
 ## Using it
 
 Open `home-budget.html` in any modern browser (Chrome, Edge, Firefox, Safari). Nothing to install.
-Amounts are stored as whole cents, so no rounding errors creep in.
+Amounts are stored as whole cents, so no rounding errors creep in. Data saved by version 1 is upgraded
+automatically on first start: categories keep their entries and get icons, and the new settings appear
+with their defaults.
 
 Data belongs to one browser profile on one device: a different browser or a private window starts
 empty. Use the JSON backup in **Settings → Data** to move data, and remember that clearing site data
@@ -45,8 +59,8 @@ everywhere.
 ## Building
 
 ```bash
-npm run build        # dist/home-budget.html      (readable, ~132 kB)
-npm run build:min    # dist/home-budget.min.html  (minified, ~110 kB)
+npm run build        # both files (readable ~185 kB, minified ~157 kB)
+npm run build:min    # dist/home-budget.min.html only
 npm test             # unit tests
 npm run coverage     # unit tests + coverage thresholds
 node tools/browser-check.mjs dist/home-budget.html   # end-to-end check in Chromium
@@ -63,15 +77,16 @@ are verified by the same browser check.
 src/
   core/          logic with no DOM, fully unit tested
     format.js      money and date formatting, parsing, period keys
+    i18n.js        English, Russian and German texts plus user translations
     model.js       entries, categories, currencies, validation
     store.js       application state and all operations on it
     storage.js     localStorage / sessionStorage / memory, migration and repair
-    stats.js       sums, averages, series and category breakdowns
-    charts.js      SVG bar and donut charts
+    stats.js       sums, averages, series, budgets and category breakdowns
+    charts.js      SVG bar (with average line) and donut charts
     csv.js         CSV reader and writer with delimiter detection
     zip.js         ZIP reader and writer (for .xlsx)
-    xlsx.js        .xlsx reader and writer
-    pdf.js         PDF writer (Helvetica, paginated table)
+    xlsx.js        .xlsx reader and writer, including a native Excel chart
+    pdf.js         PDF writer (Helvetica, paginated table, vector chart)
     importer.js    column detection and row conversion
     exporter.js    entries -> CSV / XLSX / PDF
   ui/            DOM layer: shell, views, dialogs
@@ -89,12 +104,15 @@ it can be tested in Node and why the same logic runs in the export/import code p
 npm run coverage
 ```
 
-72 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
-ZIP write → read), the PDF structure, storage repair of corrupt data, and the import detection for
-files with and without headers. The run **fails below 90%** line, branch and function coverage of
-`src/core`; it currently sits at about 99% lines, 95% branches.
+96 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+ZIP write → read), the PDF and chart structure, storage upgrades from version 1 data, budget
+calculations, translation completeness (every language has every key with the same placeholders), and
+the import detection for files with and without headers. The run **fails below 90%** line, branch and
+function coverage of `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium: it adds an entry
-through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF and
-verifies the produced bytes, imports a semicolon-separated German CSV, and takes the screenshots in
-this README. It fails if anything logs an error to the console.
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (21 checks): it adds
+an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
+and verifies the produced bytes (including the chart parts), imports a semicolon-separated German CSV,
+switches the interface between English, Russian, German and a user translation written in the settings
+editor, checks the average line and the budget bars, and takes the screenshots in this README. It fails
+if anything logs an error to the console.

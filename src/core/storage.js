@@ -4,8 +4,15 @@
  */
 
 import { createDefaultState, defaultCategories, defaultCurrencies, STATE_VERSION } from './model.js';
+import { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } from './i18n.js';
 
 export const STORAGE_KEY = 'home-budget/v1';
+
+/** Icons given to categories that were created before version 2. */
+const LEGACY_ICONS = {
+  daily: '\u2615', monthly: '\ud83d\udd01', yearly: '\ud83d\udcc5', groceries: '\ud83d\uded2',
+  transport: '\ud83d\ude8c', home: '\ud83c\udfe0', income: '\ud83d\udcb0',
+};
 
 /** In-memory storage used by tests and as a fallback when the browser blocks storage. */
 export class MemoryStorage {
@@ -51,9 +58,19 @@ export function migrateState(raw) {
   const fallback = createDefaultState();
   if (!raw || typeof raw !== 'object') return fallback;
   const settings = raw.settings && typeof raw.settings === 'object' ? raw.settings : {};
-  const categories = Array.isArray(settings.categories) && settings.categories.length
+  const knownIds = new Set(defaultCategories().map((category) => category.id));
+  const categories = (Array.isArray(settings.categories) && settings.categories.length
     ? settings.categories.filter((c) => c && typeof c.id === 'string' && typeof c.name === 'string')
-    : defaultCategories();
+    : defaultCategories()
+  ).map((category) => ({
+    ...category,
+    icon: typeof category.icon === 'string' && category.icon
+      ? category.icon
+      : (LEGACY_ICONS[category.id] || '\ud83d\udcb8'),
+    limit: Number.isFinite(category.limit) && category.limit > 0 ? Math.round(category.limit) : null,
+    nameKey: typeof category.nameKey === 'string' ? category.nameKey
+      : (knownIds.has(category.id) ? `category.${category.id}` : undefined),
+  }));
   const currencies = Array.isArray(settings.currencies) && settings.currencies.length
     ? settings.currencies.filter((c) => c && typeof c.code === 'string')
     : defaultCurrencies();
@@ -72,6 +89,13 @@ export function migrateState(raw) {
         ? settings.defaultCurrency : fallback.settings.defaultCurrency,
       uiMode: ['auto', 'mobile', 'desktop'].includes(settings.uiMode) ? settings.uiMode : 'auto',
       theme: ['auto', 'light', 'dark'].includes(settings.theme) ? settings.theme : 'auto',
+      language: typeof settings.language === 'string'
+        && (settings.language === 'auto' || settings.language === CUSTOM_LANGUAGE
+          || LANGUAGES.some((item) => item.code === settings.language))
+        ? settings.language : 'auto',
+      customLanguageName: typeof settings.customLanguageName === 'string' && settings.customLanguageName.trim()
+        ? settings.customLanguageName.trim().slice(0, 40) : 'My language',
+      customTranslation: sanitizeTranslation(settings.customTranslation),
     },
     entries: entries.map((entry) => ({
       id: entry.id,

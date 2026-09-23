@@ -182,6 +182,55 @@ async function main() {
     'return document.querySelectorAll(".chart rect").length > 3 && document.querySelectorAll(".donut path").length > 1;',
   ));
 
+  check('the average line is on the chart', await cdp.evaluate(
+    'return document.querySelectorAll(".average-line").length === 1 && /avg|average|среднее|Durchschnitt/i.test(document.querySelector(".average-label").textContent);',
+  ));
+
+  check('categories show their icons', await cdp.evaluate(
+    'return document.querySelectorAll(".category-icon").length > 3;',
+  ));
+
+  const budgets = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    store.updateCategory('groceries', { limit: 30000 });
+    await new Promise((done) => setTimeout(done, 100));
+    const rows = [...document.querySelectorAll('.bar-list li')];
+    const text = rows.map((row) => row.textContent).join(' | ');
+    return { rows: rows.length, text, over: /over|%/.test(text) };
+  `);
+  check('a category limit shows up as a budget bar', budgets.rows > 0 && /Groceries/.test(budgets.text),
+    budgets.text.slice(0, 80));
+
+  const predefined = await cdp.evaluate(
+    'return window.homeBudget.store.categories.map((category) => category.id).slice(0, 3).join(",");',
+  );
+  check('daily, monthly and yearly are predefined', predefined === 'daily,monthly,yearly', predefined);
+
+  const languages = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    store.updateSettings({ language: 'ru' });
+    await new Promise((done) => setTimeout(done, 100));
+    const russian = document.querySelector('.tab').textContent;
+    const russianCategory = document.querySelector('.card-head h2').textContent;
+    store.updateSettings({ language: 'de' });
+    await new Promise((done) => setTimeout(done, 100));
+    const german = document.querySelector('.tab').textContent;
+    store.updateSettings({ language: 'custom', customTranslation: { 'nav.home': 'Kodu' }, customLanguageName: 'Eesti' });
+    await new Promise((done) => setTimeout(done, 100));
+    const custom = document.querySelector('.tab').textContent;
+    const fallback = document.querySelectorAll('.tab')[1].textContent;
+    store.updateSettings({ language: 'en' });
+    await new Promise((done) => setTimeout(done, 100));
+    return { russian, russianCategory, german, custom, fallback, english: document.querySelector('.tab').textContent };
+  `);
+  check('the interface switches language',
+    languages.russian.includes('Главная') && languages.german.includes('Start')
+      && languages.custom.includes('Kodu') && languages.fallback.includes('Entries')
+      && languages.english.includes('Home'),
+    JSON.stringify(languages));
+  check('predefined category names are translated too', /Ежедневные/.test(languages.russianCategory),
+    languages.russianCategory);
+
   const stats = await cdp.evaluate(`
     [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Stats')).click();
     await new Promise((done) => setTimeout(done, 100));
@@ -203,6 +252,7 @@ async function main() {
     URL.createObjectURL = original;
     const csv = await captured[0].text();
     const xlsx = new Uint8Array(await captured[1].arrayBuffer());
+    const xlsxText = new TextDecoder('latin1').decode(xlsx);
     const pdf = await captured[2].text();
     return {
       count: captured.length,
@@ -210,13 +260,17 @@ async function main() {
       csvRows: csv.trim().split('\\r\\n').length,
       xlsxMagic: String.fromCharCode(xlsx[0], xlsx[1]),
       xlsxSize: xlsx.length,
+      xlsxHasChart: xlsxText.includes('charts/chart1.xml'),
       pdfHead: pdf.slice(0, 8),
+      pdfHasChart: pdf.includes('re f') && pdf.includes('Expenses'),
     };
   `);
   check('CSV export has a header and one row per entry',
     exported.csvHead === 'Date,Category,Type,Amount,Currency,Note' && exported.csvRows === 7, JSON.stringify(exported));
   check('XLSX export is a zip archive', exported.xlsxMagic === 'PK' && exported.xlsxSize > 1000);
   check('PDF export starts with the PDF header', exported.pdfHead.startsWith('%PDF-1.4'));
+  check('the spreadsheet contains a chart part', exported.xlsxHasChart);
+  check('the PDF contains the drawn chart', exported.pdfHasChart);
 
   const imported = await cdp.evaluate(`
     const csv = 'Datum;Betrag;Kategorie;Kommentar\\n20.09.2026;-15,75;Groceries;Rimi\\n21.09.2026;-3,20;Pets;Food for the cat\\n';
@@ -244,6 +298,29 @@ async function main() {
   check('CSV import detects the columns and adds the entries',
     imported.added === 2 && imported.pets && imported.amounts[0] === 1575, JSON.stringify(imported));
 
+  const translationEditor = await cdp.evaluate(`
+    window.homeBudget.setTab('settings');
+    await new Promise((done) => setTimeout(done, 150));
+    const card = [...document.querySelectorAll('details.card')].find((item) => item.textContent.includes('My own translation'));
+    card.open = true;
+    const rows = [...card.querySelectorAll('tbody tr')];
+    const homeRow = rows.find((row) => row.textContent.includes('nav.home'));
+    const input = homeRow.querySelector('input');
+    input.value = 'Kodu';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    [...card.querySelectorAll('button')].find((button) => button.textContent.includes('Use my translation')).click();
+    await new Promise((done) => setTimeout(done, 200));
+    const tab = document.querySelector('.tab').textContent;
+    const stored = JSON.parse(localStorage.getItem('home-budget/v1')).settings;
+    window.homeBudget.store.updateSettings({ language: 'en' });
+    await new Promise((done) => setTimeout(done, 100));
+    return { rows: rows.length, tab, stored: stored.customTranslation['nav.home'], language: stored.language };
+  `);
+  check('the translation editor stores a user language',
+    translationEditor.rows > 100 && translationEditor.tab.includes('Kodu')
+      && translationEditor.stored === 'Kodu' && translationEditor.language === 'custom',
+    JSON.stringify(translationEditor));
+
   const persisted = await cdp.evaluate('const count = window.homeBudget.store.entries.length; location.reload(); return count;');
   await sleep(700);
   const afterReload = await cdp.evaluate('return window.homeBudget.store.entries.length;');
@@ -256,14 +333,17 @@ async function main() {
     { name: 'desktop-entries', width: 1280, height: 900, mobile: false, mode: 'desktop', tab: 'Entries' },
     { name: 'mobile-home', width: 390, height: 844, mobile: true, mode: 'mobile', tab: 'Home' },
     { name: 'mobile-entries', width: 390, height: 844, mobile: true, mode: 'mobile', tab: 'Entries' },
+    { name: 'desktop-settings', width: 1280, height: 900, mobile: false, mode: 'desktop', tab: 'Settings' },
+    { name: 'desktop-home-ru', width: 1280, height: 900, mobile: false, mode: 'desktop', tab: 'Home', language: 'ru' },
   ];
   for (const shot of shots) {
     await cdp.send('Emulation.setDeviceMetricsOverride', {
       width: shot.width, height: shot.height, deviceScaleFactor: 2, mobile: shot.mobile,
     });
     await cdp.evaluate(`
-      window.homeBudget.store.updateSettings({ uiMode: '${shot.mode}' });
-      [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('${shot.tab}')).click();
+      const app = window.homeBudget;
+      app.store.updateSettings({ uiMode: '${shot.mode}', language: '${shot.language || 'en'}' });
+      app.setTab('${shot.tab.toLowerCase()}');
       window.scrollTo(0, 0);
     `);
     await sleep(250);

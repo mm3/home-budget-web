@@ -1,6 +1,8 @@
 /** Application shell: state, navigation, dialogs and rendering. */
 
 import { BudgetStore } from '../core/store.js';
+import { AppError } from '../core/model.js';
+import { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES } from '../core/i18n.js';
 import { loadState, migrateState, pickStorage, saveState } from '../core/storage.js';
 import { append, clear, el, render } from './dom.js';
 import { entriesView, entryForm } from './views/entries.js';
@@ -9,10 +11,10 @@ import { settingsView, categoryForm } from './views/settings.js';
 import { statsView } from './views/stats.js';
 
 const TABS = [
-  { id: 'home', label: 'Home', icon: '⌂' },
-  { id: 'entries', label: 'Entries', icon: '☰' },
-  { id: 'stats', label: 'Stats', icon: '◔' },
-  { id: 'settings', label: 'Settings', icon: '⚙' },
+  { id: 'home', key: 'nav.home', icon: '\u2302' },
+  { id: 'entries', key: 'nav.entries', icon: '\u2630' },
+  { id: 'stats', key: 'nav.stats', icon: '\u25d4' },
+  { id: 'settings', key: 'nav.settings', icon: '\u2699' },
 ];
 
 export class App {
@@ -33,11 +35,59 @@ export class App {
       statsPeriod: 'month',
       currency: null,
       showIncome: false,
+      showAverage: true,
       filter: {},
       importPreview: null,
       message: loaded.error ? { text: loaded.error, kind: 'error' } : null,
     };
     this.store.subscribe(() => this.render());
+    this.t = (key, params) => this.translator()(key, params);
+  }
+
+  /** Translator for the language chosen in the settings. */
+  translator() {
+    const settings = this.store.settings;
+    const language = settings.language === 'auto' ? this.detectedLanguage() : settings.language;
+    const signature = `${language}|${settings.language === CUSTOM_LANGUAGE ? JSON.stringify(settings.customTranslation) : ''}`;
+    if (this.translatorSignature !== signature) {
+      this.translatorSignature = signature;
+      this.translatorFunction = createTranslator(language, settings.customTranslation);
+    }
+    return this.translatorFunction;
+  }
+
+  /** Language code guessed from the browser. */
+  detectedLanguage() {
+    const navigatorLanguages = typeof navigator === 'object' && navigator
+      ? (navigator.languages || [navigator.language]).filter(Boolean)
+      : [];
+    return detectLanguage(navigatorLanguages);
+  }
+
+  detectedLanguageName() {
+    const code = this.detectedLanguage();
+    const found = LANGUAGES.find((item) => item.code === code);
+    return found ? found.name : code;
+  }
+
+  /** Category name, translated when it is one of the predefined categories. */
+  categoryName(category) {
+    return category.nameKey ? this.t(category.nameKey) : category.name;
+  }
+
+  /** "3 entries" / "1 entry" in the chosen language. */
+  countText(count) {
+    return count === 1 ? this.t('common.entriesOne') : this.t('common.entries', { count });
+  }
+
+  /** Translates the few error messages that have a key, otherwise shows the message. */
+  errorText(error) {
+    if (!(error instanceof AppError)) return error.message;
+    const map = {
+      'Enter an amount, for example 12.50': 'error.amountRequired',
+      'Unknown category': 'error.unknownCategory',
+    };
+    return map[error.message] ? this.t(map[error.message]) : error.message;
   }
 
   /** Currency the dashboard and statistics are shown in. */
@@ -74,7 +124,7 @@ export class App {
       const result = action();
       return result;
     } catch (error) {
-      this.notify(error.message, 'error');
+      this.notify(this.errorText(error), 'error');
       return null;
     }
   }
@@ -85,7 +135,10 @@ export class App {
     const dialog = el('dialog.dialog', { on: { cancel: () => this.closeDialog() } }, [
       el('header.dialog-head', {}, [
         el('h2', { text: title }),
-        el('button.link', { type: 'button', text: '✕', 'aria-label': 'Close', on: { click: () => this.closeDialog() } }),
+        el('button.link', {
+          type: 'button', text: '\u2715', 'aria-label': this.t('common.close'),
+          on: { click: () => this.closeDialog() },
+        }),
       ]),
       body,
     ]);
@@ -112,9 +165,9 @@ export class App {
   deleteEntry(id) {
     const entry = this.store.entries.find((item) => item.id === id);
     if (!entry) return;
-    if (!window.confirm('Delete this entry?')) return;
+    if (!window.confirm(this.t('entries.confirmDelete'))) return;
     this.run(() => this.store.deleteEntry(id));
-    this.notify('Entry deleted');
+    this.notify(this.t('entries.deleted'));
   }
 
   editCategory(id) {
@@ -126,31 +179,33 @@ export class App {
     const used = this.store.categoryUsage().get(id) || 0;
     if (used > 0) {
       const target = window.prompt(
-        `"${this.store.category(id).name}" has ${used} entries. Move them to which category? Type its name, or cancel.`,
-        this.store.category(this.store.settings.defaultCategoryId).name,
+        this.t('settings.moveEntries', { category: this.categoryName(this.store.category(id)), count: used }),
+        this.categoryName(this.store.category(this.store.settings.defaultCategoryId)),
       );
       if (target === null) return;
-      const moveTo = this.store.categories.find((item) => item.name.toLowerCase() === target.trim().toLowerCase());
+      const wanted = target.trim().toLowerCase();
+      const moveTo = this.store.categories.find((item) => item.name.toLowerCase() === wanted
+        || this.categoryName(item).toLowerCase() === wanted);
       if (!moveTo) {
-        this.notify(`No category named "${target}"`, 'error');
+        this.notify(this.t('settings.noCategoryNamed', { name: target }), 'error');
         return;
       }
       this.run(() => this.store.deleteCategory(id, moveTo.id));
-    } else if (window.confirm('Delete this category?')) {
+    } else if (window.confirm(this.t('settings.confirmDeleteCategory'))) {
       this.run(() => this.store.deleteCategory(id));
     }
   }
 
   clearEntries() {
-    if (!window.confirm('Delete all entries? The categories and settings stay.')) return;
+    if (!window.confirm(this.t('settings.confirmDeleteAll'))) return;
     const removed = this.store.clearEntries();
-    this.notify(`${removed} entries deleted`);
+    this.notify(this.t('settings.deletedEntries', { count: removed }));
   }
 
   restore(rawState) {
     const state = migrateState(rawState);
     this.store.replaceState(state);
-    this.notify(`Backup restored: ${state.entries.length} entries`);
+    this.notify(this.t('settings.backupRestored', { count: state.entries.length }));
   }
 
   // ------------------------------------------------------------- rendering
@@ -160,20 +215,25 @@ export class App {
     document.body.dataset.mode = settings.uiMode;
     document.body.dataset.theme = settings.theme;
     document.body.classList.toggle('dark', this.prefersDark(settings.theme));
+    document.documentElement.lang = settings.language === 'auto' ? this.detectedLanguage() : settings.language;
     const view = this.currentView();
     render(this.root, [
       el('header.app-bar', {}, [
-        el('div.brand', {}, [el('span.logo', { text: '€' }), el('strong', { text: 'Home Budget' })]),
+        el('div.brand', {}, [
+          el('span.logo', { text: '\u20ac' }),
+          el('strong', { text: this.t('app.title') }),
+        ]),
         el('nav.tabs', {}, TABS.map((tab) => el('button', {
           type: 'button',
           class: tab.id === this.ui.tab ? 'tab active' : 'tab',
+          title: this.t(tab.key),
           on: { click: () => this.setTab(tab.id) },
-        }, [el('span.tab-icon', { text: tab.icon }), el('span.tab-label', { text: tab.label })]))),
+        }, [el('span.tab-icon', { text: tab.icon }), el('span.tab-label', { text: this.t(tab.key) })]))),
       ]),
       this.ui.message ? el('p', { class: `toast ${this.ui.message.kind}`, text: this.ui.message.text }) : null,
       el('main.main', {}, view),
       el('footer.app-footer', {}, [
-        el('span', { text: `Stored in your browser (${this.storageKind}) · works offline` }),
+        el('span', { text: this.t('app.storedIn', { storage: this.storageKind }) }),
       ]),
     ]);
   }

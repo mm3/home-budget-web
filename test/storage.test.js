@@ -57,6 +57,44 @@ test('corrupt or partial documents are repaired', () => {
   assert.equal(migrateState({ settings: { categories: [{ id: 'a', name: 'A' }] }, entries: 'no' }).entries.length, 0);
 });
 
+test('data from version 1 gains icons, limits and language settings', () => {
+  const upgraded = migrateState({
+    version: 1,
+    settings: {
+      categories: [
+        { id: 'daily', name: 'Daily', kind: 'expense', color: '#4f46e5' },
+        { id: 'pets', name: 'Pets', kind: 'expense', color: '#000000', limit: 12.7 },
+      ],
+      currencies: [{ code: 'EUR', symbol: '€', decimals: 2 }],
+      defaultCategoryId: 'daily',
+      defaultCurrency: 'EUR',
+    },
+    entries: [{ id: 'e', date: '2026-01-01', amount: 100, categoryId: 'daily', currency: 'EUR' }],
+  });
+  assert.equal(upgraded.version, 2);
+  assert.equal(upgraded.settings.categories[0].icon, '☕');
+  assert.equal(upgraded.settings.categories[0].nameKey, 'category.daily');
+  assert.equal(upgraded.settings.categories[1].icon, '💸');
+  assert.equal(upgraded.settings.categories[1].nameKey, undefined);
+  assert.equal(upgraded.settings.categories[1].limit, 13);
+  assert.equal(upgraded.settings.language, 'auto');
+  assert.equal(upgraded.settings.customLanguageName, 'My language');
+  assert.deepEqual(upgraded.settings.customTranslation, {});
+  assert.equal(upgraded.entries.length, 1);
+});
+
+test('language settings are validated when loading', () => {
+  const custom = migrateState({
+    settings: { language: 'custom', customLanguageName: '  Eesti  ', customTranslation: { 'nav.home': 'Kodu', junk: 1 } },
+    entries: [],
+  });
+  assert.equal(custom.settings.language, 'custom');
+  assert.equal(custom.settings.customLanguageName, 'Eesti');
+  assert.deepEqual(custom.settings.customTranslation, { 'nav.home': 'Kodu' });
+  assert.equal(migrateState({ settings: { language: 'klingon' }, entries: [] }).settings.language, 'auto');
+  assert.equal(migrateState({ settings: { language: 'de' }, entries: [] }).settings.language, 'de');
+});
+
 test('unreadable and unwritable storage is reported, not thrown', () => {
   const broken = {
     getItem() { throw new Error('blocked'); },

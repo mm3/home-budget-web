@@ -7,7 +7,8 @@ import {
   AppError, createCategory, createCurrency, createEntry, createDefaultState,
   findCategory, findCurrency, slugify,
 } from './model.js';
-import { isIsoDate, parseAmount, todayIso } from './format.js';
+import { isIsoDate, parseAmount, periodStart, todayIso } from './format.js';
+import { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } from './i18n.js';
 
 export class BudgetStore {
   /**
@@ -157,7 +158,10 @@ export class BudgetStore {
   updateCategory(id, changes) {
     const index = this.categories.findIndex((category) => category.id === id);
     if (index < 0) throw new AppError('Category not found');
-    const updated = createCategory({ ...this.categories[index], ...changes, id });
+    const current = this.categories[index];
+    // a renamed predefined category keeps the user's name instead of the translated one
+    const renamed = changes.name !== undefined && String(changes.name).trim() !== current.name;
+    const updated = createCategory({ ...current, ...changes, id, keepNameKey: !renamed });
     if (this.categories.some((other, otherIndex) => otherIndex !== index
         && other.name.toLowerCase() === updated.name.toLowerCase())) {
       throw new AppError(`Category "${updated.name}" already exists`);
@@ -257,6 +261,17 @@ export class BudgetStore {
       if (!['auto', 'light', 'dark'].includes(changes.theme)) throw new AppError('Unknown theme');
       settings.theme = changes.theme;
     }
+    if (changes.language !== undefined) {
+      const allowed = ['auto', CUSTOM_LANGUAGE, ...LANGUAGES.map((item) => item.code)];
+      if (!allowed.includes(changes.language)) throw new AppError('Unknown language');
+      settings.language = changes.language;
+    }
+    if (changes.customLanguageName !== undefined) {
+      settings.customLanguageName = String(changes.customLanguageName).trim().slice(0, 40) || 'My language';
+    }
+    if (changes.customTranslation !== undefined) {
+      settings.customTranslation = sanitizeTranslation(changes.customTranslation);
+    }
     this.#changed();
     return settings;
   }
@@ -273,6 +288,41 @@ export class BudgetStore {
     this.state.entries = [];
     this.#changed();
     return removed;
+  }
+
+  /**
+   * Spending against the monthly limits of the shown currency.
+   * @returns {Array<{category: object, spent: number, limit: number, percent: number, over: boolean, remaining: number}>}
+   */
+  budgets(currencyCode, today = this.today()) {
+    const from = periodStart(today, 'month');
+    const to = this.monthEnd(from);
+    const spent = new Map();
+    for (const entry of this.state.entries) {
+      if (entry.currency !== currencyCode || entry.date < from || entry.date > to) continue;
+      spent.set(entry.categoryId, (spent.get(entry.categoryId) || 0) + entry.amount);
+    }
+    return this.categories
+      .filter((category) => category.kind === 'expense' && category.limit)
+      .map((category) => {
+        const used = spent.get(category.id) || 0;
+        return {
+          category,
+          spent: used,
+          limit: category.limit,
+          percent: Math.round((used / category.limit) * 100),
+          over: used > category.limit,
+          remaining: category.limit - used,
+        };
+      })
+      .sort((a, b) => b.percent - a.percent);
+  }
+
+  /** Last day of the month that starts on `monthStart`. */
+  monthEnd(monthStart) {
+    const [year, month] = monthStart.split('-').map(Number);
+    const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    return `${monthStart.slice(0, 8)}${String(days).padStart(2, '0')}`;
   }
 
   /** Finds a category by name (case-insensitive) or creates one. */

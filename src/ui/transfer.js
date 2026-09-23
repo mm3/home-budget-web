@@ -10,14 +10,18 @@ import { parseXlsx } from '../core/xlsx.js';
 import { el, field, options, render } from './dom.js';
 import { download, MIME, readAsBytes, readAsText } from './files.js';
 
-const FIELD_LABELS = { date: 'Date', amount: 'Amount', category: 'Category', currency: 'Currency', note: 'Note' };
+const FIELD_KEYS = {
+  date: 'common.date', amount: 'common.amount', category: 'common.category',
+  currency: 'common.currency', note: 'common.note',
+};
 
 export function transferPanel(app, entries) {
+  const t = app.t;
   return el('section.card', {}, [
-    el('header.card-head', {}, [el('h2', { text: 'Export and import' })]),
+    el('header.card-head', {}, [el('h2', { text: t('transfer.title') })]),
     el('div.transfer', {}, [
       el('div.transfer-block', {}, [
-        el('h3', { text: 'Export the entries shown above' }),
+        el('h3', { text: t('transfer.exportTitle') }),
         el('div.button-row', {}, [
           el('button', { type: 'button', text: 'CSV', on: { click: () => exportCsv(app, entries) } }),
           el('button', { type: 'button', text: 'Excel (.xlsx)', on: { click: () => exportXlsx(app, entries) } }),
@@ -25,41 +29,55 @@ export function transferPanel(app, entries) {
         ]),
       ]),
       el('div.transfer-block', {}, [
-        el('h3', { text: 'Import from CSV or Excel' }),
+        el('h3', { text: t('transfer.importTitle') }),
         el('input', {
           type: 'file', accept: '.csv,.txt,.tsv,.xlsx',
           on: { change: (event) => pickFile(app, event.target.files[0]) },
         }),
-        el('p.muted', { text: 'Columns are detected automatically; you can correct them before importing.' }),
+        el('p.muted', { text: t('transfer.importHint') }),
       ]),
     ]),
     app.ui.importPreview ? importPreview(app) : null,
   ]);
 }
 
+/** Everything the export functions need, including the texts used inside the files. */
 function context(app) {
-  return { categories: app.store.categories, currencies: app.store.currencies };
+  return {
+    categories: app.store.categories,
+    currencies: app.store.currencies,
+    today: app.store.today(),
+    chartCurrency: app.viewCurrency(),
+    chartPeriod: app.ui.statsPeriod,
+    chartCount: 12,
+    labels: {
+      expenses: app.t('common.expenses'),
+      average: app.t('stats.averageColumn'),
+      statistics: app.t('nav.stats'),
+      period: app.t('stats.periodColumn'),
+    },
+  };
 }
 
 function exportCsv(app, entries) {
   download(buildCsvExport(entries, context(app)), exportFileName('csv', app.store.today()), MIME.csv);
-  app.notify(`Exported ${entries.length} entries to CSV`);
+  app.notify(app.t('transfer.exported', { count: entries.length, format: 'CSV' }));
 }
 
 async function exportXlsx(app, entries) {
   const bytes = await buildXlsxExport(entries, context(app));
   download(bytes, exportFileName('xlsx', app.store.today()), MIME.xlsx);
-  app.notify(`Exported ${entries.length} entries to Excel`);
+  app.notify(app.t('transfer.exported', { count: entries.length, format: 'Excel' }));
 }
 
 function exportPdf(app, entries) {
   const bytes = buildPdfExport(entries, {
     ...context(app),
     subtitle: describeRange(app, entries),
-    footer: 'Home Budget',
+    footer: app.t('app.title'),
   });
   download(bytes, exportFileName('pdf', app.store.today()), MIME.pdf);
-  app.notify(`Exported ${entries.length} entries to PDF`);
+  app.notify(app.t('transfer.exported', { count: entries.length, format: 'PDF' }));
 }
 
 function describeRange(app, entries) {
@@ -67,7 +85,7 @@ function describeRange(app, entries) {
   if (filter.from || filter.to) {
     return `${filter.from ? formatDate(filter.from) : '...'} - ${filter.to ? formatDate(filter.to) : '...'}`;
   }
-  return `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`;
+  return app.countText(entries.length);
 }
 
 async function pickFile(app, file) {
@@ -79,7 +97,7 @@ async function pickFile(app, file) {
     const structure = detectStructure(rows);
     app.setUi({ importPreview: { fileName: file.name, rows, structure } });
   } catch (error) {
-    app.notify(`Could not read the file: ${error.message}`, 'error');
+    app.notify(app.t('transfer.readError', { message: error.message }), 'error');
   }
 }
 
@@ -94,10 +112,11 @@ function importPreview(app) {
     today: app.store.today(),
   });
   const width = rows.reduce((max, row) => Math.max(max, row.length), 0);
-  const columnOptions = [{ value: '', label: 'not used' },
+  const t = app.t;
+  const columnOptions = [{ value: '', label: t('transfer.notUsed') },
     ...Array.from({ length: width }, (unused, index) => ({
       value: String(index),
-      label: `Column ${index + 1}${structure.headerRow !== null && rows[structure.headerRow][index]
+      label: `${t('transfer.column', { number: index + 1 })}${structure.headerRow !== null && rows[structure.headerRow][index]
         ? `: ${rows[structure.headerRow][index]}` : ''}`,
     }))];
 
@@ -109,41 +128,46 @@ function importPreview(app) {
   });
 
   return el('div.import-preview', {}, [
-    el('h3', { text: `Import preview - ${preview.fileName}` }),
+    el('h3', { text: t('transfer.previewTitle', { file: preview.fileName }) }),
     el('p.muted', {
-      text: structure.confidence === 'header'
-        ? 'Columns were matched by their header names.'
-        : 'No header was recognised, so the columns were guessed from their contents.',
+      text: structure.confidence === 'header' ? t('transfer.byHeader') : t('transfer.byContent'),
     }),
     structure.warnings.length ? el('p.warning', { text: structure.warnings.join('. ') }) : null,
-    el('div.filters', {}, Object.keys(FIELD_LABELS).map((fieldName) => field(
-      FIELD_LABELS[fieldName],
+    el('div.filters', {}, Object.keys(FIELD_KEYS).map((fieldName) => field(
+      t(FIELD_KEYS[fieldName]),
       el('select', { on: { change: (event) => setMapping(fieldName, event.target.value) } },
         options(columnOptions, structure.mapping[fieldName] === null ? '' : String(structure.mapping[fieldName]))),
     ))),
     el('p.summary', { text: describeImport(result) }),
     result.entries.length ? el('div.table-wrap', {}, el('table.entries-table', {}, [
       el('thead', {}, el('tr', {}, [
-        el('th', { text: 'Date' }), el('th', { text: 'Category' }), el('th', { text: 'Note' }), el('th.num', { text: 'Amount' }),
+        el('th', { text: t('common.date') }), el('th', { text: t('common.category') }),
+        el('th', { text: t('common.note') }), el('th.num', { text: t('common.amount') }),
       ])),
       el('tbody', {}, result.entries.slice(0, 5).map((entry) => el('tr', {}, [
         el('td', { text: formatDate(entry.date) }),
-        el('td', { text: entry.categoryName || app.store.category(app.store.settings.defaultCategoryId).name }),
+        el('td', {
+          text: entry.categoryName || app.categoryName(app.store.category(app.store.settings.defaultCategoryId)),
+        }),
         el('td', { text: entry.note }),
         el('td.num', { text: formatMoney(entry.amount, app.store.currency(entry.currency)) }),
       ]))),
     ])) : null,
     result.skipped.length
-      ? el('p.muted', { text: `Skipped rows: ${result.skipped.slice(0, 5).map((item) => `#${item.row} (${item.reason})`).join(', ')}` })
+      ? el('p.muted', {
+        text: t('transfer.skippedRows', {
+          rows: result.skipped.slice(0, 5).map((item) => `#${item.row} (${item.reason})`).join(', '),
+        }),
+      })
       : null,
     el('div.button-row', {}, [
       el('button.primary', {
         type: 'button',
-        text: `Import ${result.entries.length} entries`,
+        text: t('transfer.importButton', { count: result.entries.length }),
         disabled: result.entries.length === 0,
         on: { click: () => runImport(app, result) },
       }),
-      el('button', { type: 'button', text: 'Cancel', on: { click: () => app.setUi({ importPreview: null }) } }),
+      el('button', { type: 'button', text: t('common.cancel'), on: { click: () => app.setUi({ importPreview: null }) } }),
     ]),
   ]);
 }
@@ -157,5 +181,5 @@ function runImport(app, result) {
   });
   const added = store.addEntries(prepared);
   app.setUi({ importPreview: null });
-  app.notify(`Imported ${added} ${added === 1 ? 'entry' : 'entries'}`);
+  app.notify(app.t('transfer.imported', { count: added }));
 }

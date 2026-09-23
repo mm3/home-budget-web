@@ -261,6 +261,18 @@ td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: m
 tbody tr:hover { background: var(--surface-2); }
 tbody tr:last-child td { border-bottom: 0; }
 .row-actions { white-space: nowrap; text-align: right; }
+.category-icon { font-size: 1.05em; margin-right: 7px; line-height: 1; }
+.legend-icon { font-size: 1em; }
+.small { font-size: .78rem; }
+.row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; }
+.icon-input { width: 64px; font-size: 1.2rem; text-align: center; }
+.icon-picker { display: flex; flex-wrap: wrap; gap: 4px; }
+.icon-choice { padding: 4px 7px; font-size: 1.05rem; border-radius: 8px; }
+.card-summary { font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+.translation-table { max-height: 320px; overflow: auto; }
+.translation-table input { width: 100%; }
+.fill.over { background: var(--danger) !important; }
+.badge.over { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
 .dot {
   display: inline-block;
   width: 10px;
@@ -326,6 +338,8 @@ svg .grid { fill: none; }
 .toggle { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .toggle input { width: 14px; height: 14px; }
 .chart-scale { fill: var(--muted); font-size: 10px; }
+.average-line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.average-label { fill: var(--accent); font-size: 10px; font-weight: 600; }
 .key::before {
   content: "";
   display: inline-block;

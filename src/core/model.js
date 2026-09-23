@@ -5,25 +5,39 @@ import { isIsoDate, todayIso } from './format.js';
 /** Error with a message meant to be shown to the user. */
 export class AppError extends Error {}
 
-export const STATE_VERSION = 1;
+export const STATE_VERSION = 2;
 export const DEFAULT_CATEGORY_ID = 'daily';
 export const MAX_NOTE_LENGTH = 200;
 export const MAX_NAME_LENGTH = 40;
 
 /** The category every quick entry goes to. */
 export function defaultCategory() {
-  return { id: DEFAULT_CATEGORY_ID, name: 'Daily', kind: 'expense', color: '#4f46e5' };
+  return {
+    id: DEFAULT_CATEGORY_ID, name: 'Daily', nameKey: 'category.daily',
+    kind: 'expense', color: '#4f46e5', icon: '\u2615', limit: null,
+  };
 }
 
+/**
+ * Categories every new installation starts with: the three spending rhythms
+ * (daily, monthly, yearly) plus a few common ones and income.
+ */
 export function defaultCategories() {
   return [
     defaultCategory(),
-    { id: 'groceries', name: 'Groceries', kind: 'expense', color: '#ea580c' },
-    { id: 'transport', name: 'Transport', kind: 'expense', color: '#0284c7' },
-    { id: 'home', name: 'Home', kind: 'expense', color: '#7c3aed' },
-    { id: 'income', name: 'Income', kind: 'income', color: '#16a34a' },
+    { id: 'monthly', name: 'Monthly', nameKey: 'category.monthly', kind: 'expense', color: '#0f766e', icon: '\ud83d\udd01', limit: null },
+    { id: 'yearly', name: 'Yearly', nameKey: 'category.yearly', kind: 'expense', color: '#b45309', icon: '\ud83d\udcc5', limit: null },
+    { id: 'groceries', name: 'Groceries', nameKey: 'category.groceries', kind: 'expense', color: '#ea580c', icon: '\ud83d\uded2', limit: null },
+    { id: 'transport', name: 'Transport', nameKey: 'category.transport', kind: 'expense', color: '#0284c7', icon: '\ud83d\ude8c', limit: null },
+    { id: 'home', name: 'Home', nameKey: 'category.home', kind: 'expense', color: '#7c3aed', icon: '\ud83c\udfe0', limit: null },
+    { id: 'income', name: 'Income', nameKey: 'category.income', kind: 'income', color: '#16a34a', icon: '\ud83d\udcb0', limit: null },
   ];
 }
+
+/** Emojis offered in the category form. */
+export const ICON_CHOICES = ['\u2615', '\ud83d\udd01', '\ud83d\udcc5', '\ud83d\uded2', '\ud83d\ude8c', '\ud83c\udfe0',
+  '\ud83d\udcb0', '\ud83c\udf74', '\ud83d\udc8a', '\ud83c\udfac', '\ud83d\udc55', '\ud83d\udcf1', '\u26a1', '\ud83d\udc36',
+  '\ud83c\udf81', '\u2708\ufe0f', '\ud83d\udcda', '\ud83c\udfcb\ufe0f', '\ud83d\udc76', '\ud83d\udd27', '\ud83d\udcb3', '\u2753'];
 
 export function defaultCurrencies() {
   return [
@@ -44,6 +58,9 @@ export function createDefaultState() {
       defaultCurrency: 'EUR',
       uiMode: 'auto',
       theme: 'auto',
+      language: 'auto',
+      customLanguageName: 'My language',
+      customTranslation: {},
     },
     entries: [],
   };
@@ -92,14 +109,28 @@ export function createEntry(input, now = new Date()) {
   };
 }
 
-/** Validates and normalizes a category. */
+/**
+ * Validates and normalizes a category.
+ * `nameKey` marks a predefined category whose name is translated; renaming clears it.
+ * `limit` is an optional monthly spending limit in minor units.
+ */
 export function createCategory(input) {
   const name = String(input.name ?? '').trim();
   if (!name) throw new AppError('Category name is required');
   if (name.length > MAX_NAME_LENGTH) throw new AppError(`Name must be at most ${MAX_NAME_LENGTH} characters`);
   const kind = input.kind === 'income' ? 'income' : 'expense';
   const color = /^#[0-9a-fA-F]{6}$/.test(input.color || '') ? String(input.color).toLowerCase() : '#4f46e5';
-  return { id: input.id || slugify(name), name, kind, color };
+  const icon = [...String(input.icon ?? '').trim()].slice(0, 2).join('') || '\ud83d\udcb8';
+  let limit = null;
+  if (input.limit !== null && input.limit !== undefined && input.limit !== '') {
+    const value = Number(input.limit);
+    if (!Number.isFinite(value) || !Number.isInteger(value)) throw new AppError('Limit must be a whole number of minor units');
+    if (value < 0) throw new AppError('Limit cannot be negative');
+    limit = value || null;
+  }
+  const category = { id: input.id || slugify(name), name, kind, color, icon, limit };
+  if (input.nameKey && input.keepNameKey !== false) category.nameKey = input.nameKey;
+  return category;
 }
 
 /** Validates and normalizes a currency. */
@@ -120,7 +151,7 @@ export function findCurrency(currencies, code) {
 /** Looks up a category, falling back to a placeholder for entries of a deleted category. */
 export function findCategory(categories, id) {
   return categories.find((category) => category.id === id)
-    || { id, name: id || 'Unknown', kind: 'expense', color: '#94a3b8' };
+    || { id, name: id || 'Unknown', kind: 'expense', color: '#94a3b8', icon: '\u2753', limit: null };
 }
 
 /** Expenses count negative, income positive. */

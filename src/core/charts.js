@@ -11,7 +11,8 @@ function escapeXml(value) {
 /**
  * Grouped bar chart of expenses and income per period.
  * @param {Array<{label: string, fullLabel?: string, expense: number, income: number}>} data
- * @param {{width?: number, height?: number, formatValue?: (value: number) => string, showIncome?: boolean}} [options]
+ * @param {{width?: number, height?: number, formatValue?: (value: number) => string, showIncome?: boolean,
+ *          average?: number|null, averageLabel?: string}} [options]
  */
 export function barChart(data, options = {}) {
   const width = options.width || 640;
@@ -21,7 +22,9 @@ export function barChart(data, options = {}) {
   const format = options.formatValue || String;
   const plotHeight = height - padding.top - padding.bottom;
   const plotWidth = width - padding.left - padding.right;
-  const max = Math.max(1, ...data.map((point) => Math.max(point.expense, showIncome ? point.income : 0)));
+  const average = Number.isFinite(options.average) && options.average > 0 ? options.average : null;
+  const max = Math.max(1, ...data.map((point) => Math.max(point.expense, showIncome ? point.income : 0)),
+    average || 0);
   const slot = plotWidth / Math.max(1, data.length);
   const barWidth = Math.max(4, Math.min(28, slot * (showIncome ? 0.3 : 0.55)));
 
@@ -50,6 +53,13 @@ export function barChart(data, options = {}) {
     parts.push(`<text class="chart-label" x="${round(centre)}" y="${height - 8}" text-anchor="middle">`
       + `${escapeXml(point.label)}</text>`);
   });
+  if (average !== null) {
+    const y = padding.top + plotHeight - (average / max) * plotHeight;
+    parts.push(`<line class="average-line" x1="0" y1="${round(y)}" x2="${width}" y2="${round(y)}"/>`);
+    const label = options.averageLabel || `avg ${format(average)}`;
+    parts.push(`<text class="average-label" x="${width - 4}" y="${round(Math.max(y - 7, 10))}" text-anchor="end">`
+      + `${escapeXml(label)}</text>`);
+  }
   parts.push('</svg>');
   return parts.join('');
 }

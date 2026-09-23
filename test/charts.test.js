@@ -29,6 +29,18 @@ test('barChart hides income bars when there is no income', () => {
   assert.ok(barChart(points, { showIncome: false, width: 300, height: 100 }).includes('viewBox="0 0 300 100"'));
 });
 
+test('the average line is drawn on request', () => {
+  const withAverage = barChart(points, { average: 2000, averageLabel: 'avg 20.00' });
+  assert.match(withAverage, /average-line/);
+  assert.match(withAverage, /avg 20\.00/);
+  assert.ok(!barChart(points).includes('average-line'), 'no line without an average');
+  assert.ok(!barChart(points, { average: 0 }).includes('average-line'));
+  assert.ok(!barChart(points, { average: Number.NaN }).includes('average-line'));
+  const huge = barChart([{ label: 'a', expense: 10, income: 0 }], { average: 1000, showScale: true });
+  assert.match(huge, /average-line/, 'the scale grows to fit the average');
+  assert.ok(!huge.includes('NaN'));
+});
+
 test('donutChart draws one path per slice', () => {
   const svg = donutChart([
     { name: 'Food', amount: 70, color: '#ea580c', share: 70 },

@@ -91,6 +91,52 @@ test('xlsx files with shared strings are understood', async () => {
   assert.deepEqual(parsed.rows[2], ['']);
 });
 
+test('a chart sheet is added when chart data is given', async () => {
+  const bytes = await buildXlsx({
+    sheetName: 'Home Budget',
+    columns: [{ key: 'date', title: 'Date', type: 'date' }, { key: 'amount', title: 'Amount', type: 'number' }],
+    rows: [{ date: '2026-09-22', amount: -12.5 }],
+    chart: {
+      sheetName: 'Statistics',
+      title: 'Expenses (EUR)',
+      categoryTitle: 'Period',
+      valueTitle: 'Expenses',
+      averageTitle: 'Average',
+      points: [{ label: 'Jul 26', value: 120.5 }, { label: 'Aug 26', value: 88 }, { label: 'Sep 26', value: 135.45 }],
+      average: 114.65,
+    },
+  });
+  const files = await readZip(bytes);
+  const names = [...files.keys()];
+  for (const part of ['xl/worksheets/sheet2.xml', 'xl/charts/chart1.xml', 'xl/drawings/drawing1.xml',
+    'xl/drawings/_rels/drawing1.xml.rels', 'xl/worksheets/_rels/sheet2.xml.rels']) {
+    assert.ok(names.includes(part), `${part} is in the file`);
+  }
+  const decoder = new TextDecoder();
+  const chart = decoder.decode(files.get('xl/charts/chart1.xml'));
+  assert.match(chart, /c:barChart/);
+  assert.match(chart, /c:lineChart/, 'the average is drawn as a line');
+  assert.match(chart, /'Statistics'!\$B\$2:\$B\$4/);
+  assert.match(chart, /<c:v>135\.45<\/c:v>/);
+  assert.match(chart, /<c:v>114\.65<\/c:v>/);
+  assert.match(decoder.decode(files.get('[Content_Types].xml')), /drawingml\.chart\+xml/);
+  assert.match(decoder.decode(files.get('xl/worksheets/sheet2.xml')), /<drawing r:id="rId1"\/>/);
+
+  const statistics = decoder.decode(files.get('xl/worksheets/sheet2.xml'));
+  assert.match(statistics, /Jul 26/);
+  assert.equal((await parseXlsx(bytes)).sheetName, 'Home Budget', 'the entries stay the first sheet');
+});
+
+test('no chart parts are written without chart data', async () => {
+  const bytes = await buildXlsx({
+    columns: [{ key: 'a', title: 'A' }],
+    rows: [{ a: 'x' }],
+    chart: { points: [], title: 't', valueTitle: 'v', averageTitle: 'avg', average: 0 },
+  });
+  const names = [...(await readZip(bytes)).keys()];
+  assert.ok(!names.some((name) => name.includes('chart')));
+});
+
 test('a file without a worksheet is rejected', async () => {
   const bytes = await createZip([{ name: 'xl/workbook.xml', data: '<workbook/>' }]);
   await assert.rejects(() => parseXlsx(bytes), /No worksheet/);

@@ -5,7 +5,7 @@ import { formatDate, formatMoney, toPlainAmount } from './format.js';
 import { findCategory, findCurrency } from './model.js';
 import { buildPdf } from './pdf.js';
 import { buildXlsx } from './xlsx.js';
-import { byCategory, totals } from './stats.js';
+import { byCategory as categoryTotals, series, totals } from './stats.js';
 
 export const EXPORT_COLUMNS = [
   { key: 'date', title: 'Date', type: 'date', width: 14 },
@@ -47,12 +47,43 @@ export function buildCsvExport(entries, context) {
   ], { delimiter: context.delimiter || ',' });
 }
 
-/** Spreadsheet bytes. */
+/**
+ * Data for the chart that goes into the PDF and the spreadsheet: one point per period,
+ * amounts in major units, plus the average across the periods that have entries.
+ */
+export function chartData(entries, context) {
+  const currency = findCurrency(context.currencies, context.chartCurrency
+    || (entries[0] && entries[0].currency) || 'EUR');
+  const points = series(
+    entries.filter((entry) => entry.currency === currency.code),
+    context.categories,
+    context.chartPeriod || 'month',
+    context.chartCount || 12,
+    context.today,
+  ).map((point) => ({ label: point.label, value: Number(toPlainAmount(point.expense, currency.decimals)) }));
+  const withData = points.filter((point) => point.value > 0);
+  const average = withData.length
+    ? Math.round((withData.reduce((sum, point) => sum + point.value, 0) / withData.length) * 100) / 100
+    : 0;
+  return { points, average, currency, hasData: withData.length > 0 };
+}
+
+/** Spreadsheet bytes: the entries on one sheet, the chart and its data on another. */
 export function buildXlsxExport(entries, context) {
+  const chart = chartData(entries, context);
   return buildXlsx({
     sheetName: 'Home Budget',
     columns: EXPORT_COLUMNS,
     rows: exportRows(entries, context),
+    chart: chart.hasData ? {
+      sheetName: context.labels?.statistics || 'Statistics',
+      title: `${context.labels?.expenses || 'Expenses'} (${chart.currency.code})`,
+      categoryTitle: context.labels?.period || 'Period',
+      valueTitle: context.labels?.expenses || 'Expenses',
+      averageTitle: context.labels?.average || 'Average',
+      points: chart.points,
+      average: chart.average,
+    } : null,
   });
 }
 
@@ -66,11 +97,19 @@ export function summaryByCurrency(entries, categories, currencies) {
   });
 }
 
-/** Printable report with a summary block and the entry table. */
+/** Printable report with a summary block, a chart and the entry table. */
 export function buildPdfExport(entries, context) {
   const rows = exportRows(entries, context);
   const summary = summaryByCurrency(entries, context.categories, context.currencies);
+  const chart = chartData(entries, context);
   return buildPdf({
+    chart: chart.hasData ? {
+      title: `${context.labels?.expenses || 'Expenses'} (${chart.currency.code})`,
+      points: chart.points,
+      average: chart.average,
+      averageLabel: context.labels?.average || 'average',
+      format: (value) => `${value.toFixed(chart.currency.decimals)} ${chart.currency.code}`,
+    } : null,
     title: 'Home Budget',
     subtitle: context.subtitle || `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`,
     summary: summary.flatMap((item) => {
@@ -96,9 +135,9 @@ export function buildPdfExport(entries, context) {
   });
 }
 
-/** Category breakdown lines for the PDF or a text summary. */
+/** Category breakdown lines for a text summary. */
 export function breakdownLines(entries, categories, currencies, code) {
   const currency = findCurrency(currencies, code);
-  return byCategory(entries.filter((entry) => entry.currency === code), categories)
+  return categoryTotals(entries.filter((entry) => entry.currency === code), categories)
     .map((item) => `${item.name}: ${formatMoney(item.amount, currency)} (${item.share}%)`);
 }

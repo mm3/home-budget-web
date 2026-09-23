@@ -147,6 +147,57 @@ test('categoryByNameOrCreate reuses existing names', () => {
   assert.equal(pickColor(8), pickColor(0));
 });
 
+test('budgets track the limits of the current month', () => {
+  const store = makeStore();
+  store.updateCategory('groceries', { limit: 40000 });
+  store.updateCategory('transport', { limit: 10000 });
+  store.addEntry({ amount: 12000, categoryId: 'groceries', currency: 'EUR', date: '2026-09-05' });
+  store.addEntry({ amount: 35000, categoryId: 'groceries', currency: 'EUR', date: '2026-09-20' });
+  store.addEntry({ amount: 9900, categoryId: 'groceries', currency: 'EUR', date: '2026-08-31', note: 'last month' });
+  store.addEntry({ amount: 5000, categoryId: 'transport', currency: 'USD', date: '2026-09-10', note: 'other currency' });
+
+  const budgets = store.budgets('EUR');
+  assert.deepEqual(budgets.map((budget) => budget.category.id), ['groceries', 'transport']);
+  assert.equal(budgets[0].spent, 47000);
+  assert.equal(budgets[0].percent, 118);
+  assert.equal(budgets[0].over, true);
+  assert.equal(budgets[0].remaining, -7000);
+  assert.equal(budgets[1].spent, 0);
+  assert.equal(budgets[1].over, false);
+  assert.equal(budgets[1].remaining, 10000);
+  assert.deepEqual(makeStore().budgets('EUR'), [], 'without limits there is nothing to show');
+});
+
+test('month ends are calculated correctly', () => {
+  const store = makeStore();
+  assert.equal(store.monthEnd('2026-02-01'), '2026-02-28');
+  assert.equal(store.monthEnd('2024-02-01'), '2024-02-29');
+  assert.equal(store.monthEnd('2026-09-01'), '2026-09-30');
+  assert.equal(store.monthEnd('2026-12-01'), '2026-12-31');
+});
+
+test('renaming a predefined category drops its translated name', () => {
+  const store = makeStore();
+  assert.equal(store.category('daily').nameKey, 'category.daily');
+  const renamed = store.updateCategory('daily', { name: 'Pocket money' });
+  assert.equal(renamed.nameKey, undefined);
+  assert.equal(renamed.name, 'Pocket money');
+  const recoloured = store.updateCategory('groceries', { color: '#111111' });
+  assert.equal(recoloured.nameKey, 'category.groceries', 'other changes keep the translation');
+});
+
+test('language settings are validated', () => {
+  const store = makeStore();
+  store.updateSettings({ language: 'de' });
+  assert.equal(store.settings.language, 'de');
+  store.updateSettings({ language: 'custom', customLanguageName: '  Eesti  ', customTranslation: { 'nav.home': 'Kodu', junk: 'x' } });
+  assert.equal(store.settings.customLanguageName, 'Eesti');
+  assert.deepEqual(store.settings.customTranslation, { 'nav.home': 'Kodu' });
+  store.updateSettings({ customLanguageName: '   ' });
+  assert.equal(store.settings.customLanguageName, 'My language');
+  assert.throws(() => store.updateSettings({ language: 'klingon' }), /Unknown language/);
+});
+
 test('replaceState and clearEntries', () => {
   const store = makeStore();
   store.quickAdd('5');

@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseCsv } from '../src/core/csv.js';
 import {
-  breakdownLines, buildCsvExport, buildPdfExport, buildXlsxExport, EXPORT_COLUMNS, exportFileName,
+  breakdownLines, buildCsvExport, buildPdfExport, buildXlsxExport, chartData, EXPORT_COLUMNS, exportFileName,
   exportRows, summaryByCurrency,
 } from '../src/core/exporter.js';
+import { readZip } from '../src/core/zip.js';
 import { parseXlsx, excelSerialToIso } from '../src/core/xlsx.js';
 
 const categories = [
@@ -56,6 +57,44 @@ test('PDF export contains the summary and the rows', () => {
   assert.match(text, /22\.09\.2026/);
   const withoutSubtitle = new TextDecoder('latin1').decode(buildPdfExport(entries.slice(0, 1), context));
   assert.match(withoutSubtitle, /1 entry/);
+});
+
+test('chart data has one point per period and an average of the used periods', () => {
+  const chart = chartData(entries, { ...context, today: '2026-09-22', chartCurrency: 'EUR', chartCount: 3 });
+  assert.deepEqual(chart.points.map((point) => point.label), ['Jul 26', 'Aug 26', 'Sep 26']);
+  assert.deepEqual(chart.points.map((point) => point.value), [0, 0, 12.5]);
+  assert.equal(chart.average, 12.5, 'empty periods do not lower the average');
+  assert.equal(chart.currency.code, 'EUR');
+  const empty = chartData([], { ...context, today: '2026-09-22' });
+  assert.equal(empty.average, 0);
+  assert.equal(empty.hasData, false);
+});
+
+test('the spreadsheet export contains the chart', async () => {
+  const files = await readZip(await buildXlsxExport(entries, { ...context, today: '2026-09-22', chartCurrency: 'EUR' }));
+  assert.ok([...files.keys()].includes('xl/charts/chart1.xml'));
+  assert.match(new TextDecoder().decode(files.get('xl/charts/chart1.xml')), /Expenses \(EUR\)/);
+});
+
+test('the PDF export contains the chart', () => {
+  const text = new TextDecoder('latin1').decode(
+    buildPdfExport(entries, { ...context, today: '2026-09-22', chartCurrency: 'EUR' }),
+  );
+  assert.match(text, /Sep 26/);
+  assert.match(text, /re f/);
+});
+
+test('exports work without translated labels and without a chart currency', async () => {
+  const plain = { categories, currencies };
+  const files = await readZip(await buildXlsxExport(entries, plain));
+  const decoder = new TextDecoder();
+  const chart = decoder.decode(files.get('xl/charts/chart1.xml'));
+  assert.match(chart, /Expenses \(EUR\)/, 'English defaults are used');
+  assert.match(decoder.decode(files.get('xl/worksheets/sheet2.xml')), /Period/, 'the data sheet uses English headers');
+  const pdf = new TextDecoder('latin1').decode(buildPdfExport(entries, plain));
+  assert.match(pdf, /average/);
+  const noChart = await readZip(await buildXlsxExport([], plain));
+  assert.ok(![...noChart.keys()].some((name) => name.includes('chart')));
 });
 
 test('summaries are grouped per currency', () => {

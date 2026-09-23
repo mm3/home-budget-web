@@ -7,14 +7,17 @@ import { transferPanel } from '../transfer.js';
 
 export function entriesView(app) {
   const store = app.store;
+  const t = app.t;
   const filter = app.ui.filter;
   const entries = store.list(filter);
   const currency = store.currency(app.viewCurrency());
   const sums = totals(entries, store.categories);
 
-  const categoryOptions = [{ value: '', label: 'All categories' },
-    ...store.categories.map((category) => ({ value: category.id, label: category.name }))];
-  const currencyOptions = [{ value: '', label: 'All currencies' },
+  const categoryOptions = [{ value: '', label: t('entries.allCategories') },
+    ...store.categories.map((category) => ({
+      value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
+    }))];
+  const currencyOptions = [{ value: '', label: t('entries.allCurrencies') },
     ...store.currencies.map((item) => ({ value: item.code, label: item.code }))];
 
   const update = (changes) => app.setUi({ filter: { ...filter, ...changes } });
@@ -22,51 +25,51 @@ export function entriesView(app) {
   return [
     el('section.card', {}, [
       el('header.card-head', {}, [
-        el('h2', { text: 'Entries' }),
-        el('button.primary', { type: 'button', text: '+ Add entry', on: { click: () => app.editEntry(null) } }),
+        el('h2', { text: t('entries.title') }),
+        el('button.primary', { type: 'button', text: t('entries.add'), on: { click: () => app.editEntry(null) } }),
       ]),
       el('details.filters-box', { open: app.isDesktop() }, [
-        el('summary', { text: 'Filters and search' }),
+        el('summary', { text: t('entries.filters') }),
         el('div.filters', {}, [
-        field('From', el('input', {
-          type: 'date', value: filter.from || '', on: { change: (event) => update({ from: event.target.value }) },
-        })),
-        field('To', el('input', {
-          type: 'date', value: filter.to || '', on: { change: (event) => update({ to: event.target.value }) },
-        })),
-        field('Category', el('select', {
-          on: { change: (event) => update({ categoryId: event.target.value }) },
-        }, options(categoryOptions, filter.categoryId || ''))),
-        field('Currency', el('select', {
-          on: { change: (event) => update({ currency: event.target.value }) },
-        }, options(currencyOptions, filter.currency || ''))),
-        field('Search', el('input', {
-          type: 'search', value: filter.text || '', placeholder: 'note or category',
-          on: { input: (event) => update({ text: event.target.value }) },
-        })),
-        el('div.filter-actions', {}, [
-          el('button', { type: 'button', text: 'This month', on: { click: () => update({
-            from: periodStart(store.today(), 'month'), to: store.today(),
-          }) } }),
-          el('button', { type: 'button', text: 'Clear', on: { click: () => app.setUi({ filter: {} }) } }),
-        ]),
+          field(t('entries.from'), el('input', {
+            type: 'date', value: filter.from || '', on: { change: (event) => update({ from: event.target.value }) },
+          })),
+          field(t('entries.to'), el('input', {
+            type: 'date', value: filter.to || '', on: { change: (event) => update({ to: event.target.value }) },
+          })),
+          field(t('common.category'), el('select', {
+            on: { change: (event) => update({ categoryId: event.target.value }) },
+          }, options(categoryOptions, filter.categoryId || ''))),
+          field(t('common.currency'), el('select', {
+            on: { change: (event) => update({ currency: event.target.value }) },
+          }, options(currencyOptions, filter.currency || ''))),
+          field(t('entries.search'), el('input', {
+            type: 'search', value: filter.text || '', placeholder: t('entries.searchHint'),
+            on: { input: (event) => update({ text: event.target.value }) },
+          })),
+          el('div.filter-actions', {}, [
+            el('button', { type: 'button', text: t('period.thisMonth'), on: { click: () => update({
+              from: periodStart(store.today(), 'month'), to: store.today(),
+            }) } }),
+            el('button', { type: 'button', text: t('common.clear'), on: { click: () => app.setUi({ filter: {} }) } }),
+          ]),
         ]),
       ]),
       el('p.summary', {}, [
-        el('span', { text: `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}` }),
-        el('span.expense', { text: `Expenses ${formatMoney(sums.expense, currency)}` }),
-        sums.income ? el('span.income', { text: `Income ${formatMoney(sums.income, currency)}` }) : null,
-        el('span', { text: `Balance ${formatMoney(sums.net, currency, { sign: true })}` }),
+        el('span', { text: app.countText(entries.length) }),
+        el('span.expense', { text: `${t('common.expenses')} ${formatMoney(sums.expense, currency)}` }),
+        sums.income ? el('span.income', { text: `${t('common.income')} ${formatMoney(sums.income, currency)}` }) : null,
+        el('span', { text: `${t('common.balance')} ${formatMoney(sums.net, currency, { sign: true })}` }),
       ]),
       entries.length
         ? el('div.table-wrap', {}, el('table.entries-table', {}, [
           el('thead', {}, el('tr', {}, [
-            el('th', { text: 'Date' }), el('th', { text: 'Category' }), el('th.hide-sm', { text: 'Note' }),
-            el('th.num', { text: 'Amount' }), el('th', {}),
+            el('th', { text: t('common.date') }), el('th', { text: t('common.category') }),
+            el('th.hide-sm', { text: t('common.note') }), el('th.num', { text: t('common.amount') }), el('th', {}),
           ])),
           el('tbody', {}, entries.map((entry) => entryRow(app, entry))),
         ]))
-        : el('p.muted', { text: 'No entries match these filters.' }),
+        : el('p.muted', { text: t('entries.empty') }),
     ]),
     transferPanel(app, entries),
   ];
@@ -82,13 +85,17 @@ function entryRow(app, entry) {
   };
   return el('tr.entry-row', { on: { click: open } }, [
     el('td', { text: formatDate(entry.date) }),
-    el('td', {}, [el('span.dot', { style: `background:${category.color}` }), category.name]),
+    el('td', {}, [el('span.category-icon', { text: category.icon }), app.categoryName(category)]),
     el('td.hide-sm', { text: entry.note }),
-    el('td', { class: `num ${category.kind === 'income' ? 'income' : 'expense'}`,
-      text: formatMoney(signed, currency, { sign: true }) }),
+    el('td', {
+      class: `num ${category.kind === 'income' ? 'income' : 'expense'}`,
+      text: formatMoney(signed, currency, { sign: true }),
+    }),
     el('td.row-actions', {}, [
-      el('button.link', { type: 'button', text: 'Edit', on: { click: () => app.editEntry(entry.id) } }),
-      el('button.link.danger', { type: 'button', text: 'Delete', on: { click: () => app.deleteEntry(entry.id) } }),
+      el('button.link', { type: 'button', text: app.t('common.edit'), on: { click: () => app.editEntry(entry.id) } }),
+      el('button.link.danger', {
+        type: 'button', text: app.t('common.delete'), on: { click: () => app.deleteEntry(entry.id) },
+      }),
     ]),
   ]);
 }
@@ -96,15 +103,19 @@ function entryRow(app, entry) {
 /** Dialog contents for creating or editing one entry. */
 export function entryForm(app, entry) {
   const store = app.store;
+  const t = app.t;
   const message = el('p.error');
+  const decimals = store.currency(entry ? entry.currency : store.settings.defaultCurrency).decimals;
   const amountInput = el('input', {
     type: 'number', step: '0.01', min: '0', required: true,
-    value: entry ? (entry.amount / 10 ** store.currency(entry.currency).decimals).toFixed(
-      store.currency(entry.currency).decimals) : '',
+    value: entry ? (entry.amount / 10 ** decimals).toFixed(decimals) : '',
   });
   const dateInput = el('input', { type: 'date', required: true, value: entry ? entry.date : todayIso(new Date()) });
   const categorySelect = el('select', {}, options(
-    store.categories.map((category) => ({ value: category.id, label: `${category.name} (${category.kind})` })),
+    store.categories.map((category) => ({
+      value: category.id,
+      label: `${category.icon} ${app.categoryName(category)} (${t(`common.${category.kind}`)})`,
+    })),
     entry ? entry.categoryId : store.settings.defaultCategoryId,
   ));
   const currencySelect = el('select', {}, options(
@@ -131,26 +142,26 @@ export function entryForm(app, entry) {
           else store.addEntry(data);
           app.closeDialog();
         } catch (error) {
-          render(message, error.message);
+          render(message, app.errorText(error));
         }
       },
     },
   }, [
-    field('Amount', amountInput),
-    field('Category', categorySelect),
-    field('Date', dateInput),
-    field('Currency', currencySelect),
-    field('Note', noteInput),
+    field(t('common.amount'), amountInput),
+    field(t('common.category'), categorySelect),
+    field(t('common.date'), dateInput),
+    field(t('common.currency'), currencySelect),
+    field(t('common.note'), noteInput),
     message,
     el('div.dialog-actions', {}, [
       entry ? el('button.link.danger', {
-        type: 'button', text: 'Delete',
+        type: 'button', text: t('common.delete'),
         on: { click: () => { app.closeDialog(); app.deleteEntry(entry.id); } },
       }) : null,
       el('span.spacer'),
-      el('button', { type: 'button', text: 'Cancel', on: { click: () => app.closeDialog() } }),
-      el('button.primary', { type: 'submit', text: entry ? 'Save' : 'Add' }),
+      el('button', { type: 'button', text: t('common.cancel'), on: { click: () => app.closeDialog() } }),
+      el('button.primary', { type: 'submit', text: entry ? t('common.save') : t('common.add') }),
     ]),
   ]);
-  return { title: entry ? 'Edit entry' : 'New entry', body: form, focus: amountInput };
+  return { title: entry ? t('entries.editEntry') : t('entries.newEntry'), body: form, focus: amountInput };
 }

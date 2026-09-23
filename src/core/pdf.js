@@ -49,6 +49,8 @@ function fit(text, fontSize, maxWidth) {
 /**
  * Builds a PDF document.
  * @param {{title: string, subtitle?: string, summary?: Array<{label: string, value: string}>,
+ *          chart?: {title: string, points: Array<{label: string, value: number}>, average?: number,
+ *                   format?: (value: number) => string},
  *          columns: Array<{title: string, key: string, width: number, align?: 'left'|'right'}>,
  *          rows: Array<Record<string, any>>, footer?: string}} document
  * @returns {Uint8Array}
@@ -77,6 +79,9 @@ export function buildPdf(document) {
         y -= 15;
       }
       y -= 8;
+      if (document.chart && document.chart.points.length) {
+        y = drawChart(content, document.chart, y);
+      }
     }
     // table header
     let x = PAGE.margin;
@@ -111,6 +116,49 @@ export function buildPdf(document) {
   pages.push(content);
 
   return assemble(pages, document.footer || '');
+}
+
+/**
+ * Draws the bar chart below the summary and returns the new vertical position.
+ * Bars are plain filled rectangles, the average is a dashed line.
+ */
+function drawChart(content, chart, top) {
+  const format = chart.format || String;
+  const width = PAGE.width - PAGE.margin * 2;
+  const height = 150;
+  const baseline = top - height;
+  const points = chart.points;
+  const average = Number.isFinite(chart.average) && chart.average > 0 ? chart.average : null;
+  const max = Math.max(1, ...points.map((point) => point.value), average || 0);
+  const slot = width / points.length;
+  const barWidth = Math.max(3, Math.min(26, slot * 0.6));
+
+  content.push(text(PAGE.margin, top + 4, chart.title, 11, true));
+  content.push(`0.85 0.86 0.89 RG 0.7 w ${PAGE.margin} ${baseline} m ${PAGE.width - PAGE.margin} ${baseline} l S`);
+  content.push(text(PAGE.margin, top - 10, format(max), 8, false, 0.45));
+
+  points.forEach((point, index) => {
+    const barHeight = (point.value / max) * (height - 16);
+    const x = PAGE.margin + slot * index + (slot - barWidth) / 2;
+    if (point.value > 0) {
+      content.push(`0.98 0.45 0.09 rg ${x.toFixed(2)} ${baseline.toFixed(2)} ${barWidth.toFixed(2)} `
+        + `${Math.max(barHeight, 1).toFixed(2)} re f`);
+    }
+    if (points.length <= 20 || index % 2 === 0) {
+      const label = toLatin1(point.label);
+      const labelX = x + barWidth / 2 - textWidth(label, 7) / 2;
+      content.push(text(labelX, baseline - 10, label, 7, false, 0.45));
+    }
+  });
+
+  if (average !== null) {
+    const y = baseline + (average / max) * (height - 16);
+    content.push(`0.31 0.27 0.9 RG 1 w [4 3] 0 d ${PAGE.margin} ${y.toFixed(2)} m `
+      + `${PAGE.width - PAGE.margin} ${y.toFixed(2)} l S [] 0 d`);
+    const label = `${chart.averageLabel || 'average'} ${format(average)}`;
+    content.push(text(PAGE.width - PAGE.margin - textWidth(label, 8), y + 3, label, 8, true, 0.3));
+  }
+  return baseline - 28;
 }
 
 function text(x, y, value, size = 10, bold = false, grey = 0) {
