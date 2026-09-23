@@ -109,7 +109,8 @@ export function buildPdf(document) {
         y = drawChart(content, document.chart, y);
       }
     }
-    // table header
+    // The header is redrawn at the top of every page: a table that runs over two
+    // pages is unreadable if only the first one says what the columns are.
     let x = PAGE.margin;
     for (const column of columns) {
       const width = column.width * scale;

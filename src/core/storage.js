@@ -50,7 +50,9 @@ export function pickStorage(globalObject = globalThis) {
       candidate.removeItem(probe);
       return { storage: candidate, kind: name };
     } catch {
-      // not usable, try the next one
+      // Reading the property alone can throw when the browser blocks storage for
+      // the page, and a private window can accept setItem and then refuse to keep
+      // it. Writing a probe and removing it again is the only reliable test.
     }
   }
   return { storage: new MemoryStorage(), kind: 'memory' };

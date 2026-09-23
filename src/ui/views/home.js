@@ -129,6 +129,15 @@ function quickAddCard(app, currency) {
     el('div.quick-input-wrap', {}, [input, el('span.quick-currency', { text: currency.symbol })]),
     el('button.primary', { type: 'submit', text: t('common.add') }),
   ]);
+  // The quick form fills in the date, the category and the currency; this opens
+  // the same dialog the Entries tab uses, for an entry that needs other ones.
+  const detailed = el('div.quick-more', {}, [
+    el('p.quick-hint.muted', { text: t('quick.hint') }),
+    el('button', {
+      type: 'button', text: t('quick.detailed'), title: t('quick.detailedHint'),
+      on: { click: () => app.editEntry(null) },
+    }),
+  ]);
   // keep the cursor in the amount field after the page re-renders
   setTimeout(() => { if (app.ui.tab === 'home' && app.focusQuickInput) input.focus(); }, 0);
 
@@ -142,7 +151,7 @@ function quickAddCard(app, currency) {
       currencySelector(app),
     ]),
     form,
-    el('p.quick-hint.muted', { text: t('quick.hint') }),
+    detailed,
   ]);
 }
 

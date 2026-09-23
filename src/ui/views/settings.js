@@ -4,7 +4,7 @@ import { CUSTOM_LANGUAGE, EN, LANGUAGES, sanitizeTranslation, translationKeys } 
 import { formatMoney, parseAmount, toPlainAmount } from '../../core/format.js';
 import { ICON_CHOICES, LIMIT_PERIODS } from '../../core/model.js';
 import { APP_VERSION, REPO_URL, SITE_URL } from '../../core/version.js';
-import { el, field, options, render } from '../dom.js';
+import { actionButton, el, field, fieldSlot, options, render } from '../dom.js';
 import { download, MIME } from '../files.js';
 
 export function settingsView(app) {
@@ -55,9 +55,12 @@ export function settingsView(app) {
     el('section.card', {}, [
       el('header.card-head', {}, [el('h2', { text: t('settings.categories') })]),
       el('div.table-wrap', {}, el('table.entries-table', {}, [
+        // Type and the entry count are the two columns a phone can do without:
+        // the kind is already obvious from the category, the count from the list.
         el('thead', {}, el('tr', {}, [
-          el('th', { text: t('common.name') }), el('th', { text: t('common.type') }),
-          el('th.num', { text: t('settings.limit') }), el('th.num', { text: t('nav.entries') }), el('th', {}),
+          el('th', { text: t('common.name') }), el('th.hide-sm', { text: t('common.type') }),
+          el('th.num', { text: t('settings.limit') }), el('th.num.hide-sm', { text: t('nav.entries') }),
+          el('th', {}),
         ])),
         el('tbody', {}, store.categories.map((category) => el('tr', {}, [
           el('td', {}, [
@@ -65,19 +68,21 @@ export function settingsView(app) {
             app.categoryName(category),
             category.id === store.settings.defaultCategoryId ? el('span.badge', { text: t('common.default') }) : null,
           ]),
-          el('td', { text: t(`common.${category.kind}`) }),
+          el('td.hide-sm', { text: t(`common.${category.kind}`) }),
           el('td.num', {
             text: category.limit
               ? `${formatMoney(category.limit, currency)} / ${t(`period.${category.limitPeriod || 'month'}`).toLowerCase()}`
               : '—',
           }),
-          el('td.num', { text: String(usage.get(category.id) || 0) }),
+          el('td.num.hide-sm', { text: String(usage.get(category.id) || 0) }),
           el('td.row-actions', {}, [
-            el('button.link', {
-              type: 'button', text: t('common.edit'), on: { click: () => app.editCategory(category.id) },
+            actionButton({
+              // The variation selector asks for the drawn glyph, not the emoji.
+              icon: '\u270e\ufe0e', label: t('common.edit'), onClick: () => app.editCategory(category.id),
             }),
-            category.id === store.settings.defaultCategoryId ? null : el('button.link.danger', {
-              type: 'button', text: t('common.delete'), on: { click: () => app.deleteCategory(category.id) },
+            category.id === store.settings.defaultCategoryId ? null : actionButton({
+              icon: '\u2715', label: t('common.delete'), danger: true,
+              onClick: () => app.deleteCategory(category.id),
             }),
           ]),
         ]))),
@@ -105,7 +110,7 @@ export function settingsView(app) {
         el('thead', {}, el('tr', {}, [
           el('th', { text: t('settings.currencyCode') }),
           el('th', { text: t('settings.currencySymbol') }),
-          el('th.num', { text: t('settings.currencyDecimals') }),
+          el('th.num.hide-sm', { text: t('settings.currencyDecimals') }),
           el('th.num', { text: t('settings.rate') }),
           el('th', {}),
         ])),
@@ -116,7 +121,7 @@ export function settingsView(app) {
             item.code === store.settings.defaultCurrency ? el('span.badge', { text: t('common.default') }) : null,
           ]),
           el('td', { text: item.symbol }),
-          el('td.num', { text: String(item.decimals) }),
+          el('td.num.hide-sm', { text: String(item.decimals) }),
           el('td.num', {}, item.code === store.settings.defaultCurrency
             ? el('span.muted', { text: '1' })
             : el('input.rate-input', {
@@ -126,9 +131,9 @@ export function settingsView(app) {
                 change: (event) => app.run(() => store.updateCurrency(item.code, { rate: event.target.value })),
               },
             })),
-          el('td.row-actions', {}, item.code === store.settings.defaultCurrency ? null : el('button.link.danger', {
-            type: 'button', text: t('common.delete'),
-            on: { click: () => app.run(() => store.deleteCurrency(item.code)) },
+          el('td.row-actions', {}, item.code === store.settings.defaultCurrency ? null : actionButton({
+            icon: '\u2715', label: t('common.delete'), danger: true,
+            onClick: () => app.run(() => store.deleteCurrency(item.code)),
           })),
         ]))),
       ])),
@@ -275,7 +280,7 @@ function currencyForm(app) {
     field(t('settings.currencyFlag'), flag, t('settings.currencyFlagHint')),
     field(t('settings.currencyDecimals'), decimals),
     field(t('settings.rate'), rate, t('settings.rateHint', { currency: app.store.settings.defaultCurrency })),
-    el('button', { type: 'submit', text: t('settings.addCurrency') }),
+    fieldSlot(el('button', { type: 'submit', text: t('settings.addCurrency') })),
     message,
   ]);
 }

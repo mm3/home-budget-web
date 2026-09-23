@@ -144,7 +144,12 @@ export class App {
     return count === 1 ? this.t('common.entriesOne') : this.t('common.entries', { count });
   }
 
-  /** Translates the few error messages that have a key, otherwise shows the message. */
+  /**
+   * Translates the few error messages that have a key, otherwise shows the
+   * message as it was thrown. The keys are the exact English strings the core
+   * throws, so changing one of those without changing it here silently drops
+   * the message back to English - the test in test/i18n.test.js guards that.
+   */
   errorText(error) {
     if (!(error instanceof AppError)) return error.message;
     const map = {
@@ -338,10 +343,7 @@ export class App {
     const view = this.currentView();
     render(this.root, [
       el('header.app-bar', {}, [
-        el('div.brand', {}, [
-          el('span.logo', { text: '\u20ac' }),
-          el('strong', { text: this.t('app.title') }),
-        ]),
+        el('div.brand', {}, [this.brandLogo(), el('strong', { text: this.t('app.title') })]),
         el('nav.tabs', {}, TABS.map((tab) => el('button', {
           type: 'button',
           class: tab.id === this.ui.tab ? 'tab active' : 'tab',
@@ -356,6 +358,24 @@ export class App {
         el('span.app-version', { text: ` · v${APP_VERSION}` }),
       ]),
     ]);
+  }
+
+  /**
+   * The coin in the corner. It carries the symbol of the currency the figures
+   * are shown in, so switching from euro to rubles is visible at a glance; it
+   * used to be a euro sign for everyone, whatever they were counting in. A
+   * symbol of more than one character (CN¥, Skr, NZ$) gets smaller type so the
+   * coin keeps its shape, and the flag and code are in the tooltip.
+   */
+  brandLogo() {
+    const currency = this.store.currency(this.viewCurrency());
+    const symbol = currency.symbol || currency.code;
+    return el('span.logo', {
+      class: symbol.length > 1 ? 'long' : '',
+      text: symbol,
+      title: `${currency.flag ? `${currency.flag} ` : ''}${currency.code}`,
+      'aria-label': this.t('app.currencyBadge', { currency: currency.code }),
+    });
   }
 
   /** True when the desktop layout is in use (explicit setting or a wide window). */

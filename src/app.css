@@ -22,8 +22,10 @@
   --radius: 14px;
   /* The coin on the logo, the one colour the interface does not otherwise use. */
   --coin-gold: #fbbf24;
-  /* Every control in a form row is exactly this tall, and every field label exactly
-     that high, so controls next to each other always sit on the same line. */
+  /* Every control in a form row is exactly this tall - a select, a text input, a
+     button standing beside them - so a row never has one control taller than the
+     next. The label height is the floor for a one-line label; a label that runs
+     longer is handled by the grid further down, not by this number. */
   --control-height: 40px;
   --label-height: 18px;
   --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .06);
@@ -98,6 +100,8 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--coin-gold);
   font-weight: 700;
 }
+/* Skr, CN¥, NZ$ - more than one character has to shrink to stay on the coin. */
+.logo.long { font-size: .72rem; letter-spacing: -.02em; }
 .tabs { display: flex; gap: 4px; }
 .tab {
   display: flex;
@@ -192,6 +196,11 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--muted);
   font-size: 1.1rem;
 }
+/* The hint and the way into the full form share a line; on a phone the button
+   drops under the hint rather than squeezing it. */
+.quick-more { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+.quick-more .quick-hint { flex: 1 1 220px; margin: 0; }
+.quick-more button { height: var(--control-height); white-space: nowrap; }
 .quick-message { margin-top: 8px; font-size: .88rem; min-height: 1.2em; color: var(--muted); }
 .quick-message.ok { color: var(--income); }
 .quick-message.error { color: var(--danger); }
@@ -252,25 +261,54 @@ input:focus-visible, select:focus-visible, button:focus-visible {
   outline-offset: 1px;
 }
 
+/* A field on its own - in a dialog, one per line - is just the three parts stacked. */
 .field { display: flex; flex-direction: column; gap: 4px; }
-/* A fixed label height plus top alignment is what keeps a row of fields lined up:
-   a longer label, or a hint under one of them, then moves nothing else. */
 .field-label {
   color: var(--muted); font-size: .8rem; font-weight: 600;
   min-height: var(--label-height); line-height: var(--label-height);
 }
 .field-hint { color: var(--muted); font-size: .75rem; line-height: 1.3; max-width: 240px; }
-.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: start; }
+
+/* A row of fields is a grid, not a flex line, for one reason: a label that
+   wraps to two lines - "Category for quick entries" on a phone, almost any
+   German label - used to grow only its own field and push its control below
+   the control beside it. With subgrid, every field in a row shares the same
+   three rows (label, control, hint), so the tallest label sets the height for
+   all of them and the controls stay level. Where subgrid is missing, the label
+   simply reserves two lines everywhere, which costs a little space and keeps
+   the same promise.
+
+   The row gap below is the gap *inside* a field - label to control to hint -
+   because subgrid takes its gaps from the grid the rows belong to. The space
+   between one line of fields and the next is the padding under each field. */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); column-gap: 12px; row-gap: 4px; }
+.inline-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); column-gap: 10px; row-gap: 4px; margin-top: 12px; }
+.row-2 { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 4px; }
+.filters > .field, .inline-form > .field, .row-2 > .field {
+  grid-row: span 3;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  padding-bottom: 8px;
+}
+@supports (grid-template-rows: subgrid) {
+  .filters > .field, .inline-form > .field, .row-2 > .field { grid-template-rows: subgrid; }
+}
+@supports not (grid-template-rows: subgrid) {
+  .filters .field-label, .inline-form .field-label, .row-2 .field-label {
+    min-height: calc(var(--label-height) * 2);
+  }
+}
+/* The error message is a sentence, not a field: it takes the whole width. */
+.inline-form > .error { grid-column: 1 / -1; margin: 0; }
+.filter-buttons { display: flex; gap: 8px; }
 .filters-box { margin-bottom: 4px; }
 .filters-box > summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: .85rem; padding: 4px 0; }
 .filters-box[open] > summary { margin-bottom: 8px; }
 .entry-row { cursor: pointer; }
-.filter-actions { display: flex; gap: 8px; margin-top: calc(var(--label-height) + 4px); }
-.inline-form { display: flex; flex-wrap: wrap; gap: 12px 10px; align-items: start; margin-top: 12px; }
-/* The submit button has no label above it, so it is pushed down by exactly one. */
-.inline-form > button { margin-top: calc(var(--label-height) + 4px); }
 /* Buttons that stand in a row with form controls are exactly as tall as they are. */
-.inline-form > button, .filters button, .button-row > button, .file-button { height: var(--control-height); }
+.inline-form button, .filters button, .button-row > button, .file-button,
+.install-row button { height: var(--control-height); }
 
 /* ---------- lists and tables ---------- */
 .summary { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; font-size: .9rem; font-weight: 600; }
@@ -281,11 +319,31 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 .qr-box svg { display: block; width: 100%; height: auto; border-radius: 8px; }
 .qr-address { margin: 0; font-size: .85rem; color: var(--muted); word-break: break-all; text-align: center; }
 .share-body .dialog-actions { align-self: stretch; }
-.install-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; }
+/* The row swaps between a sentence and a button when the browser offers to
+   install the app, which happens moments after the page opens. Without a fixed
+   height that swap would shove everything below it - the links, the Share
+   button, the whole Data card - down the page. */
+.install-row {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  margin-top: 12px; min-height: var(--control-height);
+}
 .install-row .muted { margin: 0; }
-.about-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; }
-.about-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
-.about-links a:hover { text-decoration: underline; }
+/* Two links and a button standing in one line. A button is a box by default -
+   padding, border, its own line height - so it sat lower than the links next to
+   it and wrapped onto a line of its own on a phone. Here all three are the same
+   piece of text, sharing one baseline. */
+.about-links { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-top: 10px; }
+.about-links > a, .about-links > button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+.about-links > a:hover, .about-links > button.link:hover { background: none; text-decoration: underline; }
 .more-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
 table { width: 100%; border-collapse: collapse; }
 th {
@@ -302,11 +360,12 @@ td { padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: m
 tbody tr:hover { background: var(--surface-2); }
 tbody tr:last-child td { border-bottom: 0; }
 .row-actions { white-space: nowrap; text-align: right; }
+/* A wide screen shows the word, a phone the sign - see actionButton in dom.js. */
+.action-icon { display: none; }
 .category-icon { font-size: 1.05em; margin-right: 7px; line-height: 1; }
 .currency-flag { font-size: 1.05em; margin-right: 6px; line-height: 1; }
 .legend-icon { font-size: 1em; }
 .small { font-size: .78rem; }
-.row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
 .date-input { position: relative; display: inline-flex; align-items: center; gap: 4px; }
 .date-input .date-text { width: 120px; font-variant-numeric: tabular-nums; }
 .date-input .date-text.invalid { border-color: var(--danger); }
@@ -434,26 +493,69 @@ svg .grid { fill: none; }
 .dialog-form { display: flex; flex-direction: column; gap: 12px; }
 .dialog-actions { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
 
-/* ---------- mobile ---------- */
+/* ---------- mobile ----------
+   The narrow layout used to hide .row-actions outright, which left no way at
+   all to edit or delete a category, a currency or an entry from a phone. The
+   columns that carry the least - the kind of a category, its entry count, a
+   currency's decimals, an entry's note - are dropped instead, and the actions
+   shrink to their signs. Both selectors below say the same thing: one for the
+   automatic layout on a narrow window, one for the mode chosen by hand. */
 @media (max-width: 720px) {
   body[data-mode="auto"] .tab-label { display: none; }
   body[data-mode="auto"] .grid,
   body[data-mode="auto"] .transfer { grid-template-columns: 1fr; }
   body[data-mode="auto"] .app-bar { gap: 10px; }
-  body[data-mode="auto"] .hide-sm,
-  body[data-mode="auto"] .row-actions { display: none; }
+  body[data-mode="auto"] .hide-sm { display: none; }
   body[data-mode="auto"] .main { padding: 14px 12px 32px; }
 }
 
 body[data-mode="mobile"] .tab-label { display: none; }
 body[data-mode="mobile"] .grid,
 body[data-mode="mobile"] .transfer { grid-template-columns: 1fr; }
-body[data-mode="mobile"] .hide-sm,
-body[data-mode="mobile"] .row-actions { display: none; }
+body[data-mode="mobile"] .hide-sm { display: none; }
 body[data-mode="mobile"] .main { max-width: 560px; padding: 14px 12px 32px; }
 body[data-mode="mobile"] .cards { grid-template-columns: repeat(2, 1fr); }
 body[data-mode="mobile"] .app-bar { position: sticky; }
 body[data-mode="mobile"] .tabs { flex: 1; justify-content: space-around; }
+
+/* The narrow layout, whichever way it was reached. */
+@media (max-width: 720px) {
+  body[data-mode="auto"] .action-text { display: none; }
+  body[data-mode="auto"] .action-icon { display: inline; }
+  /* A finger, not a mouse pointer: the sign gets a target of its own. */
+  body[data-mode="auto"] .row-actions button {
+    display: inline-grid; place-items: center; padding: 0;
+    min-width: 34px; height: 34px; font-size: 1.05rem;
+  }
+  /* An action hidden on a phone stays hidden - without this the rule above,
+     being the more specific one, would bring it back. */
+  body[data-mode="auto"] .row-actions button.hide-sm { display: none; }
+  /* Every pixel a cell gives back is a pixel the table does not have to scroll. */
+  body[data-mode="auto"] th,
+  body[data-mode="auto"] td { padding-left: 5px; padding-right: 5px; }
+  body[data-mode="auto"] .rate-input { width: 84px; }
+  /* Two selects fit a phone; a third squeezed to nothing. */
+  body[data-mode="auto"] .filters > .field { flex: 1 1 140px; }
+  body[data-mode="auto"] .filters select,
+  body[data-mode="auto"] .filters input { width: 100%; }
+  body[data-mode="auto"] .inline-form > .field { flex: 1 1 130px; }
+  body[data-mode="auto"] .translation-table { max-height: 260px; }
+}
+body[data-mode="mobile"] .action-text { display: none; }
+body[data-mode="mobile"] .action-icon { display: inline; }
+body[data-mode="mobile"] .row-actions button {
+  display: inline-grid; place-items: center; padding: 0;
+  min-width: 34px; height: 34px; font-size: 1.05rem;
+}
+body[data-mode="mobile"] .row-actions button.hide-sm { display: none; }
+body[data-mode="mobile"] th,
+body[data-mode="mobile"] td { padding-left: 5px; padding-right: 5px; }
+body[data-mode="mobile"] .rate-input { width: 84px; }
+body[data-mode="mobile"] .filters > .field { flex: 1 1 140px; }
+body[data-mode="mobile"] .filters select,
+body[data-mode="mobile"] .filters input { width: 100%; }
+body[data-mode="mobile"] .inline-form > .field { flex: 1 1 130px; }
+body[data-mode="mobile"] .translation-table { max-height: 260px; }
 
 body[data-mode="desktop"] .main { max-width: 1080px; }
 body[data-mode="desktop"] .grid { grid-template-columns: 1.3fr 1fr; }

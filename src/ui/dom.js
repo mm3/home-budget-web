@@ -54,13 +54,51 @@ export function byId(id) {
   return document.getElementById(id);
 }
 
-/** A labelled form field. */
+/**
+ * A labelled form field: always the same three parts in the same order - label,
+ * control, hint - even when there is no hint. That fixed shape is what lets a
+ * row of fields line up its controls no matter how long one label runs; the
+ * stylesheet puts every field in a row on the same three rows.
+ */
 export function field(labelText, control, hint) {
-  // has-hint lets a row of fields reserve room for the hint underneath, so the
-  // hint neither grows the field nor overlaps the one next to it.
-  return el(hint ? 'label.field.has-hint' : 'label.field', {},
-    [el('span.field-label', { text: labelText }), control,
-      hint ? el('span.field-hint', { text: hint }) : null]);
+  return el('label.field', {}, [
+    el('span.field-label', { text: labelText }),
+    control,
+    el('span.field-hint', { text: hint || '' }),
+  ]);
+}
+
+/**
+ * A row action - Edit, Delete - that survives a phone screen.
+ *
+ * The word is what a mouse user wants; on a narrow screen two words per row push
+ * the table off the edge, so the button carries both and the stylesheet shows
+ * whichever fits. The word is still the accessible name either way.
+ *
+ * @param {{icon: string, label: string, danger?: boolean, onClick: () => void,
+ *          extraClass?: string}} options
+ */
+export function actionButton({ icon, label, danger = false, onClick, extraClass = '' }) {
+  return el(danger ? 'button.link.danger' : 'button.link', {
+    class: extraClass,
+    type: 'button', title: label, 'aria-label': label, on: { click: onClick },
+  }, [
+    el('span.action-icon', { text: icon, 'aria-hidden': 'true' }),
+    el('span.action-text', { text: label }),
+  ]);
+}
+
+/**
+ * A cell in a row of fields that has no label of its own - a pair of buttons, a
+ * submit. The empty label keeps it on the same rows as the fields beside it, so
+ * nothing has to guess a margin when a label next to it wraps to two lines.
+ */
+export function fieldSlot(control) {
+  return el('div.field', {}, [
+    el('span.field-label', { 'aria-hidden': 'true' }),
+    control,
+    el('span.field-hint'),
+  ]);
 }
 
 /** An <option> list for a <select>. */

@@ -1,4 +1,4 @@
-# Home Budget 3.8.0 (browser version)
+# Home Budget 3.9.0 (browser version)
 
 <table>
 <tr>
@@ -34,7 +34,10 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 ## What it does
 
 - **Quick add:** type an amount, press **Add**. The entry goes to the default category (**Daily**),
-  with today's date and the default currency. Nothing else has to be filled in.
+  with today's date and the default currency. Nothing else has to be filled in. **Add with details**,
+  next to it, opens the full form when the category, the date, the currency or a note is not the usual
+  one. The coin in the corner carries the symbol of the currency the figures are shown in, so it is
+  never a guess which one you are looking at.
 - **Predefined categories** for the spending rhythms - **Daily**, **Monthly**, **Yearly** - plus
   **Budget** for planned shopping, Groceries, Transport, Home and Income. Every category has an emoji,
   a colour and an optional **limit with its own period** (per day, week, month or year); the limits show
@@ -75,9 +78,9 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 - **Share it:** **Settings → About → Share** draws the app's address as a QR code, offline, with the
   same encoder that made the one at the top of this README - point a phone at the screen, or copy the
   link.
-- **Two ways to start over**, and the difference is spelled out in the settings: **Delete all entries**
-  removes the entries and keeps your categories, currencies, rates and settings, while **Reset
-  everything** puts the app back to how it ships. Both ask first.
+- **Two ways to start over**, and the difference is spelled out in the settings: **Delete all data**
+  removes every entry and keeps your categories, currencies, rates and settings, while **Reset to
+  default** puts the app back to how it ships. Both ask first.
 
 | Mobile | Russian interface |
 |---|---|
@@ -139,7 +142,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.8.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.9.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -179,7 +182,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.8.0` is pushed.
+built files to a release when a tag like `v3.9.0` is pushed.
 
 ## Building
 
@@ -284,7 +287,7 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-119 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+120 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
 budget calculations per limit period, currency conversion, unique flags and symbols, localized period
@@ -293,7 +296,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (46 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (47 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
@@ -301,9 +304,11 @@ CSV, switches the interface between English, Russian, German and a user translat
 settings editor, checks the version stamp, the cache and web app metadata, the average line, the budget
 bars with their periods, the ruble, the currency flags and that no two currencies share a symbol,
 confirms that deleting the entries keeps the settings while resetting really restores the defaults,
-**measures every row of form controls** - in the cards, in the filters and in the dialogs - and fails
-when a label of a different length or a hint under one field pushes its control off the line its
-neighbours sit on, adds five thousand entries at once to check that the list pages instead of drawing
+**measures every row of form controls** - in the cards, in the filters and in the dialogs, at a desktop
+width and again at 390 pixels - and fails when a label of a different length, a label that wraps to two
+lines or a hint under one field pushes its control off the line its neighbours sit on, checks that a
+phone can still reach the edit and delete actions of every table row and that they are big enough to
+hit, adds five thousand entries at once to check that the list pages instead of drawing
 them all, refuses the amounts that would break the totals, checks that no native date input is left in the page
 and that dates are shown, typed and refused in the app's own format, confirms that **About** links to
 the published page and to the repository, that the page still loads nothing from the network, and

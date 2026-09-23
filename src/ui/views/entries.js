@@ -3,7 +3,7 @@
 import { formatDate, formatMoney, periodStart, todayIso } from '../../core/format.js';
 import { AppError, MAX_AMOUNT } from '../../core/model.js';
 import { totals } from '../../core/stats.js';
-import { dateField, el, field, options, render } from '../dom.js';
+import { actionButton, dateField, el, field, fieldSlot, options, render } from '../dom.js';
 import { transferPanel } from '../transfer.js';
 
 /** Entries drawn before the list asks whether to show more. */
@@ -55,12 +55,12 @@ export function entriesView(app) {
             type: 'search', value: filter.text || '', placeholder: t('entries.searchHint'),
             on: { input: (event) => update({ text: event.target.value }) },
           })),
-          el('div.filter-actions', {}, [
+          fieldSlot(el('div.filter-buttons', {}, [
             el('button', { type: 'button', text: t('period.thisMonth'), on: { click: () => update({
               from: periodStart(store.today(), 'month'), to: store.today(),
             }) } }),
             el('button', { type: 'button', text: t('common.clear'), on: { click: () => app.setUi({ filter: {} }) } }),
-          ]),
+          ])),
         ]),
       ]),
       el('p.summary', {}, [
@@ -110,9 +110,14 @@ function entryRow(app, entry) {
       text: formatMoney(signed, currency, { sign: true }),
     }),
     el('td.row-actions', {}, [
-      el('button.link', { type: 'button', text: app.t('common.edit'), on: { click: () => app.editEntry(entry.id) } }),
-      el('button.link.danger', {
-        type: 'button', text: app.t('common.delete'), on: { click: () => app.deleteEntry(entry.id) },
+      // Tapping the row itself already opens the editor, so on a phone the
+      // pencil is one target too many in a table that has to fit 390 pixels.
+      actionButton({
+        icon: '\u270e\ufe0e', label: app.t('common.edit'), extraClass: 'hide-sm',
+        onClick: () => app.editEntry(entry.id),
+      }),
+      actionButton({
+        icon: '\u2715', label: app.t('common.delete'), danger: true, onClick: () => app.deleteEntry(entry.id),
       }),
     ]),
   ]);

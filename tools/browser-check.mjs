@@ -578,7 +578,11 @@ async function main() {
   // the top of its field must be the same everywhere, whatever the label's length or
   // a hint underneath, and the controls must be equally tall. Wrapping to a second
   // line is fine, which is why the offset inside the field is measured, not the page.
-  const aligned = await cdp.evaluate(`
+  //
+  // It runs twice. A phone is where this breaks first - the columns are narrow, so
+  // "Category for quick entries" wraps to two lines and used to drag its select
+  // below the one beside it - and a desktop check alone never saw that.
+  const alignmentProbe = `
     const check = (where) => {
       const problems = [];
       for (const row of document.querySelectorAll('.inline-form, .row-2, .filters')) {
@@ -618,11 +622,13 @@ async function main() {
       return problems;
     };
     const found = [];
+    window.homeBudget.closeDialog();
     [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Settings')).click();
     await new Promise((done) => setTimeout(done, 200));
     found.push(...check('settings'));
     // the category dialog, with its colour/icon and limit/limit period rows
-    [...document.querySelectorAll('.entries-table button')].find((button) => button.textContent === 'Edit').click();
+    [...document.querySelectorAll('.entries-table button')]
+      .find((button) => button.getAttribute('aria-label') === 'Edit').click();
     await new Promise((done) => setTimeout(done, 250));
     found.push(...check('category dialog'));
     window.homeBudget.closeDialog();
@@ -640,8 +646,66 @@ async function main() {
       window.homeBudget.closeDialog();
     }
     return found;
-  `);
+  `;
+
+  const aligned = [];
+  for (const layout of [
+    { name: 'desktop', width: 1280, height: 900, mobile: false, mode: 'desktop' },
+    { name: 'phone', width: 390, height: 844, mobile: true, mode: 'mobile' },
+  ]) {
+    await cdp.send('Emulation.setDeviceMetricsOverride', {
+      width: layout.width, height: layout.height, deviceScaleFactor: 1, mobile: layout.mobile,
+    });
+    await cdp.evaluate(`window.homeBudget.store.updateSettings({ uiMode: '${layout.mode}' });`);
+    await sleep(200);
+    const found = await cdp.evaluate(alignmentProbe);
+    aligned.push(...found.map((item) => `${layout.name}: ${item}`));
+  }
   check('controls in a row of fields stay on one line', aligned.length === 0, aligned.join(' | '));
+
+  // Hiding the row actions on a narrow screen left no way at all to edit or delete
+  // a category, a currency or an entry from a phone. They are there, and they are
+  // big enough to hit: 24 CSS pixels is the smallest target this layout allows.
+  const reachable = await cdp.evaluate(`
+    const app = window.homeBudget;
+    const look = async (tab) => {
+      app.setTab(tab);
+      await new Promise((done) => setTimeout(done, 250));
+      // An action the layout deliberately drops - the pencil in the entry list,
+      // where tapping the row already opens the editor - is not measured.
+      const buttons = [...document.querySelectorAll('.entries-table .row-actions button')]
+        .filter((button) => getComputedStyle(button).display !== 'none');
+      const boxes = buttons.map((button) => button.getBoundingClientRect());
+      // A table wider than the screen scrolls sideways, so a button can exist and
+      // still be out of reach until someone discovers they can drag the table.
+      const table = document.querySelector('.entries-table');
+      return {
+        count: buttons.length,
+        onScreen: boxes.filter((box) => box.width > 0 && box.right <= window.innerWidth + 1).length,
+        tiny: boxes.filter((box) => box.width < 24 || box.height < 24).length,
+        labels: [...new Set(buttons.map((button) => button.getAttribute('aria-label')))],
+        sideways: table ? table.scrollWidth > table.parentElement.clientWidth + 1 : false,
+        wordShown: buttons.some((button) => {
+          const span = button.querySelector('.action-text');
+          return span && getComputedStyle(span).display !== 'none';
+        }),
+      };
+    };
+    return { settings: await look('settings'), entries: await look('entries'),
+      overflow: document.documentElement.scrollWidth > window.innerWidth + 1 };
+  `);
+  const reachableOk = (where) => where.count > 0 && where.onScreen === where.count
+    && where.tiny === 0 && !where.wordShown && !where.sideways && where.labels.includes('Delete');
+  check('a phone can still edit and delete the rows of a table',
+    reachableOk(reachable.settings) && reachableOk(reachable.entries) && !reachable.overflow
+      && reachable.settings.labels.includes('Edit'),
+    JSON.stringify(reachable));
+
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width: 1280, height: 900, deviceScaleFactor: 1, mobile: false,
+  });
+  await cdp.evaluate(`window.homeBudget.store.updateSettings({ uiMode: 'desktop' });`);
+  await sleep(150);
 
   // screenshots
   const shots = [

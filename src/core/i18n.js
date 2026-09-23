@@ -18,6 +18,7 @@ export const CUSTOM_LANGUAGE = 'custom';
 /** English texts. Every other language uses the same keys. */
 export const EN = {
   'app.title': 'Home Budget',
+  'app.currencyBadge': 'Showing {currency}',
   'app.storedIn': 'Stored in your browser ({storage}) · works offline',
   'nav.home': 'Home',
   // Period names, so charts, statistics and the PDF speak the interface language.
@@ -71,6 +72,8 @@ export const EN = {
   'quick.title': 'Add to {category}',
   'quick.hint': 'Type an amount and press Add - date, category and currency are filled in for you.',
   'quick.added': 'Added {amount} to {category}',
+  'quick.detailed': 'Add with details',
+  'quick.detailedHint': 'Choose the category, date, currency and a note yourself.',
 
   'period.day': 'Day',
   'period.week': 'Week',
@@ -187,12 +190,12 @@ export const EN = {
   'settings.dataHint': 'Everything is stored in this browser ({storage}). Nothing is sent anywhere.',
   'settings.backup': 'Download backup (JSON)',
   'settings.restore': 'Restore backup',
-  'settings.deleteAll': 'Delete all entries',
-  'settings.resetAll': 'Reset everything',
-  'settings.confirmResetAll': 'Reset everything? Entries, categories, currencies and settings all go back to the defaults.',
-  'settings.resetDone': 'Everything has been reset to the defaults',
-  'settings.deleteHint': 'Deleting the entries keeps your categories, currencies and settings. Resetting undoes all of it.',
-  'settings.confirmDeleteAll': 'Delete all entries? The categories and settings stay.',
+  'settings.deleteAll': 'Delete all data',
+  'settings.resetAll': 'Reset to default',
+  'settings.confirmResetAll': 'Reset to default? Entries, categories, currencies and settings all go back to how the app started.',
+  'settings.resetDone': 'Everything is back to the defaults',
+  'settings.deleteHint': 'Deleting the data removes every entry and keeps your categories, currencies and settings. Resetting undoes those too.',
+  'settings.confirmDeleteAll': 'Delete all data? Every entry goes; the categories, currencies and settings stay.',
   'settings.deletedEntries': '{count} entries deleted',
   'settings.backupDownloaded': 'Backup downloaded',
   'settings.backupRestored': 'Backup restored: {count} entries',
@@ -252,6 +255,7 @@ export const EN = {
 /** Russian texts. */
 export const RU = {
   'app.title': 'Домашний бюджет',
+  'app.currencyBadge': 'Показано в {currency}',
   'app.storedIn': 'Хранится в вашем браузере ({storage}) · работает офлайн',
   'nav.home': 'Главная',
   // Period names, so charts, statistics and the PDF speak the interface language.
@@ -305,6 +309,8 @@ export const RU = {
   'quick.title': 'Добавить в «{category}»',
   'quick.hint': 'Введите сумму и нажмите «Добавить» — дата, категория и валюта подставляются сами.',
   'quick.added': 'Добавлено {amount} в «{category}»',
+  'quick.detailed': 'Добавить подробно',
+  'quick.detailedHint': 'Категорию, дату, валюту и заметку выбираете сами.',
 
   'period.day': 'День',
   'period.week': 'Неделя',
@@ -421,12 +427,12 @@ export const RU = {
   'settings.dataHint': 'Всё хранится в этом браузере ({storage}). Никуда не отправляется.',
   'settings.backup': 'Скачать резервную копию (JSON)',
   'settings.restore': 'Восстановить из копии',
-  'settings.deleteAll': 'Удалить все записи',
-  'settings.resetAll': 'Сбросить всё',
-  'settings.confirmResetAll': 'Сбросить всё? Записи, категории, валюты и настройки вернутся к значениям по умолчанию.',
-  'settings.resetDone': 'Всё сброшено к значениям по умолчанию',
-  'settings.deleteHint': 'Удаление записей сохраняет категории, валюты и настройки. Сброс отменяет и их.',
-  'settings.confirmDeleteAll': 'Удалить все записи? Категории и настройки останутся.',
+  'settings.deleteAll': 'Удалить все данные',
+  'settings.resetAll': 'Сбросить к значениям по умолчанию',
+  'settings.confirmResetAll': 'Сбросить к значениям по умолчанию? Записи, категории, валюты и настройки вернутся к тому, с чего приложение начиналось.',
+  'settings.resetDone': 'Всё вернулось к значениям по умолчанию',
+  'settings.deleteHint': 'Удаление данных убирает все записи и сохраняет категории, валюты и настройки. Сброс возвращает и их.',
+  'settings.confirmDeleteAll': 'Удалить все данные? Исчезнут все записи; категории, валюты и настройки останутся.',
   'settings.deletedEntries': 'Удалено записей: {count}',
   'settings.backupDownloaded': 'Копия скачана',
   'settings.backupRestored': 'Копия восстановлена, записей: {count}',
@@ -486,6 +492,7 @@ export const RU = {
 /** German texts. */
 export const DE = {
   'app.title': 'Haushaltsbudget',
+  'app.currencyBadge': 'Angezeigt in {currency}',
   'app.storedIn': 'Im Browser gespeichert ({storage}) · funktioniert offline',
   'nav.home': 'Start',
   // Period names, so charts, statistics and the PDF speak the interface language.
@@ -539,6 +546,8 @@ export const DE = {
   'quick.title': 'Zu „{category}" hinzufügen',
   'quick.hint': 'Betrag eingeben und auf Hinzufügen tippen - Datum, Kategorie und Währung werden gesetzt.',
   'quick.added': '{amount} zu „{category}" hinzugefügt',
+  'quick.detailed': 'Mit Details hinzufügen',
+  'quick.detailedHint': 'Kategorie, Datum, Währung und Notiz wählen Sie selbst.',
 
   'period.day': 'Tag',
   'period.week': 'Woche',
@@ -655,12 +664,12 @@ export const DE = {
   'settings.dataHint': 'Alles bleibt in diesem Browser ({storage}). Es wird nichts gesendet.',
   'settings.backup': 'Sicherung laden (JSON)',
   'settings.restore': 'Sicherung einspielen',
-  'settings.deleteAll': 'Alle Einträge löschen',
-  'settings.resetAll': 'Alles zurücksetzen',
-  'settings.confirmResetAll': 'Alles zurücksetzen? Einträge, Kategorien, Währungen und Einstellungen gehen auf die Standardwerte zurück.',
-  'settings.resetDone': 'Alles wurde auf die Standardwerte zurückgesetzt',
-  'settings.deleteHint': 'Das Löschen der Einträge behält Kategorien, Währungen und Einstellungen. Das Zurücksetzen nimmt auch die zurück.',
-  'settings.confirmDeleteAll': 'Alle Einträge löschen? Kategorien und Einstellungen bleiben.',
+  'settings.deleteAll': 'Alle Daten löschen',
+  'settings.resetAll': 'Auf Standard zurücksetzen',
+  'settings.confirmResetAll': 'Auf Standard zurücksetzen? Einträge, Kategorien, Währungen und Einstellungen gehen dahin zurück, wo die App angefangen hat.',
+  'settings.resetDone': 'Alles steht wieder auf den Standardwerten',
+  'settings.deleteHint': 'Das Löschen der Daten entfernt jeden Eintrag und behält Kategorien, Währungen und Einstellungen. Das Zurücksetzen nimmt auch die zurück.',
+  'settings.confirmDeleteAll': 'Alle Daten löschen? Jeder Eintrag geht; Kategorien, Währungen und Einstellungen bleiben.',
   'settings.deletedEntries': '{count} Einträge gelöscht',
   'settings.backupDownloaded': 'Sicherung geladen',
   'settings.backupRestored': 'Sicherung eingespielt: {count} Einträge',

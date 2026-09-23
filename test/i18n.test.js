@@ -76,3 +76,31 @@ test('no language defines the same key twice', async () => {
     assert.deepEqual(repeated, [], `${language} repeats ${repeated.join(', ')}`);
   }
 });
+
+test('every error message the interface translates is one the core really throws', async () => {
+  const { readdirSync, readFileSync } = await import('node:fs');
+  const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
+  // The map in app.js keys off the exact English text of the thrown error, which
+  // is fragile by nature: rewording a message in the core would drop it back to
+  // English in every language without anything failing. This is what fails.
+  const shell = read('../src/ui/app.js');
+  const block = shell.slice(shell.indexOf('const map = {'), shell.indexOf('};', shell.indexOf('const map = {')));
+  const mapped = [...block.matchAll(/'([^']+)':\s*'([^']+)'/g)].map(([, message, key]) => ({ message, key }));
+  assert.ok(mapped.length >= 6, 'the error map was not found');
+
+  const sources = ['../src/core/', '../src/ui/', '../src/ui/views/']
+    .flatMap((directory) => readdirSync(new URL(directory, import.meta.url))
+      .filter((name) => name.endsWith('.js'))
+      .map((name) => read(directory + name)))
+    .join('\n');
+  // A throw can pick between two messages with a ternary, so every quoted string
+  // inside the AppError call counts, not just a lone literal argument.
+  const thrown = new Set([...sources.matchAll(/new AppError\(([\s\S]*?)\);/g)]
+    .flatMap((call) => [...call[1].matchAll(/'([^']+)'/g)].map((literal) => literal[1])));
+
+  for (const { message, key } of mapped) {
+    assert.ok(thrown.has(message), `nothing throws AppError('${message}') any more`);
+    assert.ok(key in EN, `${key} is not a translation key`);
+  }
+});
