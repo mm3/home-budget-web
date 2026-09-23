@@ -1,9 +1,13 @@
 /** Entries screen: filters, the list itself, and the export / import panel. */
 
 import { formatDate, formatMoney, periodStart, todayIso } from '../../core/format.js';
+import { MAX_AMOUNT } from '../../core/model.js';
 import { totals } from '../../core/stats.js';
 import { el, field, options, render } from '../dom.js';
 import { transferPanel } from '../transfer.js';
+
+/** Entries drawn before the list asks whether to show more. */
+export const PAGE_SIZE = 200;
 
 export function entriesView(app) {
   const store = app.store;
@@ -12,6 +16,10 @@ export function entriesView(app) {
   const entries = store.list(filter);
   const currency = store.currency(app.viewCurrency());
   const sums = totals(entries, store.categories);
+  // The summary, the exports and the statistics always cover every matching entry;
+  // only the table itself is cut, because drawing it is what costs the time.
+  const shown = entries.slice(0, app.ui.shownEntries);
+  const hidden = entries.length - shown.length;
 
   const categoryOptions = [{ value: '', label: t('entries.allCategories') },
     ...store.categories.map((category) => ({
@@ -67,9 +75,19 @@ export function entriesView(app) {
             el('th', { text: t('common.date') }), el('th', { text: t('common.category') }),
             el('th.hide-sm', { text: t('common.note') }), el('th.num', { text: t('common.amount') }), el('th', {}),
           ])),
-          el('tbody', {}, entries.map((entry) => entryRow(app, entry))),
+          el('tbody', {}, shown.map((entry) => entryRow(app, entry))),
         ]))
         : el('p.muted', { text: t('entries.empty') }),
+      hidden > 0 ? el('div.more-row', {}, [
+        el('span.muted', { text: t('entries.showing', { shown: shown.length, total: entries.length }) }),
+        el('button', {
+          type: 'button', text: t('entries.showMore', { count: Math.min(hidden, PAGE_SIZE) }),
+          on: { click: () => app.showMoreEntries() },
+        }),
+        el('button.link', {
+          type: 'button', text: t('entries.showAll'), on: { click: () => app.showMoreEntries(true) },
+        }),
+      ]) : null,
     ]),
     transferPanel(app, entries),
   ];
@@ -107,7 +125,7 @@ export function entryForm(app, entry) {
   const message = el('p.error');
   const decimals = store.currency(entry ? entry.currency : store.settings.defaultCurrency).decimals;
   const amountInput = el('input', {
-    type: 'number', step: '0.01', min: '0', required: true,
+    type: 'number', step: '0.01', min: '0', max: String(MAX_AMOUNT / 10 ** decimals), required: true,
     value: entry ? (entry.amount / 10 ** decimals).toFixed(decimals) : '',
   });
   const dateInput = el('input', { type: 'date', required: true, value: entry ? entry.date : todayIso(new Date()) });

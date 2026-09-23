@@ -46,6 +46,8 @@ export function parseAmount(text, decimals = 2) {
   if (typeof text !== 'string') return null;
   let cleaned = text.trim();
   if (!cleaned) return null;
+  // "1e15" would lose its exponent to the cleanup below and quietly become 115.
+  if (/\d\s*[eE][-+]?\s*\d/.test(cleaned)) return null;
   let negative = false;
   if (/^\(.*\)$/.test(cleaned)) {
     negative = true;

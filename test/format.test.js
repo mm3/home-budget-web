@@ -136,3 +136,12 @@ test('period labels follow the language they are given', () => {
   assert.equal(periodLabel('2026-09', 'month', 'long', {}), 'September 2026', 'English is the fallback');
   assert.equal(periodLabel('2026-09', 'month', 'long', { months: ['too', 'short'] }), 'September 2026');
 });
+
+test('scientific notation is refused instead of being mangled', () => {
+  // The cleanup drops letters, so "1e15" used to come out as 115.00 without a word.
+  assert.equal(parseAmount('1e15', 2), null);
+  assert.equal(parseAmount('1E3', 2), null);
+  assert.equal(parseAmount('2.5e-3', 2), null);
+  assert.equal(parseAmount('12.50 €', 2), 1250, 'currency symbols are still tolerated');
+  assert.equal(parseAmount('1 234,56', 2), 123456);
+});

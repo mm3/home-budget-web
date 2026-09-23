@@ -268,3 +268,13 @@ test('deleting the entries keeps the settings, resetting does not', () => {
   assert.ok(!store.currencies.some((currency) => currency.code === 'XTS'));
   assert.equal(store.settings.theme, 'auto');
 });
+
+test('an amount that rounds away says so instead of claiming it is zero', () => {
+  const store = makeStore();
+  assert.throws(() => store.quickAdd('0.001'), /too small/);
+  assert.throws(() => store.quickAdd('0'), /cannot be zero/);
+  assert.throws(() => store.quickAdd('0.00'), /cannot be zero/);
+  assert.throws(() => store.quickAdd('1e15'), /Enter an amount/, 'no exponent sneaks through');
+  assert.throws(() => store.quickAdd('999999999999999'), /too large/);
+  assert.equal(store.quickAdd('0.005').amount, 1, 'half a cent still rounds up to one');
+});

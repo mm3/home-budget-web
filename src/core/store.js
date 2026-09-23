@@ -67,7 +67,11 @@ export class BudgetStore {
     const currency = this.currency(this.settings.defaultCurrency);
     const amount = parseAmount(amountText, currency.decimals);
     if (amount === null) throw new AppError('Enter an amount, for example 12.50');
-    if (amount === 0) throw new AppError('Amount cannot be zero');
+    // "0.001" in a currency with two decimals rounds to nothing - that is not the
+    // same mistake as typing a plain zero, and saying so avoids a puzzling error.
+    if (amount === 0) {
+      throw new AppError(/[1-9]/.test(String(amountText)) ? 'This amount is too small' : 'Amount cannot be zero');
+    }
     return this.addEntry({
       amount: Math.abs(amount),
       categoryId: this.settings.defaultCategoryId,

@@ -1,6 +1,7 @@
 /** Home screen: quick add, key figures, budgets, charts and the latest entries. */
 
 import { barChart, donutChart } from '../../core/charts.js';
+import { MAX_AMOUNT } from '../../core/model.js';
 import { formatDate, formatMoney, PERIODS } from '../../core/format.js';
 import { byCategory, overview, series } from '../../core/stats.js';
 import { el, field, options } from '../dom.js';
@@ -108,7 +109,7 @@ function toggle(app, key, label) {
 function quickAddCard(app, currency) {
   const t = app.t;
   const input = el('input.quick-input', {
-    type: 'number', step: '0.01', min: '0', inputmode: 'decimal',
+    type: 'number', step: '0.01', min: '0', max: String(MAX_AMOUNT / 10 ** currency.decimals), inputmode: 'decimal',
     placeholder: '0.00', 'aria-label': t('common.amount'), id: 'quick-amount',
   });
   const submit = (event) => {

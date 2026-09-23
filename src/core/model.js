@@ -12,6 +12,13 @@ export const STATE_VERSION = DATA_VERSION;
 export const LIMIT_PERIODS = ['day', 'week', 'month', 'year'];
 export const DEFAULT_CATEGORY_ID = 'daily';
 export const MAX_NOTE_LENGTH = 200;
+/**
+ * Biggest amount one entry may hold, in minor units: a thousand million major
+ * units, e.g. 1 000 000 000.00 EUR. Far beyond any home budget, and low enough
+ * that even a full store of entries adds up well inside the range where integers
+ * stay exact (2^53), so no single entry can turn the totals into nonsense.
+ */
+export const MAX_AMOUNT = 100000000000;
 export const MAX_NAME_LENGTH = 40;
 
 /** The category every quick entry goes to. */
@@ -144,6 +151,7 @@ export function createEntry(input, now = new Date()) {
     throw new AppError('Amount must be a whole number of minor units');
   }
   if (amount === 0) throw new AppError('Amount cannot be zero');
+  if (Math.abs(amount) > MAX_AMOUNT) throw new AppError('This amount is too large');
   const date = input.date === undefined || input.date === null || input.date === '' ? todayIso(now) : input.date;
   if (!isIsoDate(date)) throw new AppError('Date must be yyyy-mm-dd');
   if (!input.categoryId) throw new AppError('Category is required');

@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   AppError, convertAmount, createCategory, createCurrency, createDefaultState, createEntry, defaultCategory,
-  defaultCurrencies, findCategory, findCurrency, ICON_CHOICES, LIMIT_PERIODS, newId, signedAmount, slugify,
+  defaultCurrencies, findCategory, findCurrency, ICON_CHOICES, LIMIT_PERIODS, MAX_AMOUNT, newId,
+  signedAmount, slugify,
 } from '../src/core/model.js';
 import { APP_VERSION } from '../src/core/version.js';
 
@@ -145,4 +146,15 @@ test('signedAmount makes expenses negative', () => {
   ];
   assert.equal(signedAmount({ amount: 100, categoryId: 'daily' }, categories), -100);
   assert.equal(signedAmount({ amount: 100, categoryId: 'pay' }, categories), 100);
+});
+
+test('an amount has an upper bound, so totals stay exact', () => {
+  const entry = { categoryId: 'daily', currency: 'EUR' };
+  assert.equal(createEntry({ ...entry, amount: MAX_AMOUNT }).amount, MAX_AMOUNT);
+  assert.equal(createEntry({ ...entry, amount: -MAX_AMOUNT }).amount, -MAX_AMOUNT);
+  assert.throws(() => createEntry({ ...entry, amount: MAX_AMOUNT + 1 }), /too large/);
+  assert.throws(() => createEntry({ ...entry, amount: 1e300 }), /too large/);
+  assert.throws(() => createEntry({ ...entry, amount: -1e300 }), /too large/);
+  // A full store of the largest entries still adds up inside the exact integer range.
+  assert.ok(MAX_AMOUNT * 60000 < Number.MAX_SAFE_INTEGER);
 });

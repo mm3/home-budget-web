@@ -388,6 +388,62 @@ async function main() {
   check('a Russian PDF holds real cyrillic text, not question marks',
     russianPdf.cyrillic && russianPdf.questionMarks === 0, JSON.stringify(russianPdf));
 
+  const bulk = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    const before = store.entries.length;
+    const rows = [];
+    for (let index = 0; index < 5000; index += 1) {
+      rows.push({ amount: 100 + (index % 900), categoryId: 'daily', currency: 'EUR',
+        date: new Date(Date.now() - (index % 400) * 86400000).toISOString().slice(0, 10),
+        note: 'Bulk ' + index });
+    }
+    store.addEntries(rows);
+    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Entries')).click();
+    const started = performance.now();
+    window.homeBudget.render();
+    const renderMs = Math.round(performance.now() - started);
+    const drawn = document.querySelectorAll('.entries-table tbody tr').length;
+    const summary = document.querySelector('.summary').textContent;
+    const more = document.querySelector('.more-row');
+    const showMore = more ? [...more.querySelectorAll('button')][0] : null;
+    if (showMore) showMore.click();
+    await new Promise((done) => setTimeout(done, 200));
+    const afterMore = document.querySelectorAll('.entries-table tbody tr').length;
+    const showAll = [...document.querySelector('.more-row').querySelectorAll('button')][1];
+    showAll.click();
+    await new Promise((done) => setTimeout(done, 600));
+    const afterAll = document.querySelectorAll('.entries-table tbody tr').length;
+    return { total: store.entries.length, before, drawn, renderMs, afterMore, afterAll,
+      summaryCounts: /5[0-9. ]{3}/.test(summary) || summary.includes(String(store.entries.length)),
+      showingText: more ? more.textContent.slice(0, 40) : '' };
+  `);
+  check('a long list is drawn one page at a time',
+    bulk.drawn === 200 && bulk.afterMore === 400 && bulk.afterAll === bulk.total && bulk.renderMs < 400,
+    JSON.stringify(bulk));
+  check('the summary still counts every matching entry, not just the page shown',
+    bulk.summaryCounts, bulk.showingText);
+
+  const amounts = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    const result = {};
+    const attempt = (value) => {
+      try { const entry = store.quickAdd(value); store.deleteEntry(entry.id); return 'accepted ' + entry.amount; }
+      catch (error) { return 'rejected: ' + window.homeBudget.errorText(error); }
+    };
+    result.huge = attempt('999999999999999999999');
+    result.exponent = attempt('1e15');
+    result.tiny = attempt('0.001');
+    result.zero = attempt('0');
+    result.normal = attempt('12.50');
+    result.totalsFinite = Number.isSafeInteger(store.entries.reduce((sum, entry) => sum + entry.amount, 0));
+    return result;
+  `);
+  check('an amount that would break the totals is refused',
+    amounts.huge.startsWith('rejected') && amounts.exponent.startsWith('rejected')
+      && amounts.tiny.startsWith('rejected') && amounts.zero.startsWith('rejected')
+      && amounts.normal === 'accepted 1250' && amounts.totalsFinite,
+    JSON.stringify(amounts));
+
   // Every control in a row of fields has to sit on the same line: the distance from
   // the top of its field must be the same everywhere, whatever the label's length or
   // a hint underneath, and the controls must be equally tall. Wrapping to a second

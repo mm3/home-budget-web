@@ -114,6 +114,9 @@ export const EN = {
   'entries.search': 'Search',
   'entries.searchHint': 'note or category',
   'entries.empty': 'No entries match these filters.',
+  'entries.showing': 'Showing {shown} of {total}',
+  'entries.showMore': 'Show {count} more',
+  'entries.showAll': 'Show all',
   'entries.newEntry': 'New entry',
   'entries.editEntry': 'Edit entry',
   'entries.deleted': 'Entry deleted',
@@ -135,7 +138,7 @@ export const EN = {
   'stats.entryCount': 'Entries: {count}',
 
   'transfer.title': 'Export and import',
-  'transfer.exportTitle': 'Export the entries shown above',
+  'transfer.exportTitle': 'Export everything the filters match',
   'transfer.importTitle': 'Import from CSV or Excel',
   'transfer.importHint': 'Columns are detected automatically; you can correct them before importing.',
   'transfer.exported': 'Exported {count} entries to {format}',
@@ -224,6 +227,9 @@ export const EN = {
   'category.budget': 'Budget',
   'error.amountRequired': 'Enter an amount, for example 12.50',
   'error.unknownCategory': 'Unknown category',
+  'error.amountTooLarge': 'This amount is too large',
+  'error.amountTooSmall': 'This amount is too small for this currency',
+  'error.amountZero': 'The amount cannot be zero',
 };
 
 /** Russian texts. */
@@ -325,6 +331,9 @@ export const RU = {
   'entries.search': 'Поиск',
   'entries.searchHint': 'заметка или категория',
   'entries.empty': 'Нет записей по этим фильтрам.',
+  'entries.showing': 'Показано {shown} из {total}',
+  'entries.showMore': 'Показать ещё {count}',
+  'entries.showAll': 'Показать все',
   'entries.newEntry': 'Новая запись',
   'entries.editEntry': 'Изменить запись',
   'entries.deleted': 'Запись удалена',
@@ -346,7 +355,7 @@ export const RU = {
   'stats.entryCount': 'Записей: {count}',
 
   'transfer.title': 'Экспорт и импорт',
-  'transfer.exportTitle': 'Экспорт показанных записей',
+  'transfer.exportTitle': 'Экспорт всех записей по фильтру',
   'transfer.importTitle': 'Импорт из CSV или Excel',
   'transfer.importHint': 'Колонки определяются автоматически, перед импортом их можно поправить.',
   'transfer.exported': 'Экспортировано записей: {count} ({format})',
@@ -435,6 +444,9 @@ export const RU = {
   'category.budget': 'Покупки',
   'error.amountRequired': 'Введите сумму, например 12.50',
   'error.unknownCategory': 'Неизвестная категория',
+  'error.amountTooLarge': 'Слишком большая сумма',
+  'error.amountTooSmall': 'Слишком маленькая сумма для этой валюты',
+  'error.amountZero': 'Сумма не может быть нулём',
 };
 
 /** German texts. */
@@ -536,6 +548,9 @@ export const DE = {
   'entries.search': 'Suche',
   'entries.searchHint': 'Notiz oder Kategorie',
   'entries.empty': 'Keine Einträge für diese Filter.',
+  'entries.showing': '{shown} von {total} angezeigt',
+  'entries.showMore': '{count} weitere anzeigen',
+  'entries.showAll': 'Alle anzeigen',
   'entries.newEntry': 'Neuer Eintrag',
   'entries.editEntry': 'Eintrag bearbeiten',
   'entries.deleted': 'Eintrag gelöscht',
@@ -557,7 +572,7 @@ export const DE = {
   'stats.entryCount': 'Einträge: {count}',
 
   'transfer.title': 'Export und Import',
-  'transfer.exportTitle': 'Die oben gezeigten Einträge exportieren',
+  'transfer.exportTitle': 'Alles exportieren, was die Filter treffen',
   'transfer.importTitle': 'Import aus CSV oder Excel',
   'transfer.importHint': 'Die Spalten werden automatisch erkannt und können vor dem Import geändert werden.',
   'transfer.exported': '{count} Einträge als {format} exportiert',
@@ -646,6 +661,9 @@ export const DE = {
   'category.budget': 'Einkäufe',
   'error.amountRequired': 'Betrag eingeben, zum Beispiel 12.50',
   'error.unknownCategory': 'Unbekannte Kategorie',
+  'error.amountTooLarge': 'Dieser Betrag ist zu groß',
+  'error.amountTooSmall': 'Dieser Betrag ist für diese Währung zu klein',
+  'error.amountZero': 'Der Betrag darf nicht null sein',
 };
 
 const BUNDLED = { en: EN, ru: RU, de: DE };

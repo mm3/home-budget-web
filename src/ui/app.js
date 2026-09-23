@@ -8,7 +8,7 @@ import {
 import { APP_VERSION } from '../core/version.js';
 import { loadState, migrateState, pickStorage, saveState } from '../core/storage.js';
 import { append, clear, el, render } from './dom.js';
-import { entriesView, entryForm } from './views/entries.js';
+import { entriesView, entryForm, PAGE_SIZE } from './views/entries.js';
 import { homeView } from './views/home.js';
 import { settingsView, categoryForm } from './views/settings.js';
 import { statsView } from './views/stats.js';
@@ -40,6 +40,9 @@ export class App {
       showIncome: false,
       showAverage: true,
       filter: {},
+      // The list draws one row per entry, so a store with tens of thousands of them
+      // would spend seconds in the DOM on every render. It grows on demand instead.
+      shownEntries: PAGE_SIZE,
       importPreview: null,
       message: loaded.error ? { text: loaded.error, kind: 'error' } : null,
     };
@@ -96,6 +99,9 @@ export class App {
     const map = {
       'Enter an amount, for example 12.50': 'error.amountRequired',
       'Unknown category': 'error.unknownCategory',
+      'This amount is too large': 'error.amountTooLarge',
+      'This amount is too small': 'error.amountTooSmall',
+      'Amount cannot be zero': 'error.amountZero',
     };
     return map[error.message] ? this.t(map[error.message]) : error.message;
   }
@@ -113,7 +119,15 @@ export class App {
   }
 
   setUi(changes) {
+    // Any new filter starts the list from the top again.
+    if (changes.filter !== undefined) this.ui.shownEntries = PAGE_SIZE;
     Object.assign(this.ui, changes);
+    this.render();
+  }
+
+  /** Shows the next page of entries. */
+  showMoreEntries(all = false) {
+    this.ui.shownEntries = all ? Number.MAX_SAFE_INTEGER : this.ui.shownEntries + PAGE_SIZE;
     this.render();
   }
 
