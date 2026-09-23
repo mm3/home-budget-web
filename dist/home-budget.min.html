@@ -1,0 +1,3744 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Offline home budget: entries, categories, statistics, CSV/XLSX/PDF export and import.">
+<title>Home Budget</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M7 14l9-7 9 7v11H7z' fill='white'/%3E%3Ccircle cx='16' cy='18' r='3.4' fill='%2322c55e'/%3E%3C/svg%3E">
+<style>:root{--bg:#f4f5f8;--surface:#ffffff;--surface-2:#eef0f4;--border:#e2e5ea;--text:#171a21;--muted:#667085;--accent:#4f46e5;--accent-text:#ffffff;--income:#15803d;--expense:#c2410c;--danger:#dc2626;--warn:#b45309;--bar-expense:#f97316;--bar-income:#22c55e;--radius:14px;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.06);color-scheme:light}body.dark{--bg:#0f1116;--surface:#171a21;--surface-2:#1f232c;--border:#2a2f3a;--text:#e7e9ee;--muted:#98a2b3;--accent:#818cf8;--accent-text:#0f1116;--income:#4ade80;--expense:#fb923c;--danger:#f87171;--warn:#fbbf24;--shadow:none;color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}h1,h2,h3{margin:0;font-size:1rem}h2{font-size:1.05rem}p{margin:0}button,input,select{font:inherit;color:inherit}.muted{color:var(--muted);font-size:.88rem}.block{display:block}.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.income{color:var(--income)}.expense{color:var(--expense)}.error{color:var(--danger);margin-top:6px}.warning{color:var(--warn)}.spacer{flex:1}.app-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border)}.brand{display:flex;align-items:center;gap:8px;font-size:1.05rem}.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--accent-text);font-weight:700}.tabs{display:flex;gap:4px}.tab{display:flex;align-items:center;gap:7px;padding:8px 14px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}.tab:hover{background:var(--surface-2);color:var(--text)}.tab.active{background:var(--surface-2);color:var(--text)}.tab-icon{font-size:1.05rem}.main{max-width:1080px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-direction:column;gap:16px}.app-footer{padding:0 16px 28px;text-align:center;color:var(--muted);font-size:.8rem}.toast{max-width:1080px;margin:12px auto -4px;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--income) 14%,transparent);color:var(--income);font-weight:600}.toast.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}.stat{display:flex;flex-direction:column;gap:2px}.stat-title{color:var(--muted);font-weight:600;font-size:.85rem}.stat-value{font-size:1.45rem;font-variant-numeric:tabular-nums}.stat-sub{color:var(--muted);font-size:.78rem}.quick-card{padding-bottom:12px}.quick-form{display:flex;gap:10px;align-items:stretch}.quick-input-wrap{position:relative;flex:1}.quick-input{width:100%;padding:14px 44px 14px 14px;font-size:1.5rem;font-variant-numeric:tabular-nums;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}.quick-currency{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.1rem}.quick-message{margin-top:8px;font-size:.88rem;min-height:1.2em;color:var(--muted)}.quick-message.ok{color:var(--income)}.quick-message.error{color:var(--danger)}button{padding:9px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-weight:600;cursor:pointer}button:hover{background:var(--surface-2)}button:disabled{opacity:.5;cursor:not-allowed}button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}button.primary:hover{filter:brightness(1.08)}button.danger{color:var(--danger)}button.link{border:0;background:none;padding:4px 6px;color:var(--accent);font-weight:600}button.link.danger{color:var(--danger)}.button-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.file-button{display:inline-flex;align-items:center;padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-weight:600;cursor:pointer;background:var(--surface)}.segmented{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}.segmented button{border:0;border-radius:0;background:var(--surface);padding:7px 12px;color:var(--muted)}.segmented button.active{background:var(--surface-2);color:var(--text)}input,select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);max-width:100%}input[type="color"]{padding:2px;width:48px;height:36px}input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}.field{display:flex;flex-direction:column;gap:4px}.field-label{color:var(--muted);font-size:.8rem;font-weight:600}.field-hint{color:var(--muted);font-size:.75rem}.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.filters-box{margin-bottom:4px}.filters-box>summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:.85rem;padding:4px 0}.filters-box[open]>summary{margin-bottom:8px}.entry-row{cursor:pointer}.filter-actions{display:flex;gap:8px}.inline-form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:12px}.summary{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;font-size:.9rem;font-weight:600}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}th{text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:0 8px 8px;border-bottom:1px solid var(--border)}th.num{text-align:right}td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle}tbody tr:hover{background:var(--surface-2)}tbody tr:last-child td{border-bottom:0}.row-actions{white-space:nowrap;text-align:right}.category-icon{font-size:1.05em;margin-right:7px;line-height:1}.legend-icon{font-size:1em}.small{font-size:.78rem}.row-2{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:end}.icon-input{width:64px;font-size:1.2rem;text-align:center}.icon-picker{display:flex;flex-wrap:wrap;gap:4px}.icon-choice{padding:4px 7px;font-size:1.05rem;border-radius:8px}.card-summary{font-weight:700;font-size:1.05rem;cursor:pointer}.translation-table{max-height:320px;overflow:auto}.translation-table input{width:100%}.fill.over{background:var(--danger) !important}.badge.over{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}.dot{display:inline-block;width:10px;height:10px;margin-right:8px;border-radius:50%;vertical-align:baseline}.badge{margin-left:8px;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-size:.7rem;font-weight:700}.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:99px;background:var(--surface-2)}.entry-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}.entry{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer}.entry:last-child{border-bottom:0}.entry:hover{background:var(--surface-2)}.entry-main{display:flex;flex-direction:column;flex:1;min-width:0}.entry-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.entry-sub{color:var(--muted);font-size:.8rem}.entry-amount{font-weight:700;font-variant-numeric:tabular-nums}.facts{margin:0;padding-left:18px;color:var(--muted);display:flex;flex-direction:column;gap:6px}.bar-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.bar-head{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;margin-bottom:5px}.track{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}.fill{height:100%;border-radius:99px}.chart-box{width:100%;height:220px}.chart-box.tall{height:280px}.chart{width:100%;height:100%;display:block}.bar-expense{fill:var(--bar-expense)}.bar-income{fill:var(--bar-income)}.grid{stroke:var(--border);stroke-width:1}svg .grid{fill:none}.chart-label{fill:var(--muted);font-size:10px}.donut-empty{fill:none;stroke:var(--surface-2);stroke-width:26}.donut-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.donut{width:160px;height:160px;flex:none}.legend{display:flex;gap:14px;margin-top:8px;color:var(--muted);font-size:.8rem;align-items:center}.toggle{display:inline-flex;align-items:center;gap:5px;cursor:pointer}.toggle input{width:14px;height:14px}.chart-scale{fill:var(--muted);font-size:10px}.average-line{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}.average-label{fill:var(--accent);font-size:10px;font-weight:600}.key::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:3px;background:var(--bar-expense)}.key.income::before{background:var(--bar-income)}.legend-list{list-style:none;margin:0;padding:0;flex:1;min-width:160px}.legend-list li{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.88rem}.legend-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.legend-value{color:var(--muted);font-variant-numeric:tabular-nums}.transfer{display:grid;grid-template-columns:1fr 1fr;gap:16px}.transfer-block{display:flex;flex-direction:column;gap:8px}.transfer-block h3{font-size:.95rem}.import-preview{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px}.dialog{width:min(440px,calc(100vw - 32px));border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);padding:16px}.dialog::backdrop{background:rgba(15,17,22,.45)}.dialog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.dialog-form{display:flex;flex-direction:column;gap:12px}.dialog-actions{display:flex;gap:8px;align-items:center;margin-top:4px}@media (max-width:720px){body[data-mode="auto"] .tab-label{display:none}body[data-mode="auto"] .grid,body[data-mode="auto"] .transfer{grid-template-columns:1fr}body[data-mode="auto"] .app-bar{gap:10px}body[data-mode="auto"] .hide-sm,body[data-mode="auto"] .row-actions{display:none}body[data-mode="auto"] .main{padding:14px 12px 32px}}body[data-mode="mobile"] .tab-label{display:none}body[data-mode="mobile"] .grid,body[data-mode="mobile"] .transfer{grid-template-columns:1fr}body[data-mode="mobile"] .hide-sm,body[data-mode="mobile"] .row-actions{display:none}body[data-mode="mobile"] .main{max-width:560px;padding:14px 12px 32px}body[data-mode="mobile"] .cards{grid-template-columns:repeat(2,1fr)}body[data-mode="mobile"] .app-bar{position:sticky}body[data-mode="mobile"] .tabs{flex:1;justify-content:space-around}body[data-mode="desktop"] .main{max-width:1080px}body[data-mode="desktop"] .grid{grid-template-columns:1.3fr 1fr}</style>
+</head>
+<body data-mode="auto">
+<div id="app"></div>
+<noscript>This app needs JavaScript. Everything runs locally in your browser; nothing is sent anywhere.</noscript>
+<script>(function () {
+'use strict';
+const __cache = {};
+const __modules = {};
+function __require(name) {
+if (!(name in __cache)) { __cache[name] = __modules[name](); }
+return __cache[name];
+}
+__modules["main.js"] = function () {
+const { startApp } = __require("ui/app.js");
+const root = document.getElementById('app');
+window.homeBudget = startApp(root);
+return { };
+};
+__modules["ui/app.js"] = function () {
+const { BudgetStore } = __require("core/store.js");
+const { AppError } = __require("core/model.js");
+const { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES } = __require("core/i18n.js");
+const { loadState, migrateState, pickStorage, saveState } = __require("core/storage.js");
+const { append, clear, el, render } = __require("ui/dom.js");
+const { entriesView, entryForm } = __require("ui/views/entries.js");
+const { homeView } = __require("ui/views/home.js");
+const { settingsView, categoryForm } = __require("ui/views/settings.js");
+const { statsView } = __require("ui/views/stats.js");
+const TABS = [
+{ id: 'home', key: 'nav.home', icon: '\u2302' },
+{ id: 'entries', key: 'nav.entries', icon: '\u2630' },
+{ id: 'stats', key: 'nav.stats', icon: '\u25d4' },
+{ id: 'settings', key: 'nav.settings', icon: '\u2699' },
+];
+class App {
+constructor(root, options = {}) {
+this.root = root;
+const picked = options.storage ? { storage: options.storage, kind: 'memory' } : pickStorage();
+this.storageKind = picked.kind === 'localStorage' ? 'local storage' : picked.kind;
+this.storage = picked.storage;
+const loaded = loadState(this.storage);
+this.store = new BudgetStore({
+state: loaded.state,
+persist: (state) => saveState(this.storage, state),
+clock: options.clock,
+});
+this.ui = {
+tab: 'home',
+homePeriod: 'day',
+statsPeriod: 'month',
+currency: null,
+showIncome: false,
+showAverage: true,
+filter: {},
+importPreview: null,
+message: loaded.error ? { text: loaded.error, kind: 'error' } : null,
+};
+this.store.subscribe(() => this.render());
+this.t = (key, params) => this.translator()(key, params);
+}
+translator() {
+const settings = this.store.settings;
+const language = settings.language === 'auto' ? this.detectedLanguage() : settings.language;
+const signature = `${language}|${settings.language === CUSTOM_LANGUAGE ? JSON.stringify(settings.customTranslation) : ''}`;
+if (this.translatorSignature !== signature) {
+this.translatorSignature = signature;
+this.translatorFunction = createTranslator(language, settings.customTranslation);
+}
+return this.translatorFunction;
+}
+detectedLanguage() {
+const navigatorLanguages = typeof navigator === 'object' && navigator
+? (navigator.languages || [navigator.language]).filter(Boolean)
+: [];
+return detectLanguage(navigatorLanguages);
+}
+detectedLanguageName() {
+const code = this.detectedLanguage();
+const found = LANGUAGES.find((item) => item.code === code);
+return found ? found.name : code;
+}
+categoryName(category) {
+return category.nameKey ? this.t(category.nameKey) : category.name;
+}
+countText(count) {
+return count === 1 ? this.t('common.entriesOne') : this.t('common.entries', { count });
+}
+errorText(error) {
+if (!(error instanceof AppError)) return error.message;
+const map = {
+'Enter an amount, for example 12.50': 'error.amountRequired',
+'Unknown category': 'error.unknownCategory',
+};
+return map[error.message] ? this.t(map[error.message]) : error.message;
+}
+viewCurrency() {
+const used = this.store.usedCurrencies();
+return used.includes(this.ui.currency) ? this.ui.currency : used[0];
+}
+setTab(tab) {
+this.ui.tab = tab;
+this.ui.importPreview = null;
+this.render();
+}
+setUi(changes) {
+Object.assign(this.ui, changes);
+this.render();
+}
+notify(text, kind = 'ok') {
+this.focusQuickInput = this.ui.tab === 'home';
+this.ui.message = { text, kind };
+this.render();
+clearTimeout(this.messageTimer);
+this.messageTimer = setTimeout(() => {
+this.ui.message = null;
+this.render();
+}, 4000);
+}
+run(action) {
+try {
+const result = action();
+return result;
+} catch (error) {
+this.notify(this.errorText(error), 'error');
+return null;
+}
+}
+openDialog({ title, body, focus }) {
+const dialog = el('dialog.dialog', { on: { cancel: () => this.closeDialog() } }, [
+el('header.dialog-head', {}, [
+el('h2', { text: title }),
+el('button.link', {
+type: 'button', text: '\u2715', 'aria-label': this.t('common.close'),
+on: { click: () => this.closeDialog() },
+}),
+]),
+body,
+]);
+this.dialog = dialog;
+document.body.append(dialog);
+if (typeof dialog.showModal === 'function') dialog.showModal();
+else dialog.setAttribute('open', 'open');
+if (focus) focus.focus();
+}
+closeDialog() {
+if (!this.dialog) return;
+if (typeof this.dialog.close === 'function' && this.dialog.open) this.dialog.close();
+this.dialog.remove();
+this.dialog = null;
+this.render();
+}
+editEntry(id) {
+const entry = id ? this.store.entries.find((item) => item.id === id) : null;
+this.openDialog(entryForm(this, entry));
+}
+deleteEntry(id) {
+const entry = this.store.entries.find((item) => item.id === id);
+if (!entry) return;
+if (!window.confirm(this.t('entries.confirmDelete'))) return;
+this.run(() => this.store.deleteEntry(id));
+this.notify(this.t('entries.deleted'));
+}
+editCategory(id) {
+const category = id ? this.store.categories.find((item) => item.id === id) : null;
+this.openDialog(categoryForm(this, category));
+}
+deleteCategory(id) {
+const used = this.store.categoryUsage().get(id) || 0;
+if (used > 0) {
+const target = window.prompt(
+this.t('settings.moveEntries', { category: this.categoryName(this.store.category(id)), count: used }),
+this.categoryName(this.store.category(this.store.settings.defaultCategoryId)),
+);
+if (target === null) return;
+const wanted = target.trim().toLowerCase();
+const moveTo = this.store.categories.find((item) => item.name.toLowerCase() === wanted
+|| this.categoryName(item).toLowerCase() === wanted);
+if (!moveTo) {
+this.notify(this.t('settings.noCategoryNamed', { name: target }), 'error');
+return;
+}
+this.run(() => this.store.deleteCategory(id, moveTo.id));
+} else if (window.confirm(this.t('settings.confirmDeleteCategory'))) {
+this.run(() => this.store.deleteCategory(id));
+}
+}
+clearEntries() {
+if (!window.confirm(this.t('settings.confirmDeleteAll'))) return;
+const removed = this.store.clearEntries();
+this.notify(this.t('settings.deletedEntries', { count: removed }));
+}
+restore(rawState) {
+const state = migrateState(rawState);
+this.store.replaceState(state);
+this.notify(this.t('settings.backupRestored', { count: state.entries.length }));
+}
+render() {
+const settings = this.store.settings;
+document.body.dataset.mode = settings.uiMode;
+document.body.dataset.theme = settings.theme;
+document.body.classList.toggle('dark', this.prefersDark(settings.theme));
+document.documentElement.lang = settings.language === 'auto' ? this.detectedLanguage() : settings.language;
+const view = this.currentView();
+render(this.root, [
+el('header.app-bar', {}, [
+el('div.brand', {}, [
+el('span.logo', { text: '\u20ac' }),
+el('strong', { text: this.t('app.title') }),
+]),
+el('nav.tabs', {}, TABS.map((tab) => el('button', {
+type: 'button',
+class: tab.id === this.ui.tab ? 'tab active' : 'tab',
+title: this.t(tab.key),
+on: { click: () => this.setTab(tab.id) },
+}, [el('span.tab-icon', { text: tab.icon }), el('span.tab-label', { text: this.t(tab.key) })]))),
+]),
+this.ui.message ? el('p', { class: `toast ${this.ui.message.kind}`, text: this.ui.message.text }) : null,
+el('main.main', {}, view),
+el('footer.app-footer', {}, [
+el('span', { text: this.t('app.storedIn', { storage: this.storageKind }) }),
+]),
+]);
+}
+isDesktop() {
+const mode = this.store.settings.uiMode;
+if (mode !== 'auto') return mode === 'desktop';
+return typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 721px)').matches;
+}
+prefersDark(theme) {
+if (theme === 'dark') return true;
+if (theme === 'light') return false;
+return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+currentView() {
+switch (this.ui.tab) {
+case 'entries': return entriesView(this);
+case 'stats': return statsView(this);
+case 'settings': return settingsView(this);
+default: return homeView(this);
+}
+}
+}
+function startApp(root, options) {
+const app = new App(root, options);
+app.render();
+return app;
+}
+return { startApp, App };
+};
+__modules["core/store.js"] = function () {
+const { AppError, createCategory, createCurrency, createEntry, createDefaultState, findCategory, findCurrency, slugify } = __require("core/model.js");
+const { isIsoDate, parseAmount, periodStart, todayIso } = __require("core/format.js");
+const { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } = __require("core/i18n.js");
+class BudgetStore {
+constructor(options = {}) {
+this.state = options.state || createDefaultState();
+this.persist = options.persist || (() => null);
+this.clock = options.clock || (() => new Date());
+this.listeners = new Set();
+this.lastError = null;
+}
+subscribe(listener) {
+this.listeners.add(listener);
+return () => this.listeners.delete(listener);
+}
+get settings() {
+return this.state.settings;
+}
+get entries() {
+return this.state.entries;
+}
+get categories() {
+return this.state.settings.categories;
+}
+get currencies() {
+return this.state.settings.currencies;
+}
+category(id) {
+return findCategory(this.categories, id);
+}
+currency(code) {
+return findCurrency(this.currencies, code || this.settings.defaultCurrency);
+}
+today() {
+return todayIso(this.clock());
+}
+quickAdd(amountText) {
+const currency = this.currency(this.settings.defaultCurrency);
+const amount = parseAmount(amountText, currency.decimals);
+if (amount === null) throw new AppError('Enter an amount, for example 12.50');
+if (amount === 0) throw new AppError('Amount cannot be zero');
+return this.addEntry({
+amount: Math.abs(amount),
+categoryId: this.settings.defaultCategoryId,
+currency: currency.code,
+date: this.today(),
+});
+}
+addEntry(input) {
+const entry = createEntry(input, this.clock());
+if (!this.categories.some((category) => category.id === entry.categoryId)) {
+throw new AppError('Unknown category');
+}
+this.state.entries.push(entry);
+this.#changed();
+return entry;
+}
+updateEntry(id, changes) {
+const index = this.state.entries.findIndex((entry) => entry.id === id);
+if (index < 0) throw new AppError('Entry not found');
+const updated = createEntry({ ...this.state.entries[index], ...changes, id }, this.clock());
+this.state.entries[index] = updated;
+this.#changed();
+return updated;
+}
+deleteEntry(id) {
+const index = this.state.entries.findIndex((entry) => entry.id === id);
+if (index < 0) throw new AppError('Entry not found');
+const [removed] = this.state.entries.splice(index, 1);
+this.#changed();
+return removed;
+}
+addEntries(entries) {
+let added = 0;
+for (const input of entries) {
+try {
+const entry = createEntry(input, this.clock());
+if (!this.categories.some((category) => category.id === entry.categoryId)) continue;
+this.state.entries.push(entry);
+added += 1;
+} catch {
+}
+}
+if (added) this.#changed();
+return added;
+}
+list(filter = {}) {
+const text = (filter.text || '').trim().toLowerCase();
+return this.state.entries
+.filter((entry) => {
+if (filter.from && entry.date < filter.from) return false;
+if (filter.to && entry.date > filter.to) return false;
+if (filter.categoryId && entry.categoryId !== filter.categoryId) return false;
+if (filter.currency && entry.currency !== filter.currency) return false;
+if (text) {
+const haystack = `${entry.note} ${this.category(entry.categoryId).name}`.toLowerCase();
+if (!haystack.includes(text)) return false;
+}
+return true;
+})
+.sort((a, b) => (a.date === b.date
+? String(b.createdAt).localeCompare(String(a.createdAt))
+: b.date.localeCompare(a.date)));
+}
+addCategory(input) {
+const category = createCategory(input);
+if (this.categories.some((existing) => existing.id === category.id
+|| existing.name.toLowerCase() === category.name.toLowerCase())) {
+throw new AppError(`Category "${category.name}" already exists`);
+}
+this.categories.push(category);
+this.#changed();
+return category;
+}
+updateCategory(id, changes) {
+const index = this.categories.findIndex((category) => category.id === id);
+if (index < 0) throw new AppError('Category not found');
+const current = this.categories[index];
+const renamed = changes.name !== undefined && String(changes.name).trim() !== current.name;
+const updated = createCategory({ ...current, ...changes, id, keepNameKey: !renamed });
+if (this.categories.some((other, otherIndex) => otherIndex !== index
+&& other.name.toLowerCase() === updated.name.toLowerCase())) {
+throw new AppError(`Category "${updated.name}" already exists`);
+}
+this.categories[index] = updated;
+this.#changed();
+return updated;
+}
+categoryUsage() {
+const usage = new Map();
+for (const entry of this.state.entries) {
+usage.set(entry.categoryId, (usage.get(entry.categoryId) || 0) + 1);
+}
+return usage;
+}
+deleteCategory(id, moveToId = null) {
+if (id === this.settings.defaultCategoryId) throw new AppError('The default category cannot be deleted');
+const index = this.categories.findIndex((category) => category.id === id);
+if (index < 0) throw new AppError('Category not found');
+const used = this.categoryUsage().get(id) || 0;
+if (used > 0) {
+if (!moveToId) {
+throw new AppError(`"${this.category(id).name}" is used by ${used} ${used === 1 ? 'entry' : 'entries'}`);
+}
+if (!this.categories.some((category) => category.id === moveToId)) throw new AppError('Unknown category');
+for (const entry of this.state.entries) {
+if (entry.categoryId === id) entry.categoryId = moveToId;
+}
+}
+this.categories.splice(index, 1);
+this.#changed();
+return used;
+}
+addCurrency(input) {
+const currency = createCurrency(input);
+if (this.currencies.some((existing) => existing.code === currency.code)) {
+throw new AppError(`Currency ${currency.code} already exists`);
+}
+this.currencies.push(currency);
+this.#changed();
+return currency;
+}
+deleteCurrency(code) {
+if (code === this.settings.defaultCurrency) throw new AppError('The default currency cannot be removed');
+const index = this.currencies.findIndex((currency) => currency.code === code);
+if (index < 0) throw new AppError('Currency not found');
+if (this.state.entries.some((entry) => entry.currency === code)) {
+throw new AppError(`${code} is still used by some entries`);
+}
+this.currencies.splice(index, 1);
+this.#changed();
+}
+usedCurrencies() {
+const used = new Set(this.state.entries.map((entry) => entry.currency));
+used.add(this.settings.defaultCurrency);
+return [...used].sort((a, b) => {
+if (a === this.settings.defaultCurrency) return -1;
+if (b === this.settings.defaultCurrency) return 1;
+return a.localeCompare(b);
+});
+}
+updateSettings(changes) {
+const settings = this.settings;
+if (changes.defaultCategoryId !== undefined) {
+if (!this.categories.some((category) => category.id === changes.defaultCategoryId)) {
+throw new AppError('Unknown category');
+}
+settings.defaultCategoryId = changes.defaultCategoryId;
+}
+if (changes.defaultCurrency !== undefined) {
+if (!this.currencies.some((currency) => currency.code === changes.defaultCurrency)) {
+throw new AppError('Unknown currency');
+}
+settings.defaultCurrency = changes.defaultCurrency;
+}
+if (changes.uiMode !== undefined) {
+if (!['auto', 'mobile', 'desktop'].includes(changes.uiMode)) throw new AppError('Unknown display mode');
+settings.uiMode = changes.uiMode;
+}
+if (changes.theme !== undefined) {
+if (!['auto', 'light', 'dark'].includes(changes.theme)) throw new AppError('Unknown theme');
+settings.theme = changes.theme;
+}
+if (changes.language !== undefined) {
+const allowed = ['auto', CUSTOM_LANGUAGE, ...LANGUAGES.map((item) => item.code)];
+if (!allowed.includes(changes.language)) throw new AppError('Unknown language');
+settings.language = changes.language;
+}
+if (changes.customLanguageName !== undefined) {
+settings.customLanguageName = String(changes.customLanguageName).trim().slice(0, 40) || 'My language';
+}
+if (changes.customTranslation !== undefined) {
+settings.customTranslation = sanitizeTranslation(changes.customTranslation);
+}
+this.#changed();
+return settings;
+}
+replaceState(state) {
+this.state = state;
+this.#changed();
+}
+clearEntries() {
+const removed = this.state.entries.length;
+this.state.entries = [];
+this.#changed();
+return removed;
+}
+budgets(currencyCode, today = this.today()) {
+const from = periodStart(today, 'month');
+const to = this.monthEnd(from);
+const spent = new Map();
+for (const entry of this.state.entries) {
+if (entry.currency !== currencyCode || entry.date < from || entry.date > to) continue;
+spent.set(entry.categoryId, (spent.get(entry.categoryId) || 0) + entry.amount);
+}
+return this.categories
+.filter((category) => category.kind === 'expense' && category.limit)
+.map((category) => {
+const used = spent.get(category.id) || 0;
+return {
+category,
+spent: used,
+limit: category.limit,
+percent: Math.round((used / category.limit) * 100),
+over: used > category.limit,
+remaining: category.limit - used,
+};
+})
+.sort((a, b) => b.percent - a.percent);
+}
+monthEnd(monthStart) {
+const [year, month] = monthStart.split('-').map(Number);
+const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+return `${monthStart.slice(0, 8)}${String(days).padStart(2, '0')}`;
+}
+categoryByNameOrCreate(name) {
+const wanted = String(name || '').trim();
+if (!wanted) return this.category(this.settings.defaultCategoryId);
+const existing = this.categories.find((category) => category.name.toLowerCase() === wanted.toLowerCase()
+|| category.id === slugify(wanted));
+return existing || this.addCategory({ name: wanted, color: pickColor(this.categories.length) });
+}
+#changed() {
+this.lastError = this.persist(this.state);
+for (const listener of this.listeners) listener(this.state);
+}
+}
+const PALETTE = ['#4f46e5', '#ea580c', '#0284c7', '#16a34a', '#db2777', '#ca8a04', '#7c3aed', '#0d9488'];
+function pickColor(index) {
+return PALETTE[index % PALETTE.length];
+}
+return { pickColor, BudgetStore };
+};
+__modules["core/model.js"] = function () {
+const { isIsoDate, todayIso } = __require("core/format.js");
+class AppError extends Error {}
+const STATE_VERSION = 2;
+const DEFAULT_CATEGORY_ID = 'daily';
+const MAX_NOTE_LENGTH = 200;
+const MAX_NAME_LENGTH = 40;
+function defaultCategory() {
+return {
+id: DEFAULT_CATEGORY_ID, name: 'Daily', nameKey: 'category.daily',
+kind: 'expense', color: '#4f46e5', icon: '\u2615', limit: null,
+};
+}
+function defaultCategories() {
+return [
+defaultCategory(),
+{ id: 'monthly', name: 'Monthly', nameKey: 'category.monthly', kind: 'expense', color: '#0f766e', icon: '\ud83d\udd01', limit: null },
+{ id: 'yearly', name: 'Yearly', nameKey: 'category.yearly', kind: 'expense', color: '#b45309', icon: '\ud83d\udcc5', limit: null },
+{ id: 'groceries', name: 'Groceries', nameKey: 'category.groceries', kind: 'expense', color: '#ea580c', icon: '\ud83d\uded2', limit: null },
+{ id: 'transport', name: 'Transport', nameKey: 'category.transport', kind: 'expense', color: '#0284c7', icon: '\ud83d\ude8c', limit: null },
+{ id: 'home', name: 'Home', nameKey: 'category.home', kind: 'expense', color: '#7c3aed', icon: '\ud83c\udfe0', limit: null },
+{ id: 'income', name: 'Income', nameKey: 'category.income', kind: 'income', color: '#16a34a', icon: '\ud83d\udcb0', limit: null },
+];
+}
+const ICON_CHOICES = ['\u2615', '\ud83d\udd01', '\ud83d\udcc5', '\ud83d\uded2', '\ud83d\ude8c', '\ud83c\udfe0',
+'\ud83d\udcb0', '\ud83c\udf74', '\ud83d\udc8a', '\ud83c\udfac', '\ud83d\udc55', '\ud83d\udcf1', '\u26a1', '\ud83d\udc36',
+'\ud83c\udf81', '\u2708\ufe0f', '\ud83d\udcda', '\ud83c\udfcb\ufe0f', '\ud83d\udc76', '\ud83d\udd27', '\ud83d\udcb3', '\u2753'];
+function defaultCurrencies() {
+return [
+{ code: 'EUR', symbol: '€', decimals: 2 },
+{ code: 'USD', symbol: '$', decimals: 2 },
+{ code: 'GBP', symbol: '£', decimals: 2 },
+];
+}
+function createDefaultState() {
+return {
+version: STATE_VERSION,
+settings: {
+categories: defaultCategories(),
+currencies: defaultCurrencies(),
+defaultCategoryId: DEFAULT_CATEGORY_ID,
+defaultCurrency: 'EUR',
+uiMode: 'auto',
+theme: 'auto',
+language: 'auto',
+customLanguageName: 'My language',
+customTranslation: {},
+},
+entries: [],
+};
+}
+let idCounter = 0;
+function newId(now = Date.now()) {
+idCounter = (idCounter + 1) % 1000;
+return now.toString(36) + '-' + idCounter.toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function slugify(name) {
+const slug = String(name).toLowerCase().trim()
+.replace(/[^a-z0-9À-ɏЀ-ӿ]+/g, '-')
+.replace(/^-+|-+$/g, '');
+return slug || 'category';
+}
+function createEntry(input, now = new Date()) {
+const amount = Number(input.amount);
+if (!Number.isFinite(amount) || !Number.isInteger(amount)) {
+throw new AppError('Amount must be a whole number of minor units');
+}
+if (amount === 0) throw new AppError('Amount cannot be zero');
+const date = input.date === undefined || input.date === null || input.date === '' ? todayIso(now) : input.date;
+if (!isIsoDate(date)) throw new AppError('Date must be yyyy-mm-dd');
+if (!input.categoryId) throw new AppError('Category is required');
+if (!input.currency) throw new AppError('Currency is required');
+const note = String(input.note ?? '').trim();
+if (note.length > MAX_NOTE_LENGTH) throw new AppError(`Note must be at most ${MAX_NOTE_LENGTH} characters`);
+return {
+id: input.id || newId(),
+date,
+amount,
+categoryId: String(input.categoryId),
+currency: String(input.currency).toUpperCase(),
+note,
+createdAt: input.createdAt || new Date(now).toISOString(),
+};
+}
+function createCategory(input) {
+const name = String(input.name ?? '').trim();
+if (!name) throw new AppError('Category name is required');
+if (name.length > MAX_NAME_LENGTH) throw new AppError(`Name must be at most ${MAX_NAME_LENGTH} characters`);
+const kind = input.kind === 'income' ? 'income' : 'expense';
+const color = /^#[0-9a-fA-F]{6}$/.test(input.color || '') ? String(input.color).toLowerCase() : '#4f46e5';
+const icon = [...String(input.icon ?? '').trim()].slice(0, 2).join('') || '\ud83d\udcb8';
+let limit = null;
+if (input.limit !== null && input.limit !== undefined && input.limit !== '') {
+const value = Number(input.limit);
+if (!Number.isFinite(value) || !Number.isInteger(value)) throw new AppError('Limit must be a whole number of minor units');
+if (value < 0) throw new AppError('Limit cannot be negative');
+limit = value || null;
+}
+const category = { id: input.id || slugify(name), name, kind, color, icon, limit };
+if (input.nameKey && input.keepNameKey !== false) category.nameKey = input.nameKey;
+return category;
+}
+function createCurrency(input) {
+const code = String(input.code ?? '').trim().toUpperCase();
+if (!/^[A-Z]{2,5}$/.test(code)) throw new AppError('Currency code must be 2-5 letters, e.g. EUR');
+const decimals = Number.isInteger(input.decimals) ? input.decimals : 2;
+if (decimals < 0 || decimals > 4) throw new AppError('Decimals must be between 0 and 4');
+const symbol = String(input.symbol ?? '').trim() || code;
+return { code, symbol, decimals };
+}
+function findCurrency(currencies, code) {
+return currencies.find((currency) => currency.code === code) || { code, symbol: code, decimals: 2 };
+}
+function findCategory(categories, id) {
+return categories.find((category) => category.id === id)
+|| { id, name: id || 'Unknown', kind: 'expense', color: '#94a3b8', icon: '\u2753', limit: null };
+}
+function signedAmount(entry, categories) {
+return findCategory(categories, entry.categoryId).kind === 'income' ? entry.amount : -entry.amount;
+}
+return { defaultCategory, defaultCategories, defaultCurrencies, createDefaultState, newId, slugify, createEntry, createCategory, createCurrency, findCurrency, findCategory, signedAmount, AppError, STATE_VERSION, DEFAULT_CATEGORY_ID, MAX_NOTE_LENGTH, MAX_NAME_LENGTH, ICON_CHOICES };
+};
+__modules["core/format.js"] = function () {
+const GROUP_SEPARATOR = ' ';
+function formatMoney(minorUnits, currency = {}, options = {}) {
+const decimals = Number.isInteger(currency.decimals) ? currency.decimals : 2;
+const factor = 10 ** decimals;
+const negative = minorUnits < 0;
+const absolute = Math.abs(minorUnits);
+const whole = Math.floor(absolute / factor);
+const fraction = absolute - whole * factor;
+let text = String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, GROUP_SEPARATOR);
+if (decimals > 0) text += '.' + String(fraction).padStart(decimals, '0');
+if (options.sign) text = (negative ? '−' : '+') + text;
+else if (negative) text = '−' + text;
+const symbol = currency.symbol || currency.code || '';
+return options.symbol === false || !symbol ? text : text + ' ' + symbol;
+}
+function toPlainAmount(minorUnits, decimals = 2) {
+const factor = 10 ** decimals;
+const sign = minorUnits < 0 ? '-' : '';
+const absolute = Math.abs(minorUnits);
+const whole = Math.floor(absolute / factor);
+if (decimals === 0) return sign + String(whole);
+return sign + whole + '.' + String(absolute - whole * factor).padStart(decimals, '0');
+}
+function parseAmount(text, decimals = 2) {
+if (typeof text === 'number') return Number.isFinite(text) ? Math.round(text * 10 ** decimals) : null;
+if (typeof text !== 'string') return null;
+let cleaned = text.trim();
+if (!cleaned) return null;
+let negative = false;
+if (/^\(.*\)$/.test(cleaned)) {
+negative = true;
+cleaned = cleaned.slice(1, -1);
+}
+cleaned = cleaned.replace(/[^\d,.\-+]/g, '');
+if (cleaned.startsWith('-')) {
+negative = !negative;
+cleaned = cleaned.slice(1);
+} else if (cleaned.startsWith('+')) {
+cleaned = cleaned.slice(1);
+}
+cleaned = cleaned.replace(/[-+]/g, '');
+const lastComma = cleaned.lastIndexOf(',');
+const lastDot = cleaned.lastIndexOf('.');
+const separator = Math.max(lastComma, lastDot);
+let integerPart = cleaned;
+let fractionPart = '';
+if (separator >= 0) {
+const tail = cleaned.slice(separator + 1);
+if (/^\d{3}$/.test(tail) && cleaned.slice(0, separator).replace(/[.,]/g, '').length > 0
+&& (lastComma >= 0) !== (lastDot >= 0) && cleaned.replace(/[^.,]/g, '').length === 1
+&& cleaned.length - separator - 1 === 3 && !/^0/.test(cleaned)) {
+integerPart = cleaned.replace(/[.,]/g, '');
+} else {
+integerPart = cleaned.slice(0, separator).replace(/[.,]/g, '');
+fractionPart = tail.replace(/[.,]/g, '');
+}
+}
+if (!/^\d*$/.test(integerPart) || !/^\d*$/.test(fractionPart) || integerPart + fractionPart === '') return null;
+const rounded = Math.round(Number('0.' + (fractionPart || '0')) * 10 ** decimals);
+const value = Number(integerPart || '0') * 10 ** decimals + rounded;
+if (!Number.isFinite(value)) return null;
+return negative ? -value : value;
+}
+function todayIso(now = new Date()) {
+return toIsoDate(now);
+}
+function toIsoDate(date) {
+const year = date.getFullYear();
+const month = String(date.getMonth() + 1).padStart(2, '0');
+const day = String(date.getDate()).padStart(2, '0');
+return `${year}-${month}-${day}`;
+}
+function isIsoDate(value) {
+if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+const [year, month, day] = value.split('-').map(Number);
+const date = new Date(Date.UTC(year, month - 1, day));
+return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+function parseDateLoose(value) {
+if (value instanceof Date && !Number.isNaN(value.getTime())) return toIsoDate(value);
+if (typeof value !== 'string') return null;
+const text = value.trim();
+if (!text) return null;
+if (isIsoDate(text)) return text;
+const iso = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+if (iso) return buildIso(Number(iso[1]), Number(iso[2]), Number(iso[3]));
+const dmy = text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
+if (dmy) {
+let year = Number(dmy[3]);
+if (year < 100) year += 2000;
+let day = Number(dmy[1]);
+let month = Number(dmy[2]);
+if (month > 12 && day <= 12) [day, month] = [month, day];
+return buildIso(year, month, day);
+}
+return null;
+}
+function buildIso(year, month, day) {
+const text = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+return isIsoDate(text) ? text : null;
+}
+function addDays(isoDate, days) {
+const [year, month, day] = isoDate.split('-').map(Number);
+const date = new Date(Date.UTC(year, month - 1, day + days));
+return date.toISOString().slice(0, 10);
+}
+function addMonths(isoDate, months) {
+const [year, month, day] = isoDate.split('-').map(Number);
+const target = new Date(Date.UTC(year, month - 1 + months, 1));
+const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+target.setUTCDate(Math.min(day, lastDay));
+return target.toISOString().slice(0, 10);
+}
+function startOfWeek(isoDate) {
+const [year, month, day] = isoDate.split('-').map(Number);
+const date = new Date(Date.UTC(year, month - 1, day));
+const weekday = (date.getUTCDay() + 6) % 7;
+return addDays(isoDate, -weekday);
+}
+function isoWeek(isoDate) {
+const monday = startOfWeek(isoDate);
+const thursday = addDays(monday, 3);
+const year = Number(thursday.slice(0, 4));
+const firstThursday = startOfWeek(`${year}-01-04`);
+const week = Math.round((Date.parse(monday) - Date.parse(firstThursday)) / (7 * 86400000)) + 1;
+return { year, week };
+}
+const PERIODS = ['day', 'week', 'month', 'year'];
+function periodKey(isoDate, period) {
+switch (period) {
+case 'day': return isoDate;
+case 'week': {
+const { year, week } = isoWeek(isoDate);
+return `${year}-W${String(week).padStart(2, '0')}`;
+}
+case 'month': return isoDate.slice(0, 7);
+case 'year': return isoDate.slice(0, 4);
+default: throw new Error(`Unknown period: ${period}`);
+}
+}
+function periodStart(isoDate, period) {
+switch (period) {
+case 'day': return isoDate;
+case 'week': return startOfWeek(isoDate);
+case 'month': return isoDate.slice(0, 7) + '-01';
+case 'year': return isoDate.slice(0, 4) + '-01-01';
+default: throw new Error(`Unknown period: ${period}`);
+}
+}
+function previousPeriodStart(isoDate, period) {
+const start = periodStart(isoDate, period);
+switch (period) {
+case 'day': return addDays(start, -1);
+case 'week': return addDays(start, -7);
+case 'month': return addMonths(start, -1);
+case 'year': return `${Number(start.slice(0, 4)) - 1}-01-01`;
+default: throw new Error(`Unknown period: ${period}`);
+}
+}
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+'July', 'August', 'September', 'October', 'November', 'December'];
+function periodLabel(key, period, style = 'short') {
+switch (period) {
+case 'day': {
+const [year, month, day] = key.split('-');
+return style === 'short' ? `${day}.${month}` : `${day}.${month}.${year}`;
+}
+case 'week': {
+const [year, week] = key.split('-W');
+return style === 'short' ? `W${Number(week)}` : `Week ${Number(week)}, ${year}`;
+}
+case 'month': {
+const [year, month] = key.split('-');
+const name = MONTH_NAMES[Number(month) - 1];
+return style === 'short' ? `${name.slice(0, 3)} ${year.slice(2)}` : `${name} ${year}`;
+}
+case 'year': return key;
+default: throw new Error(`Unknown period: ${period}`);
+}
+}
+function formatDate(isoDate) {
+if (!isIsoDate(isoDate)) return '';
+const [year, month, day] = isoDate.split('-');
+return `${day}.${month}.${year}`;
+}
+return { formatMoney, toPlainAmount, parseAmount, todayIso, toIsoDate, isIsoDate, parseDateLoose, addDays, addMonths, startOfWeek, isoWeek, periodKey, periodStart, previousPeriodStart, periodLabel, formatDate, GROUP_SEPARATOR, PERIODS };
+};
+__modules["core/i18n.js"] = function () {
+const DEFAULT_LANGUAGE = 'en';
+const LANGUAGES = [
+{ code: 'en', name: 'English' },
+{ code: 'ru', name: 'Русский' },
+{ code: 'de', name: 'Deutsch' },
+];
+const CUSTOM_LANGUAGE = 'custom';
+const EN = {
+'app.title': 'Home Budget',
+'app.storedIn': 'Stored in your browser ({storage}) · works offline',
+'nav.home': 'Home',
+'nav.entries': 'Entries',
+'nav.stats': 'Stats',
+'nav.settings': 'Settings',
+'common.add': 'Add',
+'common.save': 'Save',
+'common.cancel': 'Cancel',
+'common.create': 'Create',
+'common.edit': 'Edit',
+'common.delete': 'Delete',
+'common.close': 'Close',
+'common.clear': 'Clear',
+'common.name': 'Name',
+'common.type': 'Type',
+'common.date': 'Date',
+'common.amount': 'Amount',
+'common.category': 'Category',
+'common.currency': 'Currency',
+'common.note': 'Note',
+'common.colour': 'Colour',
+'common.icon': 'Icon',
+'common.expense': 'Expense',
+'common.income': 'Income',
+'common.expenses': 'Expenses',
+'common.balance': 'Balance',
+'common.none': 'none',
+'common.default': 'default',
+'common.entries': '{count} entries',
+'common.entriesOne': '1 entry',
+'quick.title': 'Add to {category}',
+'quick.hint': 'Type an amount and press Add - date, category and currency are filled in for you.',
+'quick.added': 'Added {amount} to {category}',
+'period.day': 'Day',
+'period.week': 'Week',
+'period.month': 'Month',
+'period.year': 'Year',
+'period.days': 'Days',
+'period.weeks': 'Weeks',
+'period.months': 'Months',
+'period.years': 'Years',
+'period.today': 'Today',
+'period.thisWeek': 'This week',
+'period.thisMonth': 'This month',
+'period.thisYear': 'This year',
+'period.perDay': '/ day',
+'period.perWeek': '/ week',
+'period.perMonth': '/ month',
+'period.perYear': '/ year',
+'home.average': 'avg {amount} {per}',
+'home.income': '+{amount} income',
+'home.spendingOverTime': 'Spending over time',
+'home.byCategory': 'By category',
+'home.showIncome': 'show income',
+'home.showAverage': 'show average',
+'home.average.label': 'average {amount}',
+'home.latest': 'Latest entries',
+'home.allEntries': 'All entries',
+'home.empty': 'Nothing here yet - add your first amount above.',
+'home.noExpenses': 'No expenses yet.',
+'home.budgets': 'Budgets this month',
+'home.budgetsHint': 'Set a limit for a category in Settings to follow it here.',
+'home.budgetLeft': '{amount} left',
+'home.budgetOver': '{amount} over',
+'home.budgetOf': '{spent} of {limit}',
+'entries.title': 'Entries',
+'entries.add': '+ Add entry',
+'entries.filters': 'Filters and search',
+'entries.from': 'From',
+'entries.to': 'To',
+'entries.allCategories': 'All categories',
+'entries.allCurrencies': 'All currencies',
+'entries.search': 'Search',
+'entries.searchHint': 'note or category',
+'entries.empty': 'No entries match these filters.',
+'entries.newEntry': 'New entry',
+'entries.editEntry': 'Edit entry',
+'entries.deleted': 'Entry deleted',
+'entries.confirmDelete': 'Delete this entry?',
+'stats.sums': 'Sums and averages',
+'stats.periodColumn': 'Period',
+'stats.current': 'Current',
+'stats.averageColumn': 'Average',
+'stats.total': 'Total',
+'stats.periods': 'Periods',
+'stats.averagesHint': 'Averages count only the periods that have entries.',
+'stats.history': 'History',
+'stats.categories': 'Categories',
+'stats.highlights': 'Highlights',
+'stats.daysWithSpending': 'Days with spending: {count}',
+'stats.largest': 'Largest single expense: {amount} on {date}',
+'stats.busiest': 'Most spent in one day: {amount} on {date}',
+'stats.entryCount': 'Entries: {count}',
+'transfer.title': 'Export and import',
+'transfer.exportTitle': 'Export the entries shown above',
+'transfer.importTitle': 'Import from CSV or Excel',
+'transfer.importHint': 'Columns are detected automatically; you can correct them before importing.',
+'transfer.exported': 'Exported {count} entries to {format}',
+'transfer.readError': 'Could not read the file: {message}',
+'transfer.previewTitle': 'Import preview - {file}',
+'transfer.byHeader': 'Columns were matched by their header names.',
+'transfer.byContent': 'No header was recognised, so the columns were guessed from their contents.',
+'transfer.notUsed': 'not used',
+'transfer.column': 'Column {number}',
+'transfer.importButton': 'Import {count} entries',
+'transfer.skippedRows': 'Skipped rows: {rows}',
+'transfer.imported': 'Imported {count} entries',
+'settings.defaults': 'Defaults',
+'settings.quickCategory': 'Category for quick entries',
+'settings.displayMode': 'Display mode',
+'settings.modeAuto': 'Automatic',
+'settings.modeMobile': 'Mobile',
+'settings.modeDesktop': 'Desktop',
+'settings.theme': 'Theme',
+'settings.themeAuto': 'System',
+'settings.themeLight': 'Light',
+'settings.themeDark': 'Dark',
+'settings.language': 'Language',
+'settings.languageAuto': 'Automatic ({language})',
+'settings.languageCustom': 'My own translation',
+'settings.categories': 'Categories',
+'settings.newCategory': '+ New category',
+'settings.editCategory': 'Edit category',
+'settings.createCategory': 'New category',
+'settings.limit': 'Monthly limit',
+'settings.limitHint': 'Leave empty for no limit',
+'settings.confirmDeleteCategory': 'Delete this category?',
+'settings.moveEntries': '"{category}" has {count} entries. Move them to which category? Type its name, or cancel.',
+'settings.noCategoryNamed': 'No category named "{name}"',
+'settings.currencies': 'Currencies',
+'settings.currencyCode': 'Code',
+'settings.currencySymbol': 'Symbol',
+'settings.currencyDecimals': 'Decimals',
+'settings.addCurrency': 'Add currency',
+'settings.data': 'Data',
+'settings.dataHint': 'Everything is stored in this browser ({storage}). Nothing is sent anywhere.',
+'settings.backup': 'Download backup (JSON)',
+'settings.restore': 'Restore backup',
+'settings.deleteAll': 'Delete all entries',
+'settings.confirmDeleteAll': 'Delete all entries? The categories and settings stay.',
+'settings.deletedEntries': '{count} entries deleted',
+'settings.backupDownloaded': 'Backup downloaded',
+'settings.backupRestored': 'Backup restored: {count} entries',
+'settings.backupError': 'Could not read the backup: {message}',
+'settings.translation': 'My own translation',
+'settings.translationHint': 'Fill in the texts you want to change. Empty fields keep the English text.',
+'settings.translationName': 'Language name',
+'settings.translationExport': 'Download translation',
+'settings.translationImport': 'Load translation',
+'settings.translationSaved': 'Translation saved',
+'settings.translationLoaded': 'Translation loaded',
+'settings.translationError': 'Could not read the translation file',
+'settings.translationUse': 'Use my translation',
+'category.daily': 'Daily',
+'category.monthly': 'Monthly',
+'category.yearly': 'Yearly',
+'category.groceries': 'Groceries',
+'category.transport': 'Transport',
+'category.home': 'Home',
+'category.income': 'Income',
+'error.amountRequired': 'Enter an amount, for example 12.50',
+'error.unknownCategory': 'Unknown category',
+};
+const RU = {
+'app.title': 'Домашний бюджет',
+'app.storedIn': 'Хранится в вашем браузере ({storage}) · работает офлайн',
+'nav.home': 'Главная',
+'nav.entries': 'Записи',
+'nav.stats': 'Статистика',
+'nav.settings': 'Настройки',
+'common.add': 'Добавить',
+'common.save': 'Сохранить',
+'common.cancel': 'Отмена',
+'common.create': 'Создать',
+'common.edit': 'Изменить',
+'common.delete': 'Удалить',
+'common.close': 'Закрыть',
+'common.clear': 'Сбросить',
+'common.name': 'Название',
+'common.type': 'Тип',
+'common.date': 'Дата',
+'common.amount': 'Сумма',
+'common.category': 'Категория',
+'common.currency': 'Валюта',
+'common.note': 'Заметка',
+'common.colour': 'Цвет',
+'common.icon': 'Значок',
+'common.expense': 'Расход',
+'common.income': 'Доход',
+'common.expenses': 'Расходы',
+'common.balance': 'Баланс',
+'common.none': 'нет',
+'common.default': 'по умолчанию',
+'common.entries': 'записей: {count}',
+'common.entriesOne': '1 запись',
+'quick.title': 'Добавить в «{category}»',
+'quick.hint': 'Введите сумму и нажмите «Добавить» — дата, категория и валюта подставляются сами.',
+'quick.added': 'Добавлено {amount} в «{category}»',
+'period.day': 'День',
+'period.week': 'Неделя',
+'period.month': 'Месяц',
+'period.year': 'Год',
+'period.days': 'Дни',
+'period.weeks': 'Недели',
+'period.months': 'Месяцы',
+'period.years': 'Годы',
+'period.today': 'Сегодня',
+'period.thisWeek': 'На этой неделе',
+'period.thisMonth': 'В этом месяце',
+'period.thisYear': 'В этом году',
+'period.perDay': '/ день',
+'period.perWeek': '/ неделю',
+'period.perMonth': '/ месяц',
+'period.perYear': '/ год',
+'home.average': 'в среднем {amount} {per}',
+'home.income': '+{amount} доход',
+'home.spendingOverTime': 'Расходы по времени',
+'home.byCategory': 'По категориям',
+'home.showIncome': 'показать доходы',
+'home.showAverage': 'показать среднее',
+'home.average.label': 'среднее {amount}',
+'home.latest': 'Последние записи',
+'home.allEntries': 'Все записи',
+'home.empty': 'Пока пусто — добавьте первую сумму выше.',
+'home.noExpenses': 'Расходов пока нет.',
+'home.budgets': 'Лимиты в этом месяце',
+'home.budgetsHint': 'Задайте лимит категории в настройках, чтобы следить за ним здесь.',
+'home.budgetLeft': 'осталось {amount}',
+'home.budgetOver': 'перерасход {amount}',
+'home.budgetOf': '{spent} из {limit}',
+'entries.title': 'Записи',
+'entries.add': '+ Новая запись',
+'entries.filters': 'Фильтры и поиск',
+'entries.from': 'С',
+'entries.to': 'По',
+'entries.allCategories': 'Все категории',
+'entries.allCurrencies': 'Все валюты',
+'entries.search': 'Поиск',
+'entries.searchHint': 'заметка или категория',
+'entries.empty': 'Нет записей по этим фильтрам.',
+'entries.newEntry': 'Новая запись',
+'entries.editEntry': 'Изменить запись',
+'entries.deleted': 'Запись удалена',
+'entries.confirmDelete': 'Удалить эту запись?',
+'stats.sums': 'Суммы и средние',
+'stats.periodColumn': 'Период',
+'stats.current': 'Текущий',
+'stats.averageColumn': 'Среднее',
+'stats.total': 'Всего',
+'stats.periods': 'Периодов',
+'stats.averagesHint': 'Среднее считается только по периодам с записями.',
+'stats.history': 'История',
+'stats.categories': 'Категории',
+'stats.highlights': 'Главное',
+'stats.daysWithSpending': 'Дней с тратами: {count}',
+'stats.largest': 'Самый крупный расход: {amount}, {date}',
+'stats.busiest': 'Больше всего за день: {amount}, {date}',
+'stats.entryCount': 'Записей: {count}',
+'transfer.title': 'Экспорт и импорт',
+'transfer.exportTitle': 'Экспорт показанных записей',
+'transfer.importTitle': 'Импорт из CSV или Excel',
+'transfer.importHint': 'Колонки определяются автоматически, перед импортом их можно поправить.',
+'transfer.exported': 'Экспортировано записей: {count} ({format})',
+'transfer.readError': 'Не удалось прочитать файл: {message}',
+'transfer.previewTitle': 'Предпросмотр импорта — {file}',
+'transfer.byHeader': 'Колонки определены по названиям заголовков.',
+'transfer.byContent': 'Заголовок не найден, колонки определены по содержимому.',
+'transfer.notUsed': 'не используется',
+'transfer.column': 'Колонка {number}',
+'transfer.importButton': 'Импортировать записей: {count}',
+'transfer.skippedRows': 'Пропущенные строки: {rows}',
+'transfer.imported': 'Импортировано записей: {count}',
+'settings.defaults': 'По умолчанию',
+'settings.quickCategory': 'Категория для быстрых записей',
+'settings.displayMode': 'Режим отображения',
+'settings.modeAuto': 'Автоматически',
+'settings.modeMobile': 'Мобильный',
+'settings.modeDesktop': 'Десктопный',
+'settings.theme': 'Тема',
+'settings.themeAuto': 'Системная',
+'settings.themeLight': 'Светлая',
+'settings.themeDark': 'Тёмная',
+'settings.language': 'Язык',
+'settings.languageAuto': 'Автоматически ({language})',
+'settings.languageCustom': 'Мой перевод',
+'settings.categories': 'Категории',
+'settings.newCategory': '+ Новая категория',
+'settings.editCategory': 'Изменить категорию',
+'settings.createCategory': 'Новая категория',
+'settings.limit': 'Месячный лимит',
+'settings.limitHint': 'Пусто — без лимита',
+'settings.confirmDeleteCategory': 'Удалить эту категорию?',
+'settings.moveEntries': 'В категории «{category}» записей: {count}. В какую категорию их перенести? Введите название или отмените.',
+'settings.noCategoryNamed': 'Нет категории с названием «{name}»',
+'settings.currencies': 'Валюты',
+'settings.currencyCode': 'Код',
+'settings.currencySymbol': 'Символ',
+'settings.currencyDecimals': 'Знаков',
+'settings.addCurrency': 'Добавить валюту',
+'settings.data': 'Данные',
+'settings.dataHint': 'Всё хранится в этом браузере ({storage}). Никуда не отправляется.',
+'settings.backup': 'Скачать резервную копию (JSON)',
+'settings.restore': 'Восстановить из копии',
+'settings.deleteAll': 'Удалить все записи',
+'settings.confirmDeleteAll': 'Удалить все записи? Категории и настройки останутся.',
+'settings.deletedEntries': 'Удалено записей: {count}',
+'settings.backupDownloaded': 'Копия скачана',
+'settings.backupRestored': 'Копия восстановлена, записей: {count}',
+'settings.backupError': 'Не удалось прочитать копию: {message}',
+'settings.translation': 'Мой перевод',
+'settings.translationHint': 'Заполните строки, которые хотите изменить. Пустые останутся на английском.',
+'settings.translationName': 'Название языка',
+'settings.translationExport': 'Скачать перевод',
+'settings.translationImport': 'Загрузить перевод',
+'settings.translationSaved': 'Перевод сохранён',
+'settings.translationLoaded': 'Перевод загружен',
+'settings.translationError': 'Не удалось прочитать файл перевода',
+'settings.translationUse': 'Использовать мой перевод',
+'category.daily': 'Ежедневные',
+'category.monthly': 'Ежемесячные',
+'category.yearly': 'Ежегодные',
+'category.groceries': 'Продукты',
+'category.transport': 'Транспорт',
+'category.home': 'Дом',
+'category.income': 'Доход',
+'error.amountRequired': 'Введите сумму, например 12.50',
+'error.unknownCategory': 'Неизвестная категория',
+};
+const DE = {
+'app.title': 'Haushaltsbudget',
+'app.storedIn': 'Im Browser gespeichert ({storage}) · funktioniert offline',
+'nav.home': 'Start',
+'nav.entries': 'Einträge',
+'nav.stats': 'Statistik',
+'nav.settings': 'Einstellungen',
+'common.add': 'Hinzufügen',
+'common.save': 'Speichern',
+'common.cancel': 'Abbrechen',
+'common.create': 'Anlegen',
+'common.edit': 'Bearbeiten',
+'common.delete': 'Löschen',
+'common.close': 'Schließen',
+'common.clear': 'Zurücksetzen',
+'common.name': 'Name',
+'common.type': 'Art',
+'common.date': 'Datum',
+'common.amount': 'Betrag',
+'common.category': 'Kategorie',
+'common.currency': 'Währung',
+'common.note': 'Notiz',
+'common.colour': 'Farbe',
+'common.icon': 'Symbol',
+'common.expense': 'Ausgabe',
+'common.income': 'Einnahme',
+'common.expenses': 'Ausgaben',
+'common.balance': 'Saldo',
+'common.none': 'keine',
+'common.default': 'Standard',
+'common.entries': '{count} Einträge',
+'common.entriesOne': '1 Eintrag',
+'quick.title': 'Zu „{category}" hinzufügen',
+'quick.hint': 'Betrag eingeben und auf Hinzufügen tippen - Datum, Kategorie und Währung werden gesetzt.',
+'quick.added': '{amount} zu „{category}" hinzugefügt',
+'period.day': 'Tag',
+'period.week': 'Woche',
+'period.month': 'Monat',
+'period.year': 'Jahr',
+'period.days': 'Tage',
+'period.weeks': 'Wochen',
+'period.months': 'Monate',
+'period.years': 'Jahre',
+'period.today': 'Heute',
+'period.thisWeek': 'Diese Woche',
+'period.thisMonth': 'Dieser Monat',
+'period.thisYear': 'Dieses Jahr',
+'period.perDay': '/ Tag',
+'period.perWeek': '/ Woche',
+'period.perMonth': '/ Monat',
+'period.perYear': '/ Jahr',
+'home.average': 'Ø {amount} {per}',
+'home.income': '+{amount} Einnahmen',
+'home.spendingOverTime': 'Ausgaben im Zeitverlauf',
+'home.byCategory': 'Nach Kategorie',
+'home.showIncome': 'Einnahmen zeigen',
+'home.showAverage': 'Durchschnitt zeigen',
+'home.average.label': 'Durchschnitt {amount}',
+'home.latest': 'Letzte Einträge',
+'home.allEntries': 'Alle Einträge',
+'home.empty': 'Noch nichts da - oben den ersten Betrag eintragen.',
+'home.noExpenses': 'Noch keine Ausgaben.',
+'home.budgets': 'Limits in diesem Monat',
+'home.budgetsHint': 'Ein Limit in den Einstellungen setzen, um es hier zu verfolgen.',
+'home.budgetLeft': '{amount} übrig',
+'home.budgetOver': '{amount} darüber',
+'home.budgetOf': '{spent} von {limit}',
+'entries.title': 'Einträge',
+'entries.add': '+ Neuer Eintrag',
+'entries.filters': 'Filter und Suche',
+'entries.from': 'Von',
+'entries.to': 'Bis',
+'entries.allCategories': 'Alle Kategorien',
+'entries.allCurrencies': 'Alle Währungen',
+'entries.search': 'Suche',
+'entries.searchHint': 'Notiz oder Kategorie',
+'entries.empty': 'Keine Einträge für diese Filter.',
+'entries.newEntry': 'Neuer Eintrag',
+'entries.editEntry': 'Eintrag bearbeiten',
+'entries.deleted': 'Eintrag gelöscht',
+'entries.confirmDelete': 'Diesen Eintrag löschen?',
+'stats.sums': 'Summen und Durchschnitte',
+'stats.periodColumn': 'Zeitraum',
+'stats.current': 'Aktuell',
+'stats.averageColumn': 'Durchschnitt',
+'stats.total': 'Gesamt',
+'stats.periods': 'Perioden',
+'stats.averagesHint': 'Der Durchschnitt zählt nur Perioden mit Einträgen.',
+'stats.history': 'Verlauf',
+'stats.categories': 'Kategorien',
+'stats.highlights': 'Auf einen Blick',
+'stats.daysWithSpending': 'Tage mit Ausgaben: {count}',
+'stats.largest': 'Größte Einzelausgabe: {amount} am {date}',
+'stats.busiest': 'Meiste Ausgaben an einem Tag: {amount} am {date}',
+'stats.entryCount': 'Einträge: {count}',
+'transfer.title': 'Export und Import',
+'transfer.exportTitle': 'Die oben gezeigten Einträge exportieren',
+'transfer.importTitle': 'Import aus CSV oder Excel',
+'transfer.importHint': 'Die Spalten werden automatisch erkannt und können vor dem Import geändert werden.',
+'transfer.exported': '{count} Einträge als {format} exportiert',
+'transfer.readError': 'Datei konnte nicht gelesen werden: {message}',
+'transfer.previewTitle': 'Import-Vorschau - {file}',
+'transfer.byHeader': 'Die Spalten wurden über die Überschriften erkannt.',
+'transfer.byContent': 'Keine Überschrift erkannt, die Spalten wurden aus dem Inhalt abgeleitet.',
+'transfer.notUsed': 'nicht genutzt',
+'transfer.column': 'Spalte {number}',
+'transfer.importButton': '{count} Einträge importieren',
+'transfer.skippedRows': 'Übersprungene Zeilen: {rows}',
+'transfer.imported': '{count} Einträge importiert',
+'settings.defaults': 'Standardwerte',
+'settings.quickCategory': 'Kategorie für schnelle Einträge',
+'settings.displayMode': 'Darstellung',
+'settings.modeAuto': 'Automatisch',
+'settings.modeMobile': 'Mobil',
+'settings.modeDesktop': 'Desktop',
+'settings.theme': 'Farbschema',
+'settings.themeAuto': 'System',
+'settings.themeLight': 'Hell',
+'settings.themeDark': 'Dunkel',
+'settings.language': 'Sprache',
+'settings.languageAuto': 'Automatisch ({language})',
+'settings.languageCustom': 'Eigene Übersetzung',
+'settings.categories': 'Kategorien',
+'settings.newCategory': '+ Neue Kategorie',
+'settings.editCategory': 'Kategorie bearbeiten',
+'settings.createCategory': 'Neue Kategorie',
+'settings.limit': 'Monatslimit',
+'settings.limitHint': 'Leer lassen für kein Limit',
+'settings.confirmDeleteCategory': 'Diese Kategorie löschen?',
+'settings.moveEntries': '„{category}" hat {count} Einträge. In welche Kategorie sollen sie? Namen eingeben oder abbrechen.',
+'settings.noCategoryNamed': 'Keine Kategorie mit dem Namen „{name}"',
+'settings.currencies': 'Währungen',
+'settings.currencyCode': 'Code',
+'settings.currencySymbol': 'Symbol',
+'settings.currencyDecimals': 'Nachkommastellen',
+'settings.addCurrency': 'Währung hinzufügen',
+'settings.data': 'Daten',
+'settings.dataHint': 'Alles bleibt in diesem Browser ({storage}). Es wird nichts gesendet.',
+'settings.backup': 'Sicherung laden (JSON)',
+'settings.restore': 'Sicherung einspielen',
+'settings.deleteAll': 'Alle Einträge löschen',
+'settings.confirmDeleteAll': 'Alle Einträge löschen? Kategorien und Einstellungen bleiben.',
+'settings.deletedEntries': '{count} Einträge gelöscht',
+'settings.backupDownloaded': 'Sicherung geladen',
+'settings.backupRestored': 'Sicherung eingespielt: {count} Einträge',
+'settings.backupError': 'Sicherung konnte nicht gelesen werden: {message}',
+'settings.translation': 'Eigene Übersetzung',
+'settings.translationHint': 'Nur die Texte ausfüllen, die geändert werden sollen. Leere Felder bleiben englisch.',
+'settings.translationName': 'Name der Sprache',
+'settings.translationExport': 'Übersetzung herunterladen',
+'settings.translationImport': 'Übersetzung laden',
+'settings.translationSaved': 'Übersetzung gespeichert',
+'settings.translationLoaded': 'Übersetzung geladen',
+'settings.translationError': 'Übersetzungsdatei konnte nicht gelesen werden',
+'settings.translationUse': 'Meine Übersetzung verwenden',
+'category.daily': 'Täglich',
+'category.monthly': 'Monatlich',
+'category.yearly': 'Jährlich',
+'category.groceries': 'Lebensmittel',
+'category.transport': 'Verkehr',
+'category.home': 'Wohnen',
+'category.income': 'Einnahmen',
+'error.amountRequired': 'Betrag eingeben, zum Beispiel 12.50',
+'error.unknownCategory': 'Unbekannte Kategorie',
+};
+const BUNDLED = { en: EN, ru: RU, de: DE };
+function translationKeys() {
+return Object.keys(EN);
+}
+function bundledTexts(language) {
+return BUNDLED[language] || {};
+}
+function detectLanguage(browserLanguages = []) {
+for (const tag of browserLanguages) {
+const code = String(tag).toLowerCase().split('-')[0];
+if (BUNDLED[code]) return code;
+}
+return DEFAULT_LANGUAGE;
+}
+function createTranslator(language, custom = {}) {
+const texts = language === CUSTOM_LANGUAGE ? custom : bundledTexts(language);
+return (key, params) => {
+const template = (texts && texts[key]) || EN[key] || key;
+return params ? fill(template, params) : template;
+};
+}
+function fill(template, params) {
+return String(template).replace(/\{(\w+)\}/g, (match, name) => (
+Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
+));
+}
+function sanitizeTranslation(raw) {
+const clean = {};
+if (!raw || typeof raw !== 'object') return clean;
+for (const key of translationKeys()) {
+const value = raw[key];
+if (typeof value === 'string' && value.trim()) clean[key] = value;
+}
+return clean;
+}
+return { translationKeys, bundledTexts, detectLanguage, createTranslator, fill, sanitizeTranslation, DEFAULT_LANGUAGE, LANGUAGES, CUSTOM_LANGUAGE, EN, RU, DE };
+};
+__modules["core/storage.js"] = function () {
+const { createDefaultState, defaultCategories, defaultCurrencies, STATE_VERSION } = __require("core/model.js");
+const { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } = __require("core/i18n.js");
+const STORAGE_KEY = 'home-budget/v1';
+const LEGACY_ICONS = {
+daily: '\u2615', monthly: '\ud83d\udd01', yearly: '\ud83d\udcc5', groceries: '\ud83d\uded2',
+transport: '\ud83d\ude8c', home: '\ud83c\udfe0', income: '\ud83d\udcb0',
+};
+class MemoryStorage {
+constructor(initial = {}) {
+this.map = new Map(Object.entries(initial));
+}
+getItem(key) {
+return this.map.has(key) ? this.map.get(key) : null;
+}
+setItem(key, value) {
+this.map.set(key, String(value));
+}
+removeItem(key) {
+this.map.delete(key);
+}
+}
+function pickStorage(globalObject = globalThis) {
+for (const name of ['localStorage', 'sessionStorage']) {
+try {
+const candidate = globalObject[name];
+if (!candidate) continue;
+const probe = '__hb_probe__';
+candidate.setItem(probe, '1');
+candidate.removeItem(probe);
+return { storage: candidate, kind: name };
+} catch {
+}
+}
+return { storage: new MemoryStorage(), kind: 'memory' };
+}
+function migrateState(raw) {
+const fallback = createDefaultState();
+if (!raw || typeof raw !== 'object') return fallback;
+const settings = raw.settings && typeof raw.settings === 'object' ? raw.settings : {};
+const knownIds = new Set(defaultCategories().map((category) => category.id));
+const categories = (Array.isArray(settings.categories) && settings.categories.length
+? settings.categories.filter((c) => c && typeof c.id === 'string' && typeof c.name === 'string')
+: defaultCategories()
+).map((category) => ({
+...category,
+icon: typeof category.icon === 'string' && category.icon
+? category.icon
+: (LEGACY_ICONS[category.id] || '\ud83d\udcb8'),
+limit: Number.isFinite(category.limit) && category.limit > 0 ? Math.round(category.limit) : null,
+nameKey: typeof category.nameKey === 'string' ? category.nameKey
+: (knownIds.has(category.id) ? `category.${category.id}` : undefined),
+}));
+const currencies = Array.isArray(settings.currencies) && settings.currencies.length
+? settings.currencies.filter((c) => c && typeof c.code === 'string')
+: defaultCurrencies();
+const entries = Array.isArray(raw.entries)
+? raw.entries.filter((e) => e && typeof e.id === 'string' && typeof e.date === 'string'
+&& Number.isFinite(e.amount))
+: [];
+return {
+version: STATE_VERSION,
+settings: {
+categories: categories.length ? categories : defaultCategories(),
+currencies: currencies.length ? currencies : defaultCurrencies(),
+defaultCategoryId: typeof settings.defaultCategoryId === 'string'
+? settings.defaultCategoryId : fallback.settings.defaultCategoryId,
+defaultCurrency: typeof settings.defaultCurrency === 'string'
+? settings.defaultCurrency : fallback.settings.defaultCurrency,
+uiMode: ['auto', 'mobile', 'desktop'].includes(settings.uiMode) ? settings.uiMode : 'auto',
+theme: ['auto', 'light', 'dark'].includes(settings.theme) ? settings.theme : 'auto',
+language: typeof settings.language === 'string'
+&& (settings.language === 'auto' || settings.language === CUSTOM_LANGUAGE
+|| LANGUAGES.some((item) => item.code === settings.language))
+? settings.language : 'auto',
+customLanguageName: typeof settings.customLanguageName === 'string' && settings.customLanguageName.trim()
+? settings.customLanguageName.trim().slice(0, 40) : 'My language',
+customTranslation: sanitizeTranslation(settings.customTranslation),
+},
+entries: entries.map((entry) => ({
+id: entry.id,
+date: entry.date,
+amount: Math.round(entry.amount),
+categoryId: typeof entry.categoryId === 'string' ? entry.categoryId : 'daily',
+currency: typeof entry.currency === 'string' ? entry.currency.toUpperCase() : 'EUR',
+note: typeof entry.note === 'string' ? entry.note : '',
+createdAt: typeof entry.createdAt === 'string' ? entry.createdAt : new Date(0).toISOString(),
+})),
+};
+}
+function loadState(storage, key = STORAGE_KEY) {
+let raw = null;
+try {
+raw = storage.getItem(key);
+} catch {
+return { state: createDefaultState(), error: 'Storage is not readable' };
+}
+if (raw === null) return { state: createDefaultState(), error: null, fresh: true };
+try {
+return { state: migrateState(JSON.parse(raw)), error: null };
+} catch {
+return { state: createDefaultState(), error: 'Saved data was unreadable and has been reset' };
+}
+}
+function saveState(storage, state, key = STORAGE_KEY) {
+try {
+storage.setItem(key, JSON.stringify(state));
+return null;
+} catch (error) {
+return error && error.name === 'QuotaExceededError'
+? 'Browser storage is full - export your data and remove old entries'
+: 'Could not save to browser storage';
+}
+}
+return { pickStorage, migrateState, loadState, saveState, MemoryStorage, STORAGE_KEY };
+};
+__modules["ui/dom.js"] = function () {
+function el(tag, props = null, children = []) {
+const [name, ...classes] = tag.split('.');
+const node = document.createElement(name || 'div');
+if (classes.length) node.className = classes.join(' ');
+if (props) {
+for (const [key, value] of Object.entries(props)) {
+if (value === null || value === undefined || value === false) continue;
+if (key === 'class') node.className = [node.className, value].filter(Boolean).join(' ');
+else if (key === 'text') node.textContent = value;
+else if (key === 'html') node.innerHTML = value;
+else if (key === 'on') for (const [event, handler] of Object.entries(value)) node.addEventListener(event, handler);
+else if (key === 'data') for (const [attribute, item] of Object.entries(value)) node.dataset[attribute] = item;
+else if (key in node && key !== 'list' && key !== 'form') node[key] = value;
+else node.setAttribute(key, value);
+}
+}
+append(node, children);
+return node;
+}
+function append(parent, children) {
+const list = Array.isArray(children) ? children : [children];
+for (const child of list) {
+if (child === null || child === undefined || child === false) continue;
+if (Array.isArray(child)) append(parent, child);
+else parent.append(child.nodeType ? child : document.createTextNode(String(child)));
+}
+return parent;
+}
+function clear(node) {
+while (node.firstChild) node.firstChild.remove();
+return node;
+}
+function render(node, children) {
+append(clear(node), children);
+return node;
+}
+function byId(id) {
+return document.getElementById(id);
+}
+function field(labelText, control, hint) {
+return el('label.field', {}, [el('span.field-label', { text: labelText }), control,
+hint ? el('span.field-hint', { text: hint }) : null]);
+}
+function options(items, selected) {
+return items.map((item) => el('option', {
+value: item.value,
+text: item.label,
+selected: String(item.value) === String(selected),
+}));
+}
+return { el, append, clear, render, byId, field, options };
+};
+__modules["ui/views/entries.js"] = function () {
+const { formatDate, formatMoney, periodStart, todayIso } = __require("core/format.js");
+const { totals } = __require("core/stats.js");
+const { el, field, options, render } = __require("ui/dom.js");
+const { transferPanel } = __require("ui/transfer.js");
+function entriesView(app) {
+const store = app.store;
+const t = app.t;
+const filter = app.ui.filter;
+const entries = store.list(filter);
+const currency = store.currency(app.viewCurrency());
+const sums = totals(entries, store.categories);
+const categoryOptions = [{ value: '', label: t('entries.allCategories') },
+...store.categories.map((category) => ({
+value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
+}))];
+const currencyOptions = [{ value: '', label: t('entries.allCurrencies') },
+...store.currencies.map((item) => ({ value: item.code, label: item.code }))];
+const update = (changes) => app.setUi({ filter: { ...filter, ...changes } });
+return [
+el('section.card', {}, [
+el('header.card-head', {}, [
+el('h2', { text: t('entries.title') }),
+el('button.primary', { type: 'button', text: t('entries.add'), on: { click: () => app.editEntry(null) } }),
+]),
+el('details.filters-box', { open: app.isDesktop() }, [
+el('summary', { text: t('entries.filters') }),
+el('div.filters', {}, [
+field(t('entries.from'), el('input', {
+type: 'date', value: filter.from || '', on: { change: (event) => update({ from: event.target.value }) },
+})),
+field(t('entries.to'), el('input', {
+type: 'date', value: filter.to || '', on: { change: (event) => update({ to: event.target.value }) },
+})),
+field(t('common.category'), el('select', {
+on: { change: (event) => update({ categoryId: event.target.value }) },
+}, options(categoryOptions, filter.categoryId || ''))),
+field(t('common.currency'), el('select', {
+on: { change: (event) => update({ currency: event.target.value }) },
+}, options(currencyOptions, filter.currency || ''))),
+field(t('entries.search'), el('input', {
+type: 'search', value: filter.text || '', placeholder: t('entries.searchHint'),
+on: { input: (event) => update({ text: event.target.value }) },
+})),
+el('div.filter-actions', {}, [
+el('button', { type: 'button', text: t('period.thisMonth'), on: { click: () => update({
+from: periodStart(store.today(), 'month'), to: store.today(),
+}) } }),
+el('button', { type: 'button', text: t('common.clear'), on: { click: () => app.setUi({ filter: {} }) } }),
+]),
+]),
+]),
+el('p.summary', {}, [
+el('span', { text: app.countText(entries.length) }),
+el('span.expense', { text: `${t('common.expenses')} ${formatMoney(sums.expense, currency)}` }),
+sums.income ? el('span.income', { text: `${t('common.income')} ${formatMoney(sums.income, currency)}` }) : null,
+el('span', { text: `${t('common.balance')} ${formatMoney(sums.net, currency, { sign: true })}` }),
+]),
+entries.length
+? el('div.table-wrap', {}, el('table.entries-table', {}, [
+el('thead', {}, el('tr', {}, [
+el('th', { text: t('common.date') }), el('th', { text: t('common.category') }),
+el('th.hide-sm', { text: t('common.note') }), el('th.num', { text: t('common.amount') }), el('th', {}),
+])),
+el('tbody', {}, entries.map((entry) => entryRow(app, entry))),
+]))
+: el('p.muted', { text: t('entries.empty') }),
+]),
+transferPanel(app, entries),
+];
+}
+function entryRow(app, entry) {
+const category = app.store.category(entry.categoryId);
+const currency = app.store.currency(entry.currency);
+const signed = category.kind === 'income' ? entry.amount : -entry.amount;
+const open = (event) => {
+if (event.target.closest('button')) return;
+app.editEntry(entry.id);
+};
+return el('tr.entry-row', { on: { click: open } }, [
+el('td', { text: formatDate(entry.date) }),
+el('td', {}, [el('span.category-icon', { text: category.icon }), app.categoryName(category)]),
+el('td.hide-sm', { text: entry.note }),
+el('td', {
+class: `num ${category.kind === 'income' ? 'income' : 'expense'}`,
+text: formatMoney(signed, currency, { sign: true }),
+}),
+el('td.row-actions', {}, [
+el('button.link', { type: 'button', text: app.t('common.edit'), on: { click: () => app.editEntry(entry.id) } }),
+el('button.link.danger', {
+type: 'button', text: app.t('common.delete'), on: { click: () => app.deleteEntry(entry.id) },
+}),
+]),
+]);
+}
+function entryForm(app, entry) {
+const store = app.store;
+const t = app.t;
+const message = el('p.error');
+const decimals = store.currency(entry ? entry.currency : store.settings.defaultCurrency).decimals;
+const amountInput = el('input', {
+type: 'number', step: '0.01', min: '0', required: true,
+value: entry ? (entry.amount / 10 ** decimals).toFixed(decimals) : '',
+});
+const dateInput = el('input', { type: 'date', required: true, value: entry ? entry.date : todayIso(new Date()) });
+const categorySelect = el('select', {}, options(
+store.categories.map((category) => ({
+value: category.id,
+label: `${category.icon} ${app.categoryName(category)} (${t(`common.${category.kind}`)})`,
+})),
+entry ? entry.categoryId : store.settings.defaultCategoryId,
+));
+const currencySelect = el('select', {}, options(
+store.currencies.map((item) => ({ value: item.code, label: `${item.code} ${item.symbol}` })),
+entry ? entry.currency : store.settings.defaultCurrency,
+));
+const noteInput = el('input', { type: 'text', maxlength: '200', value: entry ? entry.note : '' });
+const form = el('form.dialog-form', {
+on: {
+submit: (event) => {
+event.preventDefault();
+try {
+const currency = store.currency(currencySelect.value);
+const amount = Math.round(Number(amountInput.value) * 10 ** currency.decimals);
+const data = {
+amount: Math.abs(amount),
+date: dateInput.value,
+categoryId: categorySelect.value,
+currency: currency.code,
+note: noteInput.value,
+};
+if (entry) store.updateEntry(entry.id, data);
+else store.addEntry(data);
+app.closeDialog();
+} catch (error) {
+render(message, app.errorText(error));
+}
+},
+},
+}, [
+field(t('common.amount'), amountInput),
+field(t('common.category'), categorySelect),
+field(t('common.date'), dateInput),
+field(t('common.currency'), currencySelect),
+field(t('common.note'), noteInput),
+message,
+el('div.dialog-actions', {}, [
+entry ? el('button.link.danger', {
+type: 'button', text: t('common.delete'),
+on: { click: () => { app.closeDialog(); app.deleteEntry(entry.id); } },
+}) : null,
+el('span.spacer'),
+el('button', { type: 'button', text: t('common.cancel'), on: { click: () => app.closeDialog() } }),
+el('button.primary', { type: 'submit', text: entry ? t('common.save') : t('common.add') }),
+]),
+]);
+return { title: entry ? t('entries.editEntry') : t('entries.newEntry'), body: form, focus: amountInput };
+}
+return { entriesView, entryForm };
+};
+__modules["core/stats.js"] = function () {
+const { addDays, addMonths, PERIODS, periodKey, periodLabel, periodStart, todayIso } = __require("core/format.js");
+const { findCategory } = __require("core/model.js");
+function totals(entries, categories) {
+let expense = 0;
+let income = 0;
+for (const entry of entries) {
+if (findCategory(categories, entry.categoryId).kind === 'income') income += entry.amount;
+else expense += entry.amount;
+}
+return { expense, income, net: income - expense, count: entries.length };
+}
+function groupByPeriod(entries, period) {
+const groups = new Map();
+for (const entry of entries) {
+const key = periodKey(entry.date, period);
+if (!groups.has(key)) groups.set(key, []);
+groups.get(key).push(entry);
+}
+return groups;
+}
+function periodSummary(entries, categories, period, today = todayIso()) {
+const currentKey = periodKey(today, period);
+const groups = groupByPeriod(entries, period);
+const current = totals(groups.get(currentKey) || [], categories);
+let expenseSum = 0;
+let incomeSum = 0;
+for (const group of groups.values()) {
+const groupTotals = totals(group, categories);
+expenseSum += groupTotals.expense;
+incomeSum += groupTotals.income;
+}
+const periodsWithData = groups.size;
+return {
+period,
+key: currentKey,
+label: periodLabel(currentKey, period, 'long'),
+current,
+periodsWithData,
+averageExpense: periodsWithData ? Math.round(expenseSum / periodsWithData) : 0,
+averageIncome: periodsWithData ? Math.round(incomeSum / periodsWithData) : 0,
+totalExpense: expenseSum,
+totalIncome: incomeSum,
+};
+}
+function overview(entries, categories, today = todayIso()) {
+return PERIODS.map((period) => periodSummary(entries, categories, period, today));
+}
+function periodStarts(period, count, today = todayIso()) {
+const starts = [];
+let cursor = periodStart(today, period);
+for (let index = 0; index < count; index += 1) {
+starts.unshift(cursor);
+switch (period) {
+case 'day': cursor = addDays(cursor, -1); break;
+case 'week': cursor = addDays(cursor, -7); break;
+case 'month': cursor = addMonths(cursor, -1); break;
+default: cursor = `${Number(cursor.slice(0, 4)) - 1}-01-01`;
+}
+}
+return starts;
+}
+function series(entries, categories, period, count, today = todayIso()) {
+const groups = groupByPeriod(entries, period);
+return periodStarts(period, count, today).map((start) => {
+const key = periodKey(start, period);
+const groupTotals = totals(groups.get(key) || [], categories);
+return {
+key,
+label: periodLabel(key, period),
+fullLabel: periodLabel(key, period, 'long'),
+...groupTotals,
+};
+});
+}
+function byCategory(entries, categories) {
+const sums = new Map();
+let total = 0;
+for (const entry of entries) {
+const category = findCategory(categories, entry.categoryId);
+if (category.kind === 'income') continue;
+sums.set(category.id, (sums.get(category.id) || 0) + entry.amount);
+total += entry.amount;
+}
+return [...sums.entries()]
+.map(([id, amount]) => {
+const category = findCategory(categories, id);
+return {
+id,
+name: category.name,
+color: category.color,
+amount,
+share: total ? Math.round((amount / total) * 100) : 0,
+};
+})
+.sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+}
+function ofCurrency(entries, currency) {
+return entries.filter((entry) => entry.currency === currency);
+}
+function highlights(entries, categories) {
+let largest = null;
+const perDay = new Map();
+for (const entry of entries) {
+if (findCategory(categories, entry.categoryId).kind === 'income') continue;
+if (!largest || entry.amount > largest.amount) largest = entry;
+perDay.set(entry.date, (perDay.get(entry.date) || 0) + entry.amount);
+}
+let busiestDay = null;
+for (const [date, amount] of perDay) {
+if (!busiestDay || amount > busiestDay.amount) busiestDay = { date, amount };
+}
+return { largest, busiestDay, daysWithSpending: perDay.size };
+}
+return { totals, groupByPeriod, periodSummary, overview, periodStarts, series, byCategory, ofCurrency, highlights };
+};
+__modules["ui/transfer.js"] = function () {
+const { parseCsv } = __require("core/csv.js");
+const { buildCsvExport, buildPdfExport, buildXlsxExport, exportFileName } = __require("core/exporter.js");
+const { formatDate, formatMoney } = __require("core/format.js");
+const { convertRows, describeImport, detectStructure } = __require("core/importer.js");
+const { parseXlsx } = __require("core/xlsx.js");
+const { el, field, options, render } = __require("ui/dom.js");
+const { download, MIME, readAsBytes, readAsText } = __require("ui/files.js");
+const FIELD_KEYS = {
+date: 'common.date', amount: 'common.amount', category: 'common.category',
+currency: 'common.currency', note: 'common.note',
+};
+function transferPanel(app, entries) {
+const t = app.t;
+return el('section.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('transfer.title') })]),
+el('div.transfer', {}, [
+el('div.transfer-block', {}, [
+el('h3', { text: t('transfer.exportTitle') }),
+el('div.button-row', {}, [
+el('button', { type: 'button', text: 'CSV', on: { click: () => exportCsv(app, entries) } }),
+el('button', { type: 'button', text: 'Excel (.xlsx)', on: { click: () => exportXlsx(app, entries) } }),
+el('button', { type: 'button', text: 'PDF', on: { click: () => exportPdf(app, entries) } }),
+]),
+]),
+el('div.transfer-block', {}, [
+el('h3', { text: t('transfer.importTitle') }),
+el('input', {
+type: 'file', accept: '.csv,.txt,.tsv,.xlsx',
+on: { change: (event) => pickFile(app, event.target.files[0]) },
+}),
+el('p.muted', { text: t('transfer.importHint') }),
+]),
+]),
+app.ui.importPreview ? importPreview(app) : null,
+]);
+}
+function context(app) {
+return {
+categories: app.store.categories,
+currencies: app.store.currencies,
+today: app.store.today(),
+chartCurrency: app.viewCurrency(),
+chartPeriod: app.ui.statsPeriod,
+chartCount: 12,
+labels: {
+expenses: app.t('common.expenses'),
+average: app.t('stats.averageColumn'),
+statistics: app.t('nav.stats'),
+period: app.t('stats.periodColumn'),
+},
+};
+}
+function exportCsv(app, entries) {
+download(buildCsvExport(entries, context(app)), exportFileName('csv', app.store.today()), MIME.csv);
+app.notify(app.t('transfer.exported', { count: entries.length, format: 'CSV' }));
+}
+async function exportXlsx(app, entries) {
+const bytes = await buildXlsxExport(entries, context(app));
+download(bytes, exportFileName('xlsx', app.store.today()), MIME.xlsx);
+app.notify(app.t('transfer.exported', { count: entries.length, format: 'Excel' }));
+}
+function exportPdf(app, entries) {
+const bytes = buildPdfExport(entries, {
+...context(app),
+subtitle: describeRange(app, entries),
+footer: app.t('app.title'),
+});
+download(bytes, exportFileName('pdf', app.store.today()), MIME.pdf);
+app.notify(app.t('transfer.exported', { count: entries.length, format: 'PDF' }));
+}
+function describeRange(app, entries) {
+const filter = app.ui.filter;
+if (filter.from || filter.to) {
+return `${filter.from ? formatDate(filter.from) : '...'} - ${filter.to ? formatDate(filter.to) : '...'}`;
+}
+return app.countText(entries.length);
+}
+async function pickFile(app, file) {
+if (!file) return;
+try {
+const rows = /\.xlsx$/i.test(file.name)
+? (await parseXlsx(await readAsBytes(file))).rows
+: parseCsv(await readAsText(file)).rows;
+const structure = detectStructure(rows);
+app.setUi({ importPreview: { fileName: file.name, rows, structure } });
+} catch (error) {
+app.notify(app.t('transfer.readError', { message: error.message }), 'error');
+}
+}
+function importPreview(app) {
+const preview = app.ui.importPreview;
+const { rows, structure } = preview;
+const result = convertRows(rows, structure, {
+categories: app.store.categories,
+currencies: app.store.currencies,
+defaultCategoryId: app.store.settings.defaultCategoryId,
+defaultCurrency: app.store.settings.defaultCurrency,
+today: app.store.today(),
+});
+const width = rows.reduce((max, row) => Math.max(max, row.length), 0);
+const t = app.t;
+const columnOptions = [{ value: '', label: t('transfer.notUsed') },
+...Array.from({ length: width }, (unused, index) => ({
+value: String(index),
+label: `${t('transfer.column', { number: index + 1 })}${structure.headerRow !== null && rows[structure.headerRow][index]
+? `: ${rows[structure.headerRow][index]}` : ''}`,
+}))];
+const setMapping = (fieldName, value) => app.setUi({
+importPreview: {
+...preview,
+structure: { ...structure, mapping: { ...structure.mapping, [fieldName]: value === '' ? null : Number(value) } },
+},
+});
+return el('div.import-preview', {}, [
+el('h3', { text: t('transfer.previewTitle', { file: preview.fileName }) }),
+el('p.muted', {
+text: structure.confidence === 'header' ? t('transfer.byHeader') : t('transfer.byContent'),
+}),
+structure.warnings.length ? el('p.warning', { text: structure.warnings.join('. ') }) : null,
+el('div.filters', {}, Object.keys(FIELD_KEYS).map((fieldName) => field(
+t(FIELD_KEYS[fieldName]),
+el('select', { on: { change: (event) => setMapping(fieldName, event.target.value) } },
+options(columnOptions, structure.mapping[fieldName] === null ? '' : String(structure.mapping[fieldName]))),
+))),
+el('p.summary', { text: describeImport(result) }),
+result.entries.length ? el('div.table-wrap', {}, el('table.entries-table', {}, [
+el('thead', {}, el('tr', {}, [
+el('th', { text: t('common.date') }), el('th', { text: t('common.category') }),
+el('th', { text: t('common.note') }), el('th.num', { text: t('common.amount') }),
+])),
+el('tbody', {}, result.entries.slice(0, 5).map((entry) => el('tr', {}, [
+el('td', { text: formatDate(entry.date) }),
+el('td', {
+text: entry.categoryName || app.categoryName(app.store.category(app.store.settings.defaultCategoryId)),
+}),
+el('td', { text: entry.note }),
+el('td.num', { text: formatMoney(entry.amount, app.store.currency(entry.currency)) }),
+]))),
+])) : null,
+result.skipped.length
+? el('p.muted', {
+text: t('transfer.skippedRows', {
+rows: result.skipped.slice(0, 5).map((item) => `#${item.row} (${item.reason})`).join(', '),
+}),
+})
+: null,
+el('div.button-row', {}, [
+el('button.primary', {
+type: 'button',
+text: t('transfer.importButton', { count: result.entries.length }),
+disabled: result.entries.length === 0,
+on: { click: () => runImport(app, result) },
+}),
+el('button', { type: 'button', text: t('common.cancel'), on: { click: () => app.setUi({ importPreview: null }) } }),
+]),
+]);
+}
+function runImport(app, result) {
+const store = app.store;
+const prepared = result.entries.map((entry) => {
+const categoryId = entry.categoryId
+|| (entry.categoryName ? store.categoryByNameOrCreate(entry.categoryName).id : store.settings.defaultCategoryId);
+return { ...entry, categoryId };
+});
+const added = store.addEntries(prepared);
+app.setUi({ importPreview: null });
+app.notify(app.t('transfer.imported', { count: added }));
+}
+return { transferPanel };
+};
+__modules["core/csv.js"] = function () {
+const DELIMITERS = [',', ';', '\t', '|'];
+function detectDelimiter(text) {
+const sample = text.split(/\r?\n/).slice(0, 10).join('\n');
+let best = ',';
+let bestScore = -1;
+for (const delimiter of DELIMITERS) {
+let count = 0;
+let inQuotes = false;
+for (let index = 0; index < sample.length; index += 1) {
+const char = sample[index];
+if (char === '"') inQuotes = !inQuotes;
+else if (!inQuotes && char === delimiter) count += 1;
+}
+if (count > bestScore) {
+bestScore = count;
+best = delimiter;
+}
+}
+return bestScore > 0 ? best : ',';
+}
+function parseCsv(text, options = {}) {
+const clean = text.replace(/^﻿/, '');
+const delimiter = options.delimiter || detectDelimiter(clean);
+const rows = [];
+let row = [];
+let field = '';
+let inQuotes = false;
+for (let index = 0; index < clean.length; index += 1) {
+const char = clean[index];
+if (inQuotes) {
+if (char === '"') {
+if (clean[index + 1] === '"') {
+field += '"';
+index += 1;
+} else {
+inQuotes = false;
+}
+} else {
+field += char;
+}
+continue;
+}
+if (char === '"') inQuotes = true;
+else if (char === delimiter) {
+row.push(field);
+field = '';
+} else if (char === '\n') {
+row.push(field);
+rows.push(row);
+row = [];
+field = '';
+} else if (char !== '\r') {
+field += char;
+}
+}
+if (field !== '' || row.length) {
+row.push(field);
+rows.push(row);
+}
+return { rows: rows.filter((cells) => cells.some((cell) => cell !== '')), delimiter };
+}
+function toCsv(rows, options = {}) {
+const delimiter = options.delimiter || ',';
+const newline = options.newline || '\r\n';
+const body = rows.map((row) => row.map((cell) => {
+const text = cell === null || cell === undefined ? '' : String(cell);
+return /["\n\r]|^\s|\s$/.test(text) || text.includes(delimiter)
+? `"${text.replace(/"/g, '""')}"`
+: text;
+}).join(delimiter)).join(newline);
+return (options.bom === false ? '' : '﻿') + body + newline;
+}
+return { detectDelimiter, parseCsv, toCsv };
+};
+__modules["core/exporter.js"] = function () {
+/** Turns entries into the rows used by the CSV, XLSX and PDF exports. */
+const { toCsv } = __require("core/csv.js");
+const { formatDate, formatMoney, toPlainAmount } = __require("core/format.js");
+const { findCategory, findCurrency } = __require("core/model.js");
+const { buildPdf } = __require("core/pdf.js");
+const { buildXlsx } = __require("core/xlsx.js");
+const { byCategory: categoryTotals, series, totals } = __require("core/stats.js");
+const EXPORT_COLUMNS = [
+{ key: 'date', title: 'Date', type: 'date', width: 14 },
+{ key: 'category', title: 'Category', type: 'text', width: 20 },
+{ key: 'kind', title: 'Type', type: 'text', width: 10 },
+{ key: 'amount', title: 'Amount', type: 'number', width: 14 },
+{ key: 'currency', title: 'Currency', type: 'text', width: 10 },
+{ key: 'note', title: 'Note', type: 'text', width: 40 },
+];
+/** One export row per entry, with a signed amount (expenses are negative). */
+function exportRows(entries, { categories, currencies }) {
+return entries.map((entry) => {
+const category = findCategory(categories, entry.categoryId);
+const currency = findCurrency(currencies, entry.currency);
+const signed = category.kind === 'income' ? entry.amount : -entry.amount;
+return {
+date: entry.date,
+category: category.name,
+kind: category.kind === 'income' ? 'Income' : 'Expense',
+amount: Number(toPlainAmount(signed, currency.decimals)),
+currency: currency.code,
+note: entry.note,
+};
+});
+}
+/** File name such as "home-budget-2026-09-22.csv". */
+function exportFileName(extension, today) {
+return `home-budget-${today}.${extension}`;
+}
+/** CSV text with a header row. */
+function buildCsvExport(entries, context) {
+const rows = exportRows(entries, context);
+return toCsv([
+EXPORT_COLUMNS.map((column) => column.title),
+...rows.map((row) => EXPORT_COLUMNS.map((column) => row[column.key])),
+], { delimiter: context.delimiter || ',' });
+}
+/**
+* Data for the chart that goes into the PDF and the spreadsheet: one point per period,
+* amounts in major units, plus the average across the periods that have entries.
+*/
+function chartData(entries, context) {
+const currency = findCurrency(context.currencies, context.chartCurrency
+|| (entries[0] && entries[0].currency) || 'EUR');
+const points = series(
+entries.filter((entry) => entry.currency === currency.code),
+context.categories,
+context.chartPeriod || 'month',
+context.chartCount || 12,
+context.today,
+).map((point) => ({ label: point.label, value: Number(toPlainAmount(point.expense, currency.decimals)) }));
+const withData = points.filter((point) => point.value > 0);
+const average = withData.length
+? Math.round((withData.reduce((sum, point) => sum + point.value, 0) / withData.length) * 100) / 100
+: 0;
+return { points, average, currency, hasData: withData.length > 0 };
+}
+/** Spreadsheet bytes: the entries on one sheet, the chart and its data on another. */
+function buildXlsxExport(entries, context) {
+const chart = chartData(entries, context);
+return buildXlsx({
+sheetName: 'Home Budget',
+columns: EXPORT_COLUMNS,
+rows: exportRows(entries, context),
+chart: chart.hasData ? {
+sheetName: context.labels?.statistics || 'Statistics',
+title: `${context.labels?.expenses || 'Expenses'} (${chart.currency.code})`,
+categoryTitle: context.labels?.period || 'Period',
+valueTitle: context.labels?.expenses || 'Expenses',
+averageTitle: context.labels?.average || 'Average',
+points: chart.points,
+average: chart.average,
+} : null,
+});
+}
+/** Totals per currency, used in the PDF header and in the UI. */
+function summaryByCurrency(entries, categories, currencies) {
+const codes = [...new Set(entries.map((entry) => entry.currency))].sort();
+return codes.map((code) => {
+const currency = findCurrency(currencies, code);
+const sums = totals(entries.filter((entry) => entry.currency === code), categories);
+return { currency, ...sums };
+});
+}
+/** Printable report with a summary block, a chart and the entry table. */
+function buildPdfExport(entries, context) {
+const rows = exportRows(entries, context);
+const summary = summaryByCurrency(entries, context.categories, context.currencies);
+const chart = chartData(entries, context);
+return buildPdf({
+chart: chart.hasData ? {
+title: `${context.labels?.expenses || 'Expenses'} (${chart.currency.code})`,
+points: chart.points,
+average: chart.average,
+averageLabel: context.labels?.average || 'average',
+format: (value) => `${value.toFixed(chart.currency.decimals)} ${chart.currency.code}`,
+} : null,
+title: 'Home Budget',
+subtitle: context.subtitle || `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`,
+summary: summary.flatMap((item) => {
+const code = item.currency.code;
+const lines = [{ label: `Expenses (${code})`, value: formatMoney(item.expense, item.currency) }];
+if (item.income) lines.push({ label: `Income (${code})`, value: formatMoney(item.income, item.currency) });
+lines.push({ label: `Balance (${code})`, value: formatMoney(item.net, item.currency, { sign: true }) });
+return lines;
+}),
+columns: [
+{ key: 'date', title: 'Date', width: 70 },
+{ key: 'category', title: 'Category', width: 110 },
+{ key: 'note', title: 'Note', width: 230 },
+{ key: 'amount', title: 'Amount', width: 90, align: 'right' },
+],
+rows: rows.map((row) => ({
+date: formatDate(row.date),
+category: row.category,
+note: row.note,
+amount: `${row.amount.toFixed(2)} ${row.currency}`,
+})),
+footer: context.footer || '',
+});
+}
+/** Category breakdown lines for a text summary. */
+function breakdownLines(entries, categories, currencies, code) {
+const currency = findCurrency(currencies, code);
+return categoryTotals(entries.filter((entry) => entry.currency === code), categories)
+.map((item) => `${item.name}: ${formatMoney(item.amount, currency)} (${item.share}%)`);
+}
+return { exportRows, exportFileName, buildCsvExport, chartData, buildXlsxExport, summaryByCurrency, buildPdfExport, breakdownLines, EXPORT_COLUMNS };
+};
+__modules["core/pdf.js"] = function () {
+/**
+* Minimal PDF writer: one built-in font (Helvetica), a title block, a summary
+* and a paginated table. Enough for a readable export without any library.
+*/
+const PAGE = { width: 595.28, height: 841.89, margin: 40 }; // A4 portrait, points
+function escapeText(text) {
+return String(text).replace(/[\\()]/g, (char) => `\\${char}`);
+}
+/** PDF's standard encoding is Latin-1; anything else is transliterated or dropped. */
+function toLatin1(text) {
+const replacements = {
+'−': '-', '–': '-', '—': '-', '‘': "'", '’': "'",
+'“': '"', '”': '"', '…': '...', ' ': ' ', ' ': ' ', '€': '\u0080',
+};
+let result = '';
+for (const char of String(text)) {
+const replacement = replacements[char];
+if (replacement !== undefined) result += replacement;
+else if (char.codePointAt(0) <= 0xff) result += char;
+else result += '?';
+}
+return result;
+}
+/** Rough text width in points for Helvetica; good enough for column fitting. */
+function textWidth(text, fontSize) {
+let units = 0;
+for (const char of String(text)) {
+if ('iljt.,:;|!\'`'.includes(char)) units += 0.28;
+else if ('fr()[]-'.includes(char)) units += 0.36;
+else if ('MW@'.includes(char)) units += 0.9;
+else if (char === ' ') units += 0.28;
+else if (char >= 'A' && char <= 'Z') units += 0.68;
+else units += 0.55;
+}
+return units * fontSize;
+}
+function fit(text, fontSize, maxWidth) {
+let value = toLatin1(text);
+if (textWidth(value, fontSize) <= maxWidth) return value;
+while (value.length > 1 && textWidth(`${value}...`, fontSize) > maxWidth) value = value.slice(0, -1);
+return `${value}...`;
+}
+/**
+* Builds a PDF document.
+* @param {{title: string, subtitle?: string, summary?: Array<{label: string, value: string}>,
+*          chart?: {title: string, points: Array<{label: string, value: number}>, average?: number,
+*                   format?: (value: number) => string},
+*          columns: Array<{title: string, key: string, width: number, align?: 'left'|'right'}>,
+*          rows: Array<Record<string, any>>, footer?: string}} document
+* @returns {Uint8Array}
+*/
+function buildPdf(document) {
+const columns = document.columns;
+const totalWidth = columns.reduce((sum, column) => sum + column.width, 0);
+const usable = PAGE.width - PAGE.margin * 2;
+const scale = usable / totalWidth;
+const pages = [];
+let content = [];
+let y = 0;
+const startPage = (first) => {
+content = [];
+y = PAGE.height - PAGE.margin;
+if (first) {
+content.push(text(PAGE.margin, y - 6, document.title, 18, true));
+y -= 26;
+if (document.subtitle) {
+content.push(text(PAGE.margin, y - 4, document.subtitle, 10, false, 0.42));
+y -= 18;
+}
+for (const item of document.summary || []) {
+content.push(text(PAGE.margin, y - 4, `${item.label}: ${item.value}`, 11));
+y -= 15;
+}
+y -= 8;
+if (document.chart && document.chart.points.length) {
+y = drawChart(content, document.chart, y);
+}
+}
+// table header
+let x = PAGE.margin;
+for (const column of columns) {
+const width = column.width * scale;
+const value = fit(column.title, 9, width - 6);
+const offset = column.align === 'right' ? width - 6 - textWidth(value, 9) : 0;
+content.push(text(x + offset, y - 10, value, 9, true, 0.42));
+x += width;
+}
+y -= 14;
+content.push(line(PAGE.margin, y, PAGE.width - PAGE.margin, y));
+y -= 12;
+};
+startPage(true);
+for (const row of document.rows) {
+if (y < PAGE.margin + 40) {
+pages.push(content);
+startPage(false);
+}
+let x = PAGE.margin;
+for (const column of columns) {
+const width = column.width * scale;
+const value = fit(row[column.key] ?? '', 10, width - 6);
+const offset = column.align === 'right' ? width - 6 - textWidth(value, 10) : 0;
+content.push(text(x + offset, y, value, 10));
+x += width;
+}
+y -= 15;
+}
+pages.push(content);
+return assemble(pages, document.footer || '');
+}
+/**
+* Draws the bar chart below the summary and returns the new vertical position.
+* Bars are plain filled rectangles, the average is a dashed line.
+*/
+function drawChart(content, chart, top) {
+const format = chart.format || String;
+const width = PAGE.width - PAGE.margin * 2;
+const height = 150;
+const baseline = top - height;
+const points = chart.points;
+const average = Number.isFinite(chart.average) && chart.average > 0 ? chart.average : null;
+const max = Math.max(1, ...points.map((point) => point.value), average || 0);
+const slot = width / points.length;
+const barWidth = Math.max(3, Math.min(26, slot * 0.6));
+content.push(text(PAGE.margin, top + 4, chart.title, 11, true));
+content.push(`0.85 0.86 0.89 RG 0.7 w ${PAGE.margin} ${baseline} m ${PAGE.width - PAGE.margin} ${baseline} l S`);
+content.push(text(PAGE.margin, top - 10, format(max), 8, false, 0.45));
+points.forEach((point, index) => {
+const barHeight = (point.value / max) * (height - 16);
+const x = PAGE.margin + slot * index + (slot - barWidth) / 2;
+if (point.value > 0) {
+content.push(`0.98 0.45 0.09 rg ${x.toFixed(2)} ${baseline.toFixed(2)} ${barWidth.toFixed(2)} `
++ `${Math.max(barHeight, 1).toFixed(2)} re f`);
+}
+if (points.length <= 20 || index % 2 === 0) {
+const label = toLatin1(point.label);
+const labelX = x + barWidth / 2 - textWidth(label, 7) / 2;
+content.push(text(labelX, baseline - 10, label, 7, false, 0.45));
+}
+});
+if (average !== null) {
+const y = baseline + (average / max) * (height - 16);
+content.push(`0.31 0.27 0.9 RG 1 w [4 3] 0 d ${PAGE.margin} ${y.toFixed(2)} m `
++ `${PAGE.width - PAGE.margin} ${y.toFixed(2)} l S [] 0 d`);
+const label = `${chart.averageLabel || 'average'} ${format(average)}`;
+content.push(text(PAGE.width - PAGE.margin - textWidth(label, 8), y + 3, label, 8, true, 0.3));
+}
+return baseline - 28;
+}
+function text(x, y, value, size = 10, bold = false, grey = 0) {
+return `BT /${bold ? 'F2' : 'F1'} ${size} Tf ${grey ? `${grey} ${grey} ${grey} rg` : '0 0 0 rg'} `
++ `1 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)} Tm (${escapeText(toLatin1(value))}) Tj ET`;
+}
+function line(x1, y1, x2, y2) {
+return `0.8 0.8 0.85 RG 0.7 w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`;
+}
+function assemble(pages, footer) {
+const objects = [];
+const pageIds = pages.map((unused, index) => 4 + index * 2);
+objects[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+objects[2] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>`;
+objects[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+const boldFontId = 3 + pages.length * 2 + 1;
+pages.forEach((content, index) => {
+const pageId = pageIds[index];
+const streamId = pageId + 1;
+const withFooter = [...content, text(PAGE.margin, PAGE.margin - 12,
+`${footer}${footer ? '   ' : ''}Page ${index + 1} of ${pages.length}`, 8, false, 0.5)].join('\n');
+objects[pageId] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE.width.toFixed(2)} ${PAGE.height.toFixed(2)}] `
++ `/Resources << /Font << /F1 3 0 R /F2 ${boldFontId} 0 R >> >> /Contents ${streamId} 0 R >>`;
+objects[streamId] = { stream: withFooter };
+});
+objects[boldFontId] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+let pdf = '%PDF-1.4\n';
+const offsets = [];
+for (let id = 1; id < objects.length; id += 1) {
+const object = objects[id];
+if (object === undefined) continue;
+offsets[id] = pdf.length;
+if (typeof object === 'string') {
+pdf += `${id} 0 obj\n${object}\nendobj\n`;
+} else {
+pdf += `${id} 0 obj\n<< /Length ${object.stream.length} >>\nstream\n${object.stream}\nendstream\nendobj\n`;
+}
+}
+const xrefOffset = pdf.length;
+const count = objects.length;
+pdf += `xref\n0 ${count}\n0000000000 65535 f \n`;
+for (let id = 1; id < count; id += 1) {
+pdf += offsets[id] === undefined
+? '0000000000 65535 f \n'
+: `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
+}
+pdf += `trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+const bytes = new Uint8Array(pdf.length);
+for (let index = 0; index < pdf.length; index += 1) bytes[index] = pdf.charCodeAt(index) & 0xff;
+return bytes;
+}
+return { toLatin1, textWidth, buildPdf };
+};
+__modules["core/xlsx.js"] = function () {
+/**
+* Writing and reading .xlsx without a library: an xlsx file is a ZIP of XML parts.
+* The writer produces one sheet with a header row; the reader returns plain rows.
+*/
+const { createZip, readZip } = __require("core/zip.js");
+const DATE_STYLE = 1;
+function escapeXml(value) {
+return String(value).replace(/[<>&"']/g, (char) => ({
+'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;',
+}[char]));
+}
+/** Spreadsheet column name for a zero-based index: 0 -> A, 26 -> AA. */
+function columnName(index) {
+let name = '';
+let value = index;
+do {
+name = String.fromCharCode(65 + (value % 26)) + name;
+value = Math.floor(value / 26) - 1;
+} while (value >= 0);
+return name;
+}
+/** Column index for a cell reference: "B7" -> 1. */
+function columnIndex(reference) {
+const letters = String(reference).match(/^[A-Z]+/i);
+if (!letters) return 0;
+return letters[0].toUpperCase().split('').reduce((sum, char) => sum * 26 + (char.charCodeAt(0) - 64), 0) - 1;
+}
+/** Excel stores dates as days since 1899-12-30. */
+function isoToExcelSerial(isoDate) {
+const [year, month, day] = isoDate.split('-').map(Number);
+return Math.round((Date.UTC(year, month - 1, day) - Date.UTC(1899, 11, 30)) / 86400000);
+}
+/** Converts an Excel date serial back to yyyy-mm-dd. */
+function excelSerialToIso(serial) {
+const date = new Date(Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000);
+return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+}
+/** Worksheet XML for a table of rows. */
+function sheetXml(columns, rows, extra = '') {
+const cells = [];
+cells.push(`<row r="1">${columns.map((column, index) => (
+`<c r="${columnName(index)}1" t="inlineStr" s="2"><is><t>${escapeXml(column.title)}</t></is></c>`
+)).join('')}</row>`);
+rows.forEach((row, rowIndex) => {
+const reference = rowIndex + 2;
+const content = columns.map((column, index) => {
+const value = row[column.key];
+const cell = `${columnName(index)}${reference}`;
+if (value === null || value === undefined || value === '') return '';
+if (column.type === 'number') return `<c r="${cell}"><v>${Number(value)}</v></c>`;
+if (column.type === 'date') {
+return `<c r="${cell}" s="${DATE_STYLE}"><v>${isoToExcelSerial(String(value))}</v></c>`;
+}
+return `<c r="${cell}" t="inlineStr"><is><t xml:space="preserve">${escapeXml(value)}</t></is></c>`;
+}).join('');
+cells.push(`<row r="${reference}">${content}</row>`);
+});
+const columnsXml = columns.map((column, index) => (
+`<col min="${index + 1}" max="${index + 1}" width="${column.width || 16}" customWidth="1"/>`
+)).join('');
+return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<cols>${columnsXml}</cols><sheetData>${cells.join('')}</sheetData>${extra}</worksheet>`;
+}
+/** A clustered bar chart with an average line, as Excel stores it. */
+function chartXml(chart) {
+const sheet = escapeXml(chart.sheetName);
+const last = chart.points.length + 1;
+const categoryPoints = chart.points.map((point, index) => (
+`<c:pt idx="${index}"><c:v>${escapeXml(point.label)}</c:v></c:pt>`
+)).join('');
+const valuePoints = chart.points.map((point, index) => (
+`<c:pt idx="${index}"><c:v>${Number(point.value)}</c:v></c:pt>`
+)).join('');
+const averagePoints = chart.points.map((unused, index) => (
+`<c:pt idx="${index}"><c:v>${Number(chart.average || 0)}</c:v></c:pt>`
+)).join('');
+const categories = `<c:cat><c:strRef><c:f>'${sheet}'!$A$2:$A$${last}</c:f>`
++ `<c:strCache><c:ptCount val="${chart.points.length}"/>${categoryPoints}</c:strCache></c:strRef></c:cat>`;
+return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<c:chart>
+<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:t>${escapeXml(chart.title)}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>
+<c:autoTitleDeleted val="0"/>
+<c:plotArea><c:layout/>
+<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>
+<c:ser><c:idx val="0"/><c:order val="0"/>
+<c:tx><c:strRef><c:f>'${sheet}'!$B$1</c:f><c:strCache><c:ptCount val="1"/><c:pt idx="0"><c:v>${escapeXml(chart.valueTitle)}</c:v></c:pt></c:strCache></c:strRef></c:tx>
+<c:spPr><a:solidFill><a:srgbClr val="F97316"/></a:solidFill></c:spPr>
+${categories}
+<c:val><c:numRef><c:f>'${sheet}'!$B$2:$B$${last}</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="${chart.points.length}"/>${valuePoints}</c:numCache></c:numRef></c:val>
+</c:ser>
+<c:gapWidth val="60"/><c:axId val="111111111"/><c:axId val="222222222"/></c:barChart>
+<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>
+<c:ser><c:idx val="1"/><c:order val="1"/>
+<c:tx><c:strRef><c:f>'${sheet}'!$C$1</c:f><c:strCache><c:ptCount val="1"/><c:pt idx="0"><c:v>${escapeXml(chart.averageTitle)}</c:v></c:pt></c:strCache></c:strRef></c:tx>
+<c:spPr><a:ln w="19050"><a:solidFill><a:srgbClr val="4F46E5"/></a:solidFill><a:prstDash val="dash"/></a:ln></c:spPr>
+<c:marker><c:symbol val="none"/></c:marker>
+${categories}
+<c:val><c:numRef><c:f>'${sheet}'!$C$2:$C$${last}</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="${chart.points.length}"/>${averagePoints}</c:numCache></c:numRef></c:val>
+<c:smooth val="0"/></c:ser>
+<c:marker val="0"/><c:axId val="111111111"/><c:axId val="222222222"/></c:lineChart>
+<c:catAx><c:axId val="111111111"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:crossAx val="222222222"/></c:catAx>
+<c:valAx><c:axId val="222222222"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:majorGridlines/><c:numFmt formatCode="General" sourceLinked="0"/><c:crossAx val="111111111"/></c:valAx>
+</c:plotArea>
+<c:legend><c:legendPos val="b"/><c:overlay val="0"/></c:legend>
+<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/>
+</c:chart></c:chartSpace>`;
+}
+const DRAWING_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+<xdr:twoCellAnchor>
+<xdr:from><xdr:col>4</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>
+<xdr:to><xdr:col>15</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>24</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>
+<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="2" name="Chart 1"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>
+<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>
+<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">
+<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1"/>
+</a:graphicData></a:graphic></xdr:graphicFrame>
+<xdr:clientData/></xdr:twoCellAnchor></xdr:wsDr>`;
+/**
+* Builds an .xlsx file with one data sheet and, optionally, a second sheet
+* holding the statistics and a real Excel chart.
+* @param {{sheetName?: string, columns: Array<{key: string, title: string, type?: 'text'|'number'|'date', width?: number}>,
+*          rows: Array<Record<string, any>>,
+*          chart?: {sheetName?: string, title: string, valueTitle: string, averageTitle: string,
+*                   points: Array<{label: string, value: number}>, average: number}}} table
+* @returns {Promise<Uint8Array>}
+*/
+function buildXlsx(table) {
+const clean = (name, fallback) => (name || fallback).slice(0, 31).replace(/[\\/?*[\]:]/g, ' ');
+const sheetName = clean(table.sheetName, 'Data');
+const chart = table.chart && table.chart.points && table.chart.points.length
+? { ...table.chart, sheetName: clean(table.chart.sheetName, 'Statistics') }
+: null;
+const sheet = sheetXml(table.columns, table.rows);
+const statsSheet = chart ? sheetXml(
+[
+{ key: 'label', title: chart.categoryTitle || 'Period', width: 16 },
+{ key: 'value', title: chart.valueTitle, type: 'number', width: 16 },
+{ key: 'average', title: chart.averageTitle, type: 'number', width: 16 },
+],
+chart.points.map((point) => ({ label: point.label, value: point.value, average: chart.average })),
+'<drawing r:id="rId1"/>',
+) : null;
+const sheetsXml = [`<sheet name="${escapeXml(sheetName)}" sheetId="1" r:id="rId1"/>`];
+if (chart) sheetsXml.push(`<sheet name="${escapeXml(chart.sheetName)}" sheetId="2" r:id="rId2"/>`);
+const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets>${sheetsXml.join('')}</sheets></workbook>`;
+const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="1"><numFmt numFmtId="164" formatCode="yyyy\\-mm\\-dd"/></numFmts>
+<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
+<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+${chart ? '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
++ '<Override PartName="/xl/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>'
++ '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : ''}
+<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`;
+const workbookRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+${chart ? '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' : ''}
+<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+const files = [
+{ name: '[Content_Types].xml', data: contentTypes },
+{
+name: '_rels/.rels',
+data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`,
+},
+{ name: 'xl/workbook.xml', data: workbook },
+{ name: 'xl/_rels/workbook.xml.rels', data: workbookRels },
+{ name: 'xl/styles.xml', data: styles },
+{ name: 'xl/worksheets/sheet1.xml', data: sheet },
+];
+if (chart) {
+files.push(
+{ name: 'xl/worksheets/sheet2.xml', data: statsSheet },
+{
+name: 'xl/worksheets/_rels/sheet2.xml.rels',
+data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>
+</Relationships>`,
+},
+{ name: 'xl/drawings/drawing1.xml', data: DRAWING_XML },
+{
+name: 'xl/drawings/_rels/drawing1.xml.rels',
+data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart1.xml"/>
+</Relationships>`,
+},
+{ name: 'xl/charts/chart1.xml', data: chartXml(chart) },
+);
+}
+return createZip(files);
+}
+function decodeXmlEntities(text) {
+return text.replace(/&(#x?[0-9a-fA-F]+|amp|lt|gt|quot|apos);/g, (match, entity) => {
+if (entity === 'amp') return '&';
+if (entity === 'lt') return '<';
+if (entity === 'gt') return '>';
+if (entity === 'quot') return '"';
+if (entity === 'apos') return "'";
+const code = entity[1] === 'x' || entity[1] === 'X'
+? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
+return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+});
+}
+function textOf(xml) {
+const parts = [...xml.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map((match) => decodeXmlEntities(match[1]));
+return parts.join('');
+}
+/**
+* Reads the first worksheet of an .xlsx file.
+* @param {Uint8Array} bytes
+* @returns {Promise<{sheetName: string, rows: Array<Array<string|number>>}>}
+*/
+async function parseXlsx(bytes) {
+const files = await readZip(bytes);
+const decoder = new TextDecoder();
+const read = (name) => (files.has(name) ? decoder.decode(files.get(name)) : '');
+const sharedXml = read('xl/sharedStrings.xml');
+const shared = sharedXml
+? [...sharedXml.matchAll(/<si>([\s\S]*?)<\/si>/g)].map((match) => textOf(match[1]))
+: [];
+const sheetNames = [...read('xl/workbook.xml').matchAll(/<sheet[^>]*name="([^"]*)"/g)]
+.map((match) => decodeXmlEntities(match[1]));
+const sheetFile = [...files.keys()].find((name) => /^xl\/worksheets\/sheet\d+\.xml$/.test(name));
+if (!sheetFile) throw new Error('No worksheet found in the file');
+const sheetXml = read(sheetFile);
+const rows = [];
+for (const rowMatch of sheetXml.matchAll(/<row[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+const cells = [];
+for (const cellMatch of (rowMatch[1] || '').matchAll(/<c([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+const attributes = cellMatch[1];
+const body = cellMatch[2] || '';
+const reference = (attributes.match(/r="([A-Z]+\d+)"/) || [])[1];
+const type = (attributes.match(/t="([^"]+)"/) || [])[1];
+const index = reference ? columnIndex(reference) : cells.length;
+let value;
+if (type === 's') {
+const sharedIndex = Number((body.match(/<v>([\s\S]*?)<\/v>/) || [])[1]);
+value = shared[sharedIndex] ?? '';
+} else if (type === 'inlineStr') {
+value = textOf(body);
+} else if (type === 'str') {
+value = decodeXmlEntities((body.match(/<v>([\s\S]*?)<\/v>/) || [, ''])[1]);
+} else {
+const raw = (body.match(/<v>([\s\S]*?)<\/v>/) || [])[1];
+value = raw === undefined ? '' : Number(raw);
+if (Number.isNaN(value)) value = raw;
+}
+while (cells.length < index) cells.push('');
+cells[index] = value;
+}
+rows.push(cells);
+}
+return { sheetName: sheetNames[0] || 'Sheet1', rows };
+}
+return { columnName, columnIndex, isoToExcelSerial, excelSerialToIso, buildXlsx, parseXlsx };
+};
+__modules["core/zip.js"] = function () {
+/**
+* Minimal ZIP reader and writer, enough for the .xlsx format.
+* Compression uses the browser's built-in CompressionStream; when it is missing,
+* entries are stored uncompressed, which is still a valid archive.
+*/
+const textEncoder = new TextEncoder();
+const CRC_TABLE = (() => {
+const table = new Uint32Array(256);
+for (let index = 0; index < 256; index += 1) {
+let value = index;
+for (let bit = 0; bit < 8; bit += 1) {
+value = value & 1 ? (value >>> 1) ^ 0xedb88320 : value >>> 1;
+}
+table[index] = value >>> 0;
+}
+return table;
+})();
+/** CRC-32 as used by ZIP. */
+function crc32(bytes) {
+let crc = 0xffffffff;
+for (let index = 0; index < bytes.length; index += 1) {
+crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ bytes[index]) & 0xff];
+}
+return (crc ^ 0xffffffff) >>> 0;
+}
+async function deflateRaw(bytes) {
+if (typeof CompressionStream !== 'function') return null;
+try {
+const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+return new Uint8Array(await new Response(stream).arrayBuffer());
+} catch {
+return null;
+}
+}
+async function inflateRaw(bytes) {
+if (typeof DecompressionStream !== 'function') {
+throw new Error('This browser cannot read compressed .xlsx files');
+}
+const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+/**
+* Builds a ZIP archive.
+* @param {Array<{name: string, data: string|Uint8Array}>} files
+* @returns {Promise<Uint8Array>}
+*/
+async function createZip(files) {
+const entries = [];
+let offset = 0;
+const chunks = [];
+for (const file of files) {
+const raw = typeof file.data === 'string' ? textEncoder.encode(file.data) : file.data;
+const name = textEncoder.encode(file.name);
+const compressed = await deflateRaw(raw);
+const useDeflate = compressed !== null && compressed.length < raw.length;
+const data = useDeflate ? compressed : raw;
+const header = new Uint8Array(30 + name.length);
+const view = new DataView(header.buffer);
+view.setUint32(0, 0x04034b50, true);
+view.setUint16(4, 20, true);
+view.setUint16(6, 0, true);
+view.setUint16(8, useDeflate ? 8 : 0, true);
+view.setUint16(10, 0, true); // time
+view.setUint16(12, 0x2821, true);
+view.setUint32(14, crc32(raw), true);
+view.setUint32(18, data.length, true);
+view.setUint32(22, raw.length, true);
+view.setUint16(26, name.length, true);
+header.set(name, 30);
+chunks.push(header, data);
+entries.push({
+name, offset, crc: crc32(raw), compressedSize: data.length, size: raw.length, method: useDeflate ? 8 : 0,
+});
+offset += header.length + data.length;
+}
+const central = [];
+let centralSize = 0;
+for (const entry of entries) {
+const record = new Uint8Array(46 + entry.name.length);
+const view = new DataView(record.buffer);
+view.setUint32(0, 0x02014b50, true);
+view.setUint16(4, 20, true);
+view.setUint16(6, 20, true);
+view.setUint16(10, entry.method, true);
+view.setUint16(12, 0, true);
+view.setUint16(14, 0x2821, true);
+view.setUint32(16, entry.crc, true);
+view.setUint32(20, entry.compressedSize, true);
+view.setUint32(24, entry.size, true);
+view.setUint16(28, entry.name.length, true);
+view.setUint32(42, entry.offset, true);
+record.set(entry.name, 46);
+central.push(record);
+centralSize += record.length;
+}
+const end = new Uint8Array(22);
+const endView = new DataView(end.buffer);
+endView.setUint32(0, 0x06054b50, true);
+endView.setUint16(8, entries.length, true);
+endView.setUint16(10, entries.length, true);
+endView.setUint32(12, centralSize, true);
+endView.setUint32(16, offset, true);
+const total = offset + centralSize + end.length;
+const result = new Uint8Array(total);
+let position = 0;
+for (const chunk of [...chunks, ...central, end]) {
+result.set(chunk, position);
+position += chunk.length;
+}
+return result;
+}
+async function readZip(bytes) {
+const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+let endOffset = -1;
+for (let index = bytes.length - 22; index >= 0 && index > bytes.length - 22 - 0xffff; index -= 1) {
+if (view.getUint32(index, true) === 0x06054b50) {
+endOffset = index;
+break;
+}
+}
+if (endOffset < 0) throw new Error('Not a ZIP file');
+const count = view.getUint16(endOffset + 10, true);
+let pointer = view.getUint32(endOffset + 16, true);
+const decoder = new TextDecoder();
+const files = new Map();
+for (let index = 0; index < count; index += 1) {
+if (view.getUint32(pointer, true) !== 0x02014b50) throw new Error('Damaged ZIP file');
+const method = view.getUint16(pointer + 10, true);
+const compressedSize = view.getUint32(pointer + 20, true);
+const nameLength = view.getUint16(pointer + 28, true);
+const extraLength = view.getUint16(pointer + 30, true);
+const commentLength = view.getUint16(pointer + 32, true);
+const localOffset = view.getUint32(pointer + 42, true);
+const name = decoder.decode(bytes.subarray(pointer + 46, pointer + 46 + nameLength));
+const localNameLength = view.getUint16(localOffset + 26, true);
+const localExtraLength = view.getUint16(localOffset + 28, true);
+const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+const raw = bytes.subarray(dataStart, dataStart + compressedSize);
+if (method === 0) files.set(name, raw.slice());
+else if (method === 8) files.set(name, await inflateRaw(raw));
+else throw new Error(`Unsupported compression in ${name}`);
+pointer += 46 + nameLength + extraLength + commentLength;
+}
+return files;
+}
+return { crc32, createZip, readZip };
+};
+__modules["core/importer.js"] = function () {
+const { isIsoDate, parseAmount, parseDateLoose } = __require("core/format.js");
+const { excelSerialToIso } = __require("core/xlsx.js");
+const HEADER_SYNONYMS = {
+date: ['date', 'day', 'when', 'datum', 'fecha', 'data', 'kuupäev', 'kuupaev', 'дата', 'день', 'дата операции'],
+amount: ['amount', 'sum', 'total', 'value', 'price', 'cost', 'spent', 'debit', 'betrag', 'summe', 'importe',
+'summa', 'сумма', 'стоимость', 'расход'],
+category: ['category', 'categories', 'type', 'kind', 'group', 'kategorie', 'categoria', 'kategooria',
+'категория', 'тип', 'группа'],
+currency: ['currency', 'cur', 'ccy', 'währung', 'wahrung', 'valuuta', 'moneda', 'валюта'],
+note: ['note', 'notes', 'comment', 'comments', 'description', 'memo', 'details', 'text', 'purpose',
+'kommentar', 'beschreibung', 'selgitus', 'märkus', 'markus', 'комментарий', 'примечание', 'описание'],
+};
+const SYMBOL_TO_CODE = { '€': 'EUR', $: 'USD', '£': 'GBP', '₽': 'RUB', '₴': 'UAH', '₸': 'KZT', '¥': 'JPY', zł: 'PLN' };
+const EXCEL_SERIAL_MIN = 20000;
+const EXCEL_SERIAL_MAX = 60000;
+function normalizeHeader(value) {
+return String(value ?? '').toLowerCase().trim().replace(/[.\-_]+/g, ' ').replace(/\s+/g, ' ');
+}
+function matchField(header) {
+const text = normalizeHeader(header);
+if (!text) return null;
+for (const [field, names] of Object.entries(HEADER_SYNONYMS)) {
+if (names.includes(text)) return field;
+}
+for (const [field, names] of Object.entries(HEADER_SYNONYMS)) {
+if (names.some((name) => text.includes(name))) return field;
+}
+return null;
+}
+function profileColumn(rows, index) {
+let dates = 0;
+let numbers = 0;
+let texts = 0;
+let filled = 0;
+const distinct = new Set();
+for (const row of rows) {
+const value = row[index];
+if (value === undefined || value === null || value === '') continue;
+filled += 1;
+distinct.add(String(value).toLowerCase());
+if (typeof value === 'number') {
+if (value >= EXCEL_SERIAL_MIN && value <= EXCEL_SERIAL_MAX && Number.isInteger(value)) dates += 1;
+else numbers += 1;
+continue;
+}
+if (parseDateLoose(value)) dates += 1;
+else if (parseAmount(value) !== null && /\d/.test(value)) numbers += 1;
+else texts += 1;
+}
+const total = Math.max(1, filled);
+return {
+index,
+filled,
+dateRatio: dates / total,
+numberRatio: numbers / total,
+textRatio: texts / total,
+distinct: distinct.size,
+};
+}
+function detectStructure(rows) {
+const warnings = [];
+const mapping = { date: null, amount: null, category: null, currency: null, note: null };
+if (!rows.length) return { headerRow: null, mapping, confidence: 'none', warnings: ['The file is empty'] };
+let headerRow = null;
+let bestMatches = 0;
+for (let index = 0; index < Math.min(5, rows.length); index += 1) {
+const matches = rows[index].map(matchField).filter(Boolean);
+const unique = new Set(matches);
+if (unique.size >= 2 && unique.size > bestMatches) {
+bestMatches = unique.size;
+headerRow = index;
+}
+}
+if (headerRow !== null) {
+rows[headerRow].forEach((header, column) => {
+const field = matchField(header);
+if (field && mapping[field] === null) mapping[field] = column;
+});
+}
+const dataRows = rows.slice(headerRow === null ? 0 : headerRow + 1);
+const width = rows.reduce((max, row) => Math.max(max, row.length), 0);
+const profiles = [];
+for (let column = 0; column < width; column += 1) profiles.push(profileColumn(dataRows, column));
+const used = new Set(Object.values(mapping).filter((value) => value !== null));
+const pick = (field, score) => {
+if (mapping[field] !== null) return;
+const candidates = profiles
+.filter((profile) => !used.has(profile.index) && profile.filled > 0)
+.map((profile) => ({ profile, score: score(profile) }))
+.filter((candidate) => candidate.score > 0)
+.sort((a, b) => b.score - a.score);
+if (candidates.length) {
+mapping[field] = candidates[0].profile.index;
+used.add(candidates[0].profile.index);
+}
+};
+pick('date', (profile) => (profile.dateRatio >= 0.6 ? profile.dateRatio : 0));
+pick('amount', (profile) => (profile.numberRatio >= 0.6 ? profile.numberRatio : 0));
+pick('category', (profile) => (profile.textRatio >= 0.6 && profile.distinct <= Math.max(3, dataRows.length * 0.6)
+? profile.textRatio + 1 / (profile.distinct + 1) : 0));
+pick('note', (profile) => (profile.textRatio >= 0.5 ? profile.textRatio : 0));
+if (mapping.amount === null) warnings.push('No column with amounts was found');
+if (mapping.date === null) warnings.push('No date column was found - today\'s date will be used');
+const confidence = headerRow !== null ? 'header' : (mapping.amount !== null ? 'content' : 'none');
+return { headerRow, mapping, confidence, warnings };
+}
+function readDate(value) {
+if (typeof value === 'number') {
+return value >= EXCEL_SERIAL_MIN && value <= EXCEL_SERIAL_MAX ? excelSerialToIso(value) : null;
+}
+const text = String(value ?? '').trim();
+if (!text) return null;
+const numeric = Number(text);
+if (Number.isFinite(numeric) && Number.isInteger(numeric)
+&& numeric >= EXCEL_SERIAL_MIN && numeric <= EXCEL_SERIAL_MAX) {
+return excelSerialToIso(numeric);
+}
+return parseDateLoose(text);
+}
+function readCurrency(value, knownCodes) {
+const text = String(value ?? '').trim();
+if (!text) return null;
+const upper = text.toUpperCase();
+if (knownCodes.includes(upper)) return upper;
+for (const [symbol, code] of Object.entries(SYMBOL_TO_CODE)) {
+if (text.includes(symbol)) return knownCodes.includes(code) ? code : null;
+}
+return /^[A-Z]{3}$/.test(upper) ? upper : null;
+}
+function convertRows(rows, structure, context) {
+const { mapping, headerRow } = structure;
+const dataRows = rows.slice(headerRow === null ? 0 : headerRow + 1);
+const codes = context.currencies.map((currency) => currency.code);
+const decimalsOf = (code) => {
+const currency = context.currencies.find((item) => item.code === code);
+return currency ? currency.decimals : 2;
+};
+const byName = new Map(context.categories.map((category) => [category.name.toLowerCase(), category]));
+const entries = [];
+const skipped = [];
+const newCategories = [];
+dataRows.forEach((row, index) => {
+const rowNumber = (headerRow === null ? 0 : headerRow + 1) + index + 1;
+const rawAmount = mapping.amount === null ? '' : row[mapping.amount];
+const currency = (mapping.currency === null ? null : readCurrency(row[mapping.currency], codes))
+|| context.defaultCurrency;
+const decimals = decimalsOf(currency);
+const amount = typeof rawAmount === 'number'
+? Math.round(rawAmount * 10 ** decimals)
+: parseAmount(rawAmount, decimals);
+if (amount === null || amount === 0) {
+skipped.push({ row: rowNumber, reason: 'no amount' });
+return;
+}
+const date = mapping.date === null ? context.today : readDate(row[mapping.date]);
+if (!date || !isIsoDate(date)) {
+skipped.push({ row: rowNumber, reason: 'unreadable date' });
+return;
+}
+const categoryName = mapping.category === null ? '' : String(row[mapping.category] ?? '').trim();
+let category = categoryName ? byName.get(categoryName.toLowerCase()) : null;
+if (categoryName && !category) {
+if (!newCategories.includes(categoryName)) newCategories.push(categoryName);
+category = { id: null, name: categoryName, kind: amount < 0 ? 'expense' : 'income' };
+}
+const note = mapping.note === null ? '' : String(row[mapping.note] ?? '').trim();
+const isIncome = category ? category.kind === 'income' : false;
+entries.push({
+date,
+amount: Math.abs(amount),
+categoryId: category && category.id ? category.id : null,
+categoryName: category ? category.name : null,
+isIncome,
+currency,
+note: note.slice(0, 200),
+});
+});
+return { entries, skipped, newCategories };
+}
+function describeImport(result) {
+const parts = [`${result.entries.length} ${result.entries.length === 1 ? 'entry' : 'entries'}`];
+if (result.newCategories.length) parts.push(`${result.newCategories.length} new categories`);
+if (result.skipped.length) parts.push(`${result.skipped.length} skipped`);
+return parts.join(', ');
+}
+return { detectStructure, readDate, readCurrency, convertRows, describeImport, HEADER_SYNONYMS };
+};
+__modules["ui/files.js"] = function () {
+function download(content, fileName, mimeType) {
+const blob = content instanceof Uint8Array
+? new Blob([content], { type: mimeType })
+: new Blob([content], { type: `${mimeType};charset=utf-8` });
+const url = URL.createObjectURL(blob);
+const link = document.createElement('a');
+link.href = url;
+link.download = fileName;
+document.body.append(link);
+link.click();
+link.remove();
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function readAsText(file) {
+return file.text();
+}
+async function readAsBytes(file) {
+return new Uint8Array(await file.arrayBuffer());
+}
+const MIME = {
+csv: 'text/csv',
+xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+pdf: 'application/pdf',
+json: 'application/json',
+};
+return { download, readAsText, readAsBytes, MIME };
+};
+__modules["ui/views/home.js"] = function () {
+const { barChart, donutChart } = __require("core/charts.js");
+const { formatDate, formatMoney, PERIODS } = __require("core/format.js");
+const { byCategory, ofCurrency, overview, series } = __require("core/stats.js");
+const { el, field, options } = __require("ui/dom.js");
+const PERIOD_TITLES = {
+day: 'period.today', week: 'period.thisWeek', month: 'period.thisMonth', year: 'period.thisYear',
+};
+const PER_LABELS = { day: 'period.perDay', week: 'period.perWeek', month: 'period.perMonth', year: 'period.perYear' };
+const CHART_LENGTH = { day: 14, week: 12, month: 12, year: 5 };
+function homeView(app) {
+const store = app.store;
+const t = app.t;
+const currencyCode = app.viewCurrency();
+const currency = store.currency(currencyCode);
+const entries = ofCurrency(store.entries, currencyCode);
+const today = store.today();
+const summaries = overview(entries, store.categories, today);
+const period = app.ui.homePeriod;
+const points = series(entries, store.categories, period, CHART_LENGTH[period], today);
+const breakdown = byCategory(entries, store.categories);
+const recent = store.list({ currency: currencyCode }).slice(0, 8);
+const budgets = store.budgets(currencyCode, today);
+return [
+quickAddCard(app, currency),
+el('section.cards', {}, summaries.map((summary) => statCard(app, summary, currency))),
+el('section.grid', {}, [
+el('article.card', {}, [
+el('header.card-head', {}, [
+el('h2', { text: t('home.spendingOverTime') }),
+el('div.segmented', {}, PERIODS.map((item) => el('button', {
+type: 'button',
+class: item === period ? 'active' : '',
+text: t(`period.${item}s`),
+on: { click: () => app.setUi({ homePeriod: item }) },
+}))),
+]),
+el('div.chart-box', { html: chartMarkup(app, points, currency) }),
+chartLegend(app, points),
+]),
+el('article.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('home.byCategory') })]),
+breakdown.length ? el('div.donut-box', {}, [
+el('div', { html: donutChart(breakdown) }),
+el('ul.legend-list', {}, breakdown.slice(0, 6).map((item) => el('li', {}, [
+el('span.legend-icon', { text: store.category(item.id).icon }),
+el('span.legend-name', { text: app.categoryName(store.category(item.id)) }),
+el('span.legend-value', { text: `${formatMoney(item.amount, currency)} · ${item.share}%` }),
+]))),
+]) : el('p.muted', { text: t('home.noExpenses') }),
+]),
+]),
+budgetCard(app, budgets, currency),
+el('section.card', {}, [
+el('header.card-head', {}, [
+el('h2', { text: t('home.latest') }),
+el('button.link', { type: 'button', text: t('home.allEntries'), on: { click: () => app.setTab('entries') } }),
+]),
+recent.length
+? el('ul.entry-list', {}, recent.map((entry) => entryRow(app, entry, currency)))
+: el('p.muted', { text: t('home.empty') }),
+]),
+];
+}
+function chartMarkup(app, points, currency) {
+const withSpending = points.filter((point) => point.expense > 0);
+const average = withSpending.length
+? Math.round(withSpending.reduce((sum, point) => sum + point.expense, 0) / withSpending.length)
+: 0;
+return barChart(points, {
+formatValue: (value) => formatMoney(value, currency),
+showIncome: app.ui.showIncome,
+average: app.ui.showAverage ? average : null,
+averageLabel: app.t('home.average.label', { amount: formatMoney(average, currency) }),
+});
+}
+function chartLegend(app, points) {
+const t = app.t;
+return el('p.legend', {}, [
+el('span.key.expense', { text: t('common.expenses') }),
+app.ui.showIncome ? el('span.key.income', { text: t('common.income') }) : null,
+toggle(app, 'showIncome', t('home.showIncome')),
+toggle(app, 'showAverage', t('home.showAverage')),
+points.length === 0 ? el('span', { text: '' }) : null,
+]);
+}
+function toggle(app, key, label) {
+return el('label.toggle', {}, [
+el('input', {
+type: 'checkbox', checked: Boolean(app.ui[key]),
+on: { change: (event) => app.setUi({ [key]: event.target.checked }) },
+}),
+label,
+]);
+}
+function quickAddCard(app, currency) {
+const t = app.t;
+const input = el('input.quick-input', {
+type: 'number', step: '0.01', min: '0', inputmode: 'decimal',
+placeholder: '0.00', 'aria-label': t('common.amount'), id: 'quick-amount',
+});
+const submit = (event) => {
+event.preventDefault();
+try {
+const entry = app.store.quickAdd(input.value);
+app.notify(t('quick.added', {
+amount: formatMoney(entry.amount, currency),
+category: app.categoryName(app.store.category(entry.categoryId)),
+}));
+} catch (error) {
+app.notify(app.errorText(error), 'error');
+}
+};
+const form = el('form.quick-form', { on: { submit } }, [
+el('div.quick-input-wrap', {}, [input, el('span.quick-currency', { text: currency.symbol })]),
+el('button.primary', { type: 'submit', text: t('common.add') }),
+]);
+setTimeout(() => { if (app.ui.tab === 'home' && app.focusQuickInput) input.focus(); }, 0);
+const defaultCategory = app.store.category(app.store.settings.defaultCategoryId);
+return el('section.card.quick-card', {}, [
+el('header.card-head', {}, [
+el('h2', {}, [
+el('span.category-icon', { text: defaultCategory.icon }),
+t('quick.title', { category: app.categoryName(defaultCategory) }),
+]),
+currencySelector(app),
+]),
+form,
+el('p.quick-hint.muted', { text: t('quick.hint') }),
+]);
+}
+function currencySelector(app) {
+const used = app.store.usedCurrencies();
+if (used.length < 2) return null;
+return field(app.t('common.currency'), el('select', {
+on: { change: (event) => app.setUi({ currency: event.target.value }) },
+}, options(used.map((code) => ({ value: code, label: code })), app.viewCurrency())));
+}
+function statCard(app, summary, currency) {
+return el('article.card.stat', {}, [
+el('span.stat-title', { text: app.t(PERIOD_TITLES[summary.period]) }),
+el('strong.stat-value', { text: formatMoney(summary.current.expense, currency) }),
+el('span.stat-sub', {
+text: app.t('home.average', {
+amount: formatMoney(summary.averageExpense, currency),
+per: app.t(PER_LABELS[summary.period]),
+}),
+}),
+summary.current.income
+? el('span.stat-sub.income', {
+text: app.t('home.income', { amount: formatMoney(summary.current.income, currency, { symbol: false }) }),
+})
+: null,
+]);
+}
+function budgetCard(app, budgets, currency) {
+const t = app.t;
+return el('section.card', {}, [
+el('header.card-head', {}, [
+el('h2', { text: t('home.budgets') }),
+el('button.link', { type: 'button', text: t('nav.settings'), on: { click: () => app.setTab('settings') } }),
+]),
+budgets.length ? el('ul.bar-list', {}, budgets.map((budget) => el('li', {}, [
+el('div.bar-head', {}, [
+el('span', {}, [
+el('span.category-icon', { text: budget.category.icon }),
+app.categoryName(budget.category),
+budget.over ? el('span.badge.over', { text: `${budget.percent}%` })
+: el('span.badge', { text: `${budget.percent}%` }),
+]),
+el('span.num', {
+class: budget.over ? 'expense' : '',
+text: t('home.budgetOf', {
+spent: formatMoney(budget.spent, currency),
+limit: formatMoney(budget.limit, currency),
+}),
+}),
+]),
+el('div.track', {}, el('div', {
+class: `fill ${budget.over ? 'over' : ''}`,
+style: `width:${Math.min(budget.percent, 100)}%;background:${budget.over ? '' : budget.category.color}`,
+})),
+el('span.muted.small', {
+text: budget.over
+? t('home.budgetOver', { amount: formatMoney(-budget.remaining, currency) })
+: t('home.budgetLeft', { amount: formatMoney(budget.remaining, currency) }),
+}),
+]))) : el('p.muted', { text: t('home.budgetsHint') }),
+]);
+}
+function entryRow(app, entry, currency) {
+const category = app.store.category(entry.categoryId);
+return el('li.entry', { on: { click: () => app.editEntry(entry.id) } }, [
+el('span.category-icon', { text: category.icon }),
+el('span.entry-main', {}, [
+el('span.entry-title', { text: entry.note || app.categoryName(category) }),
+el('span.entry-sub', { text: `${formatDate(entry.date)} · ${app.categoryName(category)}` }),
+]),
+el('span', {
+class: `entry-amount ${category.kind === 'income' ? 'income' : 'expense'}`,
+text: formatMoney(category.kind === 'income' ? entry.amount : -entry.amount, currency, { sign: true }),
+}),
+]);
+}
+return { homeView, chartMarkup, chartLegend };
+};
+__modules["core/charts.js"] = function () {
+const NS = 'http://www.w3.org/2000/svg';
+function escapeXml(value) {
+return String(value).replace(/[<>&"']/g, (char) => ({
+'<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;',
+}[char]));
+}
+function barChart(data, options = {}) {
+const width = options.width || 640;
+const height = options.height || 220;
+const padding = { top: 12, right: 8, bottom: 26, left: 8 };
+const showIncome = options.showIncome !== false && data.some((point) => point.income > 0);
+const format = options.formatValue || String;
+const plotHeight = height - padding.top - padding.bottom;
+const plotWidth = width - padding.left - padding.right;
+const average = Number.isFinite(options.average) && options.average > 0 ? options.average : null;
+const max = Math.max(1, ...data.map((point) => Math.max(point.expense, showIncome ? point.income : 0)),
+average || 0);
+const slot = plotWidth / Math.max(1, data.length);
+const barWidth = Math.max(4, Math.min(28, slot * (showIncome ? 0.3 : 0.55)));
+const parts = [`<svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Bar chart">`];
+for (let line = 0; line <= 2; line += 1) {
+const y = padding.top + (plotHeight / 2) * line;
+parts.push(`<line class="grid" x1="0" y1="${round(y)}" x2="${width}" y2="${round(y)}"/>`);
+}
+if (options.showScale !== false) {
+parts.push(`<text class="chart-scale" x="2" y="${padding.top - 2}">${escapeXml(format(max))}</text>`);
+}
+data.forEach((point, index) => {
+const centre = padding.left + slot * (index + 0.5);
+const bars = showIncome
+? [{ value: point.expense, cls: 'bar-expense', offset: -barWidth * 0.55 },
+{ value: point.income, cls: 'bar-income', offset: barWidth * 0.55 }]
+: [{ value: point.expense, cls: 'bar-expense', offset: 0 }];
+for (const bar of bars) {
+const barHeight = max ? (bar.value / max) * plotHeight : 0;
+const x = centre + bar.offset - barWidth / 2;
+const y = padding.top + plotHeight - barHeight;
+parts.push(`<rect class="${bar.cls}" x="${round(x)}" y="${round(y)}" width="${round(barWidth)}" `
++ `height="${round(Math.max(barHeight, bar.value > 0 ? 2 : 0))}" rx="3">`
++ `<title>${escapeXml(point.fullLabel || point.label)}: ${escapeXml(format(bar.value))}</title></rect>`);
+}
+parts.push(`<text class="chart-label" x="${round(centre)}" y="${height - 8}" text-anchor="middle">`
++ `${escapeXml(point.label)}</text>`);
+});
+if (average !== null) {
+const y = padding.top + plotHeight - (average / max) * plotHeight;
+parts.push(`<line class="average-line" x1="0" y1="${round(y)}" x2="${width}" y2="${round(y)}"/>`);
+const label = options.averageLabel || `avg ${format(average)}`;
+parts.push(`<text class="average-label" x="${width - 4}" y="${round(Math.max(y - 7, 10))}" text-anchor="end">`
++ `${escapeXml(label)}</text>`);
+}
+parts.push('</svg>');
+return parts.join('');
+}
+function donutChart(slices, options = {}) {
+const size = options.size || 200;
+const radius = size / 2;
+const inner = radius * 0.62;
+const total = slices.reduce((sum, slice) => sum + slice.amount, 0);
+if (!total) {
+return `<svg class="chart donut" viewBox="0 0 ${size} ${size}" role="img" aria-label="No data">`
++ `<circle cx="${radius}" cy="${radius}" r="${round(radius - 1)}" class="donut-empty"/></svg>`;
+}
+const parts = [`<svg class="chart donut" viewBox="0 0 ${size} ${size}" role="img" aria-label="Spending by category">`];
+let angle = -Math.PI / 2;
+for (const slice of slices) {
+const sweep = (slice.amount / total) * Math.PI * 2;
+const end = angle + sweep;
+parts.push(`<path d="${arcPath(radius, radius, radius - 1, inner, angle, end)}" fill="${escapeXml(slice.color)}">`
++ `<title>${escapeXml(slice.name)}: ${slice.share}%</title></path>`);
+angle = end;
+}
+parts.push('</svg>');
+return parts.join('');
+}
+function arcPath(cx, cy, outer, inner, from, to) {
+const large = to - from > Math.PI ? 1 : 0;
+const sweep = Math.min(to - from, Math.PI * 2 - 1e-6);
+const end = from + sweep;
+const p1 = point(cx, cy, outer, from);
+const p2 = point(cx, cy, outer, end);
+const p3 = point(cx, cy, inner, end);
+const p4 = point(cx, cy, inner, from);
+return `M ${p1} A ${round(outer)} ${round(outer)} 0 ${large} 1 ${p2} L ${p3} `
++ `A ${round(inner)} ${round(inner)} 0 ${large} 0 ${p4} Z`;
+}
+function point(cx, cy, radius, angle) {
+return `${round(cx + radius * Math.cos(angle))} ${round(cy + radius * Math.sin(angle))}`;
+}
+function round(value) {
+return Math.round(value * 100) / 100;
+}
+return { barChart, donutChart };
+};
+__modules["ui/views/settings.js"] = function () {
+const { CUSTOM_LANGUAGE, EN, LANGUAGES, sanitizeTranslation, translationKeys } = __require("core/i18n.js");
+const { formatMoney, parseAmount, toPlainAmount } = __require("core/format.js");
+const { ICON_CHOICES } = __require("core/model.js");
+const { el, field, options, render } = __require("ui/dom.js");
+const { download, MIME } = __require("ui/files.js");
+function settingsView(app) {
+const store = app.store;
+const t = app.t;
+const usage = store.categoryUsage();
+const currency = store.currency(store.settings.defaultCurrency);
+return [
+el('section.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('settings.defaults') })]),
+el('div.filters', {}, [
+field(t('settings.quickCategory'), el('select', {
+on: { change: (event) => app.run(() => store.updateSettings({ defaultCategoryId: event.target.value })) },
+}, options(store.categories.map((category) => ({
+value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
+})), store.settings.defaultCategoryId))),
+field(t('common.currency'), el('select', {
+on: { change: (event) => app.run(() => store.updateSettings({ defaultCurrency: event.target.value })) },
+}, options(store.currencies.map((item) => ({ value: item.code, label: `${item.code} ${item.symbol}` })),
+store.settings.defaultCurrency))),
+field(t('settings.language'), el('select', {
+on: { change: (event) => app.run(() => store.updateSettings({ language: event.target.value })) },
+}, options([
+{ value: 'auto', label: t('settings.languageAuto', { language: app.detectedLanguageName() }) },
+...LANGUAGES.map((item) => ({ value: item.code, label: item.name })),
+{ value: CUSTOM_LANGUAGE, label: store.settings.customLanguageName || t('settings.languageCustom') },
+], store.settings.language))),
+field(t('settings.displayMode'), el('select', {
+on: { change: (event) => app.run(() => store.updateSettings({ uiMode: event.target.value })) },
+}, options([
+{ value: 'auto', label: t('settings.modeAuto') },
+{ value: 'mobile', label: t('settings.modeMobile') },
+{ value: 'desktop', label: t('settings.modeDesktop') },
+], store.settings.uiMode))),
+field(t('settings.theme'), el('select', {
+on: { change: (event) => app.run(() => store.updateSettings({ theme: event.target.value })) },
+}, options([
+{ value: 'auto', label: t('settings.themeAuto') },
+{ value: 'light', label: t('settings.themeLight') },
+{ value: 'dark', label: t('settings.themeDark') },
+], store.settings.theme))),
+]),
+]),
+el('section.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('settings.categories') })]),
+el('div.table-wrap', {}, el('table.entries-table', {}, [
+el('thead', {}, el('tr', {}, [
+el('th', { text: t('common.name') }), el('th', { text: t('common.type') }),
+el('th.num', { text: t('settings.limit') }), el('th.num', { text: t('nav.entries') }), el('th', {}),
+])),
+el('tbody', {}, store.categories.map((category) => el('tr', {}, [
+el('td', {}, [
+el('span.category-icon', { text: category.icon }),
+app.categoryName(category),
+category.id === store.settings.defaultCategoryId ? el('span.badge', { text: t('common.default') }) : null,
+]),
+el('td', { text: t(`common.${category.kind}`) }),
+el('td.num', { text: category.limit ? formatMoney(category.limit, currency) : '—' }),
+el('td.num', { text: String(usage.get(category.id) || 0) }),
+el('td.row-actions', {}, [
+el('button.link', {
+type: 'button', text: t('common.edit'), on: { click: () => app.editCategory(category.id) },
+}),
+category.id === store.settings.defaultCategoryId ? null : el('button.link.danger', {
+type: 'button', text: t('common.delete'), on: { click: () => app.deleteCategory(category.id) },
+}),
+]),
+]))),
+])),
+el('div.button-row', {}, [
+el('button.primary', {
+type: 'button', text: t('settings.newCategory'), on: { click: () => app.editCategory(null) },
+}),
+]),
+]),
+el('section.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('settings.currencies') })]),
+el('ul.chips', {}, store.currencies.map((item) => el('li.chip', {}, [
+`${item.code} ${item.symbol}`,
+item.code === store.settings.defaultCurrency ? el('span.badge', { text: t('common.default') }) : null,
+item.code === store.settings.defaultCurrency ? null : el('button.link.danger', {
+type: 'button', text: '×', title: `${t('common.delete')} ${item.code}`,
+on: { click: () => app.run(() => store.deleteCurrency(item.code)) },
+}),
+]))),
+currencyForm(app),
+]),
+translationCard(app),
+el('section.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('settings.data') })]),
+el('p.muted', { text: t('settings.dataHint', { storage: app.storageKind }) }),
+el('div.button-row', {}, [
+el('button', { type: 'button', text: t('settings.backup'), on: { click: () => backup(app) } }),
+el('label.file-button', {}, [
+t('settings.restore'),
+el('input', {
+type: 'file', accept: '.json', hidden: true,
+on: { change: (event) => restore(app, event.target.files[0]) },
+}),
+]),
+el('button.danger', { type: 'button', text: t('settings.deleteAll'), on: { click: () => app.clearEntries() } }),
+]),
+]),
+];
+}
+function translationCard(app) {
+const t = app.t;
+const store = app.store;
+const draft = { ...store.settings.customTranslation };
+const nameInput = el('input', { type: 'text', value: store.settings.customLanguageName, maxlength: '40' });
+const save = (useIt) => app.run(() => {
+store.updateSettings({
+customTranslation: draft,
+customLanguageName: nameInput.value,
+...(useIt ? { language: CUSTOM_LANGUAGE } : {}),
+});
+app.notify(t('settings.translationSaved'));
+});
+return el('details.card', { open: store.settings.language === CUSTOM_LANGUAGE }, [
+el('summary.card-summary', { text: t('settings.translation') }),
+el('p.muted', { text: t('settings.translationHint') }),
+el('div.filters', {}, [field(t('settings.translationName'), nameInput)]),
+el('div.table-wrap.translation-table', {}, el('table', {}, [
+el('thead', {}, el('tr', {}, [
+el('th', { text: 'English' }), el('th', { text: t('settings.translationName') }),
+])),
+el('tbody', {}, translationKeys().map((key) => el('tr', {}, [
+el('td', {}, [el('span.muted.small.block', { text: key }), EN[key]]),
+el('td', {}, el('input', {
+type: 'text', value: draft[key] || '', placeholder: EN[key],
+on: { input: (event) => { draft[key] = event.target.value; } },
+})),
+]))),
+])),
+el('div.button-row', {}, [
+el('button.primary', { type: 'button', text: t('common.save'), on: { click: () => save(false) } }),
+el('button', { type: 'button', text: t('settings.translationUse'), on: { click: () => save(true) } }),
+el('button', {
+type: 'button',
+text: t('settings.translationExport'),
+on: {
+click: () => {
+download(JSON.stringify({ name: nameInput.value, texts: draft }, null, 2),
+'home-budget-translation.json', MIME.json);
+},
+},
+}),
+el('label.file-button', {}, [
+t('settings.translationImport'),
+el('input', {
+type: 'file', accept: '.json', hidden: true,
+on: { change: (event) => loadTranslation(app, event.target.files[0]) },
+}),
+]),
+]),
+]);
+}
+async function loadTranslation(app, file) {
+if (!file) return;
+try {
+const parsed = JSON.parse(await file.text());
+const texts = sanitizeTranslation(parsed.texts || parsed);
+app.store.updateSettings({
+customTranslation: texts,
+customLanguageName: typeof parsed.name === 'string' ? parsed.name : app.store.settings.customLanguageName,
+language: CUSTOM_LANGUAGE,
+});
+app.notify(app.t('settings.translationLoaded'));
+} catch {
+app.notify(app.t('settings.translationError'), 'error');
+}
+}
+function currencyForm(app) {
+const t = app.t;
+const code = el('input', { type: 'text', placeholder: 'SEK', maxlength: '5', size: '6' });
+const symbol = el('input', { type: 'text', placeholder: 'kr', maxlength: '4', size: '4' });
+const decimals = el('input', { type: 'number', min: '0', max: '4', value: '2', size: '2' });
+const message = el('p.error');
+return el('form.inline-form', {
+on: {
+submit: (event) => {
+event.preventDefault();
+try {
+app.store.addCurrency({ code: code.value, symbol: symbol.value, decimals: Number(decimals.value) });
+code.value = '';
+symbol.value = '';
+} catch (error) {
+render(message, app.errorText(error));
+}
+},
+},
+}, [
+field(t('settings.currencyCode'), code),
+field(t('settings.currencySymbol'), symbol),
+field(t('settings.currencyDecimals'), decimals),
+el('button', { type: 'submit', text: t('settings.addCurrency') }),
+message,
+]);
+}
+function categoryForm(app, category) {
+const store = app.store;
+const t = app.t;
+const currency = store.currency(store.settings.defaultCurrency);
+const message = el('p.error');
+const name = el('input', {
+type: 'text', required: true, maxlength: '40', value: category ? app.categoryName(category) : '',
+});
+const kind = el('select', {}, options([
+{ value: 'expense', label: t('common.expense') },
+{ value: 'income', label: t('common.income') },
+], category ? category.kind : 'expense'));
+const color = el('input', { type: 'color', value: category ? category.color : '#4f46e5' });
+const limit = el('input', {
+type: 'number', min: '0', step: '0.01', placeholder: t('common.none'),
+value: category && category.limit ? toPlainAmount(category.limit, currency.decimals) : '',
+});
+const iconInput = el('input.icon-input', {
+type: 'text', maxlength: '2', value: category ? category.icon : '💸', 'aria-label': t('common.icon'),
+});
+const iconPicker = el('div.icon-picker', {}, ICON_CHOICES.map((choice) => el('button', {
+type: 'button', text: choice, class: 'icon-choice',
+on: { click: () => { iconInput.value = choice; } },
+})));
+const form = el('form.dialog-form', {
+on: {
+submit: (event) => {
+event.preventDefault();
+try {
+const limitValue = limit.value.trim()
+? parseAmount(limit.value, currency.decimals)
+: null;
+const data = {
+name: name.value,
+kind: kind.value,
+color: color.value,
+icon: iconInput.value,
+limit: limitValue,
+};
+if (category) store.updateCategory(category.id, data);
+else store.addCategory(data);
+app.closeDialog();
+} catch (error) {
+render(message, app.errorText(error));
+}
+},
+},
+}, [
+field(t('common.name'), name),
+field(t('common.type'), kind),
+el('div.row-2', {}, [field(t('common.colour'), color), field(t('common.icon'), iconInput)]),
+iconPicker,
+field(`${t('settings.limit')} (${currency.symbol})`, limit, t('settings.limitHint')),
+message,
+el('div.dialog-actions', {}, [
+el('span.spacer'),
+el('button', { type: 'button', text: t('common.cancel'), on: { click: () => app.closeDialog() } }),
+el('button.primary', { type: 'submit', text: category ? t('common.save') : t('common.create') }),
+]),
+]);
+return {
+title: category ? t('settings.editCategory') : t('settings.createCategory'),
+body: form,
+focus: name,
+};
+}
+function backup(app) {
+download(JSON.stringify(app.store.state, null, 2), `home-budget-backup-${app.store.today()}.json`, MIME.json);
+app.notify(app.t('settings.backupDownloaded'));
+}
+async function restore(app, file) {
+if (!file) return;
+try {
+const state = JSON.parse(await file.text());
+app.restore(state);
+} catch (error) {
+app.notify(app.t('settings.backupError', { message: error.message }), 'error');
+}
+}
+return { settingsView, categoryForm };
+};
+__modules["ui/views/stats.js"] = function () {
+const { formatDate, formatMoney, PERIODS } = __require("core/format.js");
+const { byCategory, highlights, ofCurrency, overview, series } = __require("core/stats.js");
+const { el, field, options } = __require("ui/dom.js");
+const { chartLegend, chartMarkup } = __require("ui/views/home.js");
+const LENGTHS = { day: 30, week: 16, month: 12, year: 6 };
+function statsView(app) {
+const store = app.store;
+const t = app.t;
+const code = app.viewCurrency();
+const currency = store.currency(code);
+const entries = ofCurrency(store.entries, code);
+const today = store.today();
+const summaries = overview(entries, store.categories, today);
+const period = app.ui.statsPeriod;
+const points = series(entries, store.categories, period, LENGTHS[period], today);
+const facts = highlights(entries, store.categories);
+const breakdown = byCategory(entries, store.categories);
+const used = store.usedCurrencies();
+return [
+el('section.card', {}, [
+el('header.card-head', {}, [
+el('h2', { text: t('stats.sums') }),
+used.length > 1 ? field(t('common.currency'), el('select', {
+on: { change: (event) => app.setUi({ currency: event.target.value }) },
+}, options(used.map((item) => ({ value: item, label: item })), code))) : null,
+]),
+el('div.table-wrap', {}, el('table.stats-table', {}, [
+el('thead', {}, el('tr', {}, [
+el('th', { text: t('stats.periodColumn') }),
+el('th.num', { text: t('stats.current') }),
+el('th.num', { text: t('stats.averageColumn') }),
+el('th.num', { text: t('stats.total') }),
+el('th.num', { text: t('stats.periods') }),
+])),
+el('tbody', {}, summaries.map((summary) => el('tr', {}, [
+el('td', {}, [
+el('strong', { text: t(`period.${summary.period}`) }),
+el('span.muted.block', { text: summary.label }),
+]),
+el('td.num', { text: formatMoney(summary.current.expense, currency) }),
+el('td.num', { text: formatMoney(summary.averageExpense, currency) }),
+el('td.num', { text: formatMoney(summary.totalExpense, currency) }),
+el('td.num', { text: String(summary.periodsWithData) }),
+]))),
+])),
+el('p.muted', { text: t('stats.averagesHint') }),
+]),
+el('section.card', {}, [
+el('header.card-head', {}, [
+el('h2', { text: t('stats.history') }),
+el('div.segmented', {}, PERIODS.map((item) => el('button', {
+type: 'button',
+class: item === period ? 'active' : '',
+text: t(`period.${item}s`),
+on: { click: () => app.setUi({ statsPeriod: item }) },
+}))),
+]),
+el('div.chart-box.tall', { html: chartMarkup(app, points, currency) }),
+chartLegend(app, points),
+]),
+el('section.grid', {}, [
+el('article.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('stats.categories') })]),
+breakdown.length ? el('ul.bar-list', {}, breakdown.map((item) => el('li', {}, [
+el('div.bar-head', {}, [
+el('span', {}, [
+el('span.category-icon', { text: store.category(item.id).icon }),
+app.categoryName(store.category(item.id)),
+]),
+el('span.num', { text: `${formatMoney(item.amount, currency)} · ${item.share}%` }),
+]),
+el('div.track', {}, el('div.fill', { style: `width:${item.share}%;background:${item.color}` })),
+]))) : el('p.muted', { text: t('home.noExpenses') }),
+]),
+el('article.card', {}, [
+el('header.card-head', {}, [el('h2', { text: t('stats.highlights') })]),
+el('ul.facts', {}, [
+el('li', { text: t('stats.daysWithSpending', { count: facts.daysWithSpending }) }),
+facts.largest ? el('li', {
+text: t('stats.largest', {
+amount: formatMoney(facts.largest.amount, currency),
+date: formatDate(facts.largest.date),
+}),
+}) : null,
+facts.busiestDay ? el('li', {
+text: t('stats.busiest', {
+amount: formatMoney(facts.busiestDay.amount, currency),
+date: formatDate(facts.busiestDay.date),
+}),
+}) : null,
+el('li', { text: t('stats.entryCount', { count: entries.length }) }),
+]),
+]),
+]),
+];
+}
+return { statsView };
+};
+__require("main.js");
+})();</script>
+</body>
+</html>
