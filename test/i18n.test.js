@@ -62,3 +62,17 @@ test('the browser language is matched to a bundled one', () => {
   assert.equal(detectLanguage([]), 'en');
   assert.deepEqual(bundledTexts('nope'), {});
 });
+
+test('no language defines the same key twice', async () => {
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('../src/core/i18n.js', import.meta.url), 'utf8');
+  for (const language of ['EN', 'RU', 'DE']) {
+    const start = source.indexOf(`export const ${language} = {`);
+    assert.ok(start > 0, `${language} not found`);
+    const block = source.slice(start, source.indexOf('\n};', start));
+    const keys = [...block.matchAll(/^ {2}'([^']+)':/gm)].map((match) => match[1]);
+    const repeated = keys.filter((key, index) => keys.indexOf(key) !== index);
+    // A repeated key is silently overwritten by the later one, so only a test catches it.
+    assert.deepEqual(repeated, [], `${language} repeats ${repeated.join(', ')}`);
+  }
+});

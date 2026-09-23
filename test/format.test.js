@@ -120,3 +120,19 @@ test('period keys, starts and labels', () => {
   assert.equal(periodLabel('2026', 'year'), '2026');
   assert.throws(() => periodLabel('2026', 'decade'), /Unknown period/);
 });
+
+test('period labels follow the language they are given', () => {
+  const russian = {
+    months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+      'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+    week: '{week}-я неделя, {year}',
+    weekShort: 'Н{week}',
+  };
+  assert.equal(periodLabel('2026-09', 'month', 'long', russian), 'Сентябрь 2026');
+  assert.equal(periodLabel('2026-09', 'month', 'short', russian), 'Сен 26');
+  assert.equal(periodLabel('2026-W39', 'week', 'long', russian), '39-я неделя, 2026');
+  assert.equal(periodLabel('2026-W39', 'week', 'short', russian), 'Н39');
+  assert.equal(periodLabel('2026-09-22', 'day', 'long', russian), '22.09.2026', 'dates stay numeric');
+  assert.equal(periodLabel('2026-09', 'month', 'long', {}), 'September 2026', 'English is the fallback');
+  assert.equal(periodLabel('2026-09', 'month', 'long', { months: ['too', 'short'] }), 'September 2026');
+});

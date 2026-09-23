@@ -18,9 +18,9 @@ export function homeView(app) {
   const currency = store.currency(currencyCode);
   const entries = store.entriesIn(currencyCode);
   const today = store.today();
-  const summaries = overview(entries, store.categories, today);
+  const summaries = overview(entries, store.categories, today, app.periodTexts());
   const period = app.ui.homePeriod;
-  const points = series(entries, store.categories, period, CHART_LENGTH[period], today);
+  const points = series(entries, store.categories, period, CHART_LENGTH[period], today, app.periodTexts());
   const breakdown = byCategory(entries, store.categories);
   const recent = (store.settings.convertToDefault ? store.list() : store.list({ currency: currencyCode })).slice(0, 8);
   const budgets = store.budgets(currencyCode, today);

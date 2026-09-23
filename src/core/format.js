@@ -220,11 +220,23 @@ export function previousPeriodStart(isoDate, period) {
   }
 }
 
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+export const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
-/** Human readable label for a period key, e.g. "Sep 2026" or "W38 2026". */
-export function periodLabel(key, period, style = 'short') {
+/**
+ * The words period labels are built from. The interface passes a translated set
+ * (see periodTexts in i18n.js); English is the fallback, so this module stays
+ * usable - and testable - on its own.
+ */
+export const PERIOD_TEXTS = {
+  months: MONTH_NAMES,
+  week: 'Week {week}, {year}',
+  weekShort: 'W{week}',
+};
+
+/** Human readable label for a period key, e.g. "Sep 26" or "September 2026". */
+export function periodLabel(key, period, style = 'short', texts = PERIOD_TEXTS) {
+  const months = texts.months && texts.months.length === 12 ? texts.months : MONTH_NAMES;
   switch (period) {
     case 'day': {
       const [year, month, day] = key.split('-');
@@ -232,12 +244,16 @@ export function periodLabel(key, period, style = 'short') {
     }
     case 'week': {
       const [year, week] = key.split('-W');
-      return style === 'short' ? `W${Number(week)}` : `Week ${Number(week)}, ${year}`;
+      const pattern = style === 'short'
+        ? (texts.weekShort || PERIOD_TEXTS.weekShort)
+        : (texts.week || PERIOD_TEXTS.week);
+      return pattern.replace('{week}', String(Number(week))).replace('{year}', year);
     }
     case 'month': {
       const [year, month] = key.split('-');
-      const name = MONTH_NAMES[Number(month) - 1];
-      return style === 'short' ? `${name.slice(0, 3)} ${year.slice(2)}` : `${name} ${year}`;
+      const name = months[Number(month) - 1];
+      // Three letters is a short month everywhere the app is translated into.
+      return style === 'short' ? `${[...name].slice(0, 3).join('')} ${year.slice(2)}` : `${name} ${year}`;
     }
     case 'year': return key;
     default: throw new Error(`Unknown period: ${period}`);

@@ -50,6 +50,7 @@ function context(app) {
     chartCurrency: app.viewCurrency(),
     chartPeriod: app.ui.statsPeriod,
     chartCount: 12,
+    periodTexts: app.periodTexts(),
     labels: {
       expenses: app.t('common.expenses'),
       income: app.t('common.income'),

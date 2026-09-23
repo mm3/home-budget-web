@@ -34,7 +34,7 @@ export function groupByPeriod(entries, period) {
  * Figures for the period that contains `today`, plus the average per period
  * over all periods that have data (the current one included).
  */
-export function periodSummary(entries, categories, period, today = todayIso()) {
+export function periodSummary(entries, categories, period, today = todayIso(), texts = undefined) {
   const currentKey = periodKey(today, period);
   const groups = groupByPeriod(entries, period);
   const current = totals(groups.get(currentKey) || [], categories);
@@ -49,7 +49,7 @@ export function periodSummary(entries, categories, period, today = todayIso()) {
   return {
     period,
     key: currentKey,
-    label: periodLabel(currentKey, period, 'long'),
+    label: periodLabel(currentKey, period, 'long', texts),
     current,
     periodsWithData,
     averageExpense: periodsWithData ? Math.round(expenseSum / periodsWithData) : 0,
@@ -60,8 +60,8 @@ export function periodSummary(entries, categories, period, today = todayIso()) {
 }
 
 /** One summary per period type: day, week, month, year. */
-export function overview(entries, categories, today = todayIso()) {
-  return PERIODS.map((period) => periodSummary(entries, categories, period, today));
+export function overview(entries, categories, today = todayIso(), texts = undefined) {
+  return PERIODS.map((period) => periodSummary(entries, categories, period, today, texts));
 }
 
 /** Start dates of the last `count` periods, oldest first, ending with the one holding `today`. */
@@ -84,15 +84,15 @@ export function periodStarts(period, count, today = todayIso()) {
  * Series for the bar chart: the last `count` periods with expense, income and net,
  * including periods without entries.
  */
-export function series(entries, categories, period, count, today = todayIso()) {
+export function series(entries, categories, period, count, today = todayIso(), texts = undefined) {
   const groups = groupByPeriod(entries, period);
   return periodStarts(period, count, today).map((start) => {
     const key = periodKey(start, period);
     const groupTotals = totals(groups.get(key) || [], categories);
     return {
       key,
-      label: periodLabel(key, period),
-      fullLabel: periodLabel(key, period, 'long'),
+      label: periodLabel(key, period, 'short', texts),
+      fullLabel: periodLabel(key, period, 'long', texts),
       ...groupTotals,
     };
   });

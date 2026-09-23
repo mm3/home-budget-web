@@ -156,7 +156,9 @@ export function settingsView(app) {
           }),
         ]),
         el('button.danger', { type: 'button', text: t('settings.deleteAll'), on: { click: () => app.clearEntries() } }),
+        el('button.danger', { type: 'button', text: t('settings.resetAll'), on: { click: () => app.resetAll() } }),
       ]),
+      el('p.muted', { text: t('settings.deleteHint') }),
     ]),
   ];
 }

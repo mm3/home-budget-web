@@ -2,7 +2,9 @@
 
 import { BudgetStore } from '../core/store.js';
 import { AppError } from '../core/model.js';
-import { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES } from '../core/i18n.js';
+import {
+  createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES, periodTexts,
+} from '../core/i18n.js';
 import { APP_VERSION } from '../core/version.js';
 import { loadState, migrateState, pickStorage, saveState } from '../core/storage.js';
 import { append, clear, el, render } from './dom.js';
@@ -53,8 +55,15 @@ export class App {
     if (this.translatorSignature !== signature) {
       this.translatorSignature = signature;
       this.translatorFunction = createTranslator(language, settings.customTranslation);
+      this.translatedPeriods = periodTexts(this.translatorFunction);
     }
     return this.translatorFunction;
+  }
+
+  /** Month and week names for the charts, the statistics and the exports. */
+  periodTexts() {
+    this.translator();
+    return this.translatedPeriods;
   }
 
   /** Language code guessed from the browser. */
@@ -201,6 +210,12 @@ export class App {
     if (!window.confirm(this.t('settings.confirmDeleteAll'))) return;
     const removed = this.store.clearEntries();
     this.notify(this.t('settings.deletedEntries', { count: removed }));
+  }
+
+  resetAll() {
+    if (!window.confirm(this.t('settings.confirmResetAll'))) return;
+    this.store.resetAll();
+    this.notify(this.t('settings.resetDone'));
   }
 
   restore(rawState) {

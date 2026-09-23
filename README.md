@@ -1,4 +1,4 @@
-# Home Budget 3.1.0 (browser version)
+# Home Budget 3.2.0 (browser version)
 
 A home budget app that is **one HTML file**. All JavaScript, CSS and even the PDF font are inlined,
 there are no external requests, no frameworks and no build-time dependencies. Open the file from a
@@ -19,7 +19,8 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
   currency or text; tap a row (or click *Edit*) to change it.
 - **Statistics:** sums and averages per **day, week, month and year**, a bar chart of the last
   periods (days / weeks / months / years) with an **average line**, a donut chart and a ranking per
-  category, plus highlights such as the largest single expense.
+  category, plus highlights such as the largest single expense. Month and week names follow the
+  interface language, on screen and in the exports - "Сентябрь 2026", "September 2026", "39-я неделя".
 - **Export:** CSV, Excel (.xlsx) and PDF of exactly the entries the filters show. The PDF starts with a
   drawn bar chart (vector graphics, average line included) and the spreadsheet gets a second sheet with
   the chart data and a **real Excel chart** - so the chart stays editable in Excel, LibreOffice or Numbers.
@@ -31,18 +32,24 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 - **Languages:** English, Russian and German, picked automatically from the browser or chosen in the
   settings. A built-in editor lets you write **your own translation** of every text; it is stored in the
   browser and can be downloaded and shared as a JSON file.
-- **Currencies:** twenty-four come with the app, each with its **flag** (EUR, USD, GBP, CHF, SEK, NOK,
-  DKK, PLN, CZK, **RUB**, UAH, TRY, KZT, GEL, RON, HUF, BGN, CAD, AUD, NZD, JPY, CNY, INR, ILS), and more
-  can be added - a currency you add gets a matching flag by itself. Each has an editable **rate** against
+- **Currencies:** twenty-four come with the app - EUR, USD, GBP, CHF, SEK, NOK, DKK, PLN, CZK, **RUB**,
+  UAH, TRY, KZT, GEL, RON, HUF, BGN, CAD, AUD, NZD, JPY, CNY, INR, ILS - each with its **flag** and with
+  a symbol that belongs to it alone: the three Nordic crowns read Skr / Nkr / Dkr and the Chinese yuan
+  CN¥, so an amount always says which currency it is in. More can be added, and a currency you add gets
+  a matching flag by itself. Each has an editable **rate** against
   the default currency, and a switch folds every currency into the default one for the dashboard, the
   statistics and the budgets. Rates are typed in by hand - an offline app cannot fetch them, and the
   shipped values are only examples.
 - **Configurable:** categories (name, type, colour, emoji, limit, limit period) and currencies (code,
   symbol, flag, decimals, rate), the default category and currency, light/dark theme and mobile/desktop
-  layout.
+  layout. A limit is shown with the period it is for, so the column is simply **Limit** - it has not
+  been monthly-only since version 3.
 - **Storage:** everything stays in the browser's `localStorage` (about 60 000 entries fit).
   `sessionStorage` and an in-memory store are used as fallbacks when a browser blocks storage,
   so the app still runs in private mode. A JSON backup can be downloaded and restored.
+- **Two ways to start over**, and the difference is spelled out in the settings: **Delete all entries**
+  removes the entries and keeps your categories, currencies, rates and settings, while **Reset
+  everything** puts the app back to how it ships. Both ask first.
 
 | Mobile | Russian interface |
 |---|---|
@@ -56,7 +63,7 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 
 ## Using it
 
-Open `home-budget-3.1.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.2.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -85,7 +92,7 @@ file yourself, send that same header.
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.1.0` is pushed.
+built files to a release when a tag like `v3.2.0` is pushed.
 
 ## Building
 
@@ -134,7 +141,7 @@ src/
   core/          logic with no DOM, fully unit tested
     version.js     the single version source
     format.js      money and date formatting, parsing, period keys
-    i18n.js        English, Russian and German texts plus user translations
+    i18n.js        English, Russian and German texts, month names, user translations
     model.js       entries, categories, currencies, flags, limits, conversion
     store.js       application state and all operations on it
     storage.js     localStorage / sessionStorage / memory, migration and repair
@@ -173,22 +180,24 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-106 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+110 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
-budget calculations per limit period, currency conversion and flags, version consistency, translation
-completeness (every language has every key with the same placeholders), and the import detection for
-files with and without headers. The run **fails below 90%** line, branch and function coverage of
+budget calculations per limit period, currency conversion, unique flags and symbols, localized period
+labels, deleting entries versus resetting everything, version consistency, translation completeness
+(every language has every key exactly once and with the same placeholders), and the import detection
+for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (30 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (34 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
 CSV, switches the interface between English, Russian, German and a user translation written in the
 settings editor, checks the version stamp, the cache and web app metadata, the average line, the budget
-bars with their periods, the ruble and the currency flags, and takes the screenshots in this README. It
-fails if anything logs an error to the console.
+bars with their periods, the ruble, the currency flags and that no two currencies share a symbol,
+confirms that deleting the entries keeps the settings while resetting really restores the defaults,
+and takes the screenshots in this README. It fails if anything logs an error to the console.
 
 `tools/site-check.mjs` serves `site/` over HTTP, checks the manifest and the icons, waits for the
 service worker to fill its cache, then **switches the network off and reloads** to prove the published
