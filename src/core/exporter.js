@@ -113,18 +113,26 @@ export function buildPdfExport(entries, context) {
     } : null,
     title: 'Home Budget',
     subtitle: context.subtitle || `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`,
+    // The PDF is meant to be read, so its labels follow the interface language.
+    // The CSV and the spreadsheet keep English headers, because they get imported again.
     summary: summary.flatMap((item) => {
       const code = item.currency.code;
-      const lines = [{ label: `Expenses (${code})`, value: formatMoney(item.expense, item.currency) }];
-      if (item.income) lines.push({ label: `Income (${code})`, value: formatMoney(item.income, item.currency) });
-      lines.push({ label: `Balance (${code})`, value: formatMoney(item.net, item.currency, { sign: true }) });
+      const label = (name, fallback) => `${context.labels?.[name] || fallback} (${code})`;
+      const lines = [{ label: label('expenses', 'Expenses'), value: formatMoney(item.expense, item.currency) }];
+      if (item.income) {
+        lines.push({ label: label('income', 'Income'), value: formatMoney(item.income, item.currency) });
+      }
+      lines.push({
+        label: label('balance', 'Balance'),
+        value: formatMoney(item.net, item.currency, { sign: true }),
+      });
       return lines;
     }),
     columns: [
-      { key: 'date', title: 'Date', width: 70 },
-      { key: 'category', title: 'Category', width: 110 },
-      { key: 'note', title: 'Note', width: 230 },
-      { key: 'amount', title: 'Amount', width: 90, align: 'right' },
+      { key: 'date', title: context.labels?.date || 'Date', width: 70 },
+      { key: 'category', title: context.labels?.category || 'Category', width: 110 },
+      { key: 'note', title: context.labels?.note || 'Note', width: 230 },
+      { key: 'amount', title: context.labels?.amount || 'Amount', width: 90, align: 'right' },
     ],
     rows: rows.map((row) => ({
       date: formatDate(row.date),

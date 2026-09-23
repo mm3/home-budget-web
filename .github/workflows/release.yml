@@ -1,0 +1,47 @@
+name: Release
+
+# Pushing a tag like v3.1.0 attaches the built files to a GitHub release:
+# the versioned ones to archive, and the plain names for a link that always
+# points at the latest build.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Unit tests and coverage
+        run: npm run coverage
+      - name: Build
+        run: |
+          npm run build
+          npm run build:plain
+          npm run build:site
+      - name: Check the built files in a browser
+        run: |
+          npm run browser-check
+          npm run site-check
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum home-budget*.html > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/home-budget-*.html
+            dist/home-budget.html
+            dist/home-budget.min.html
+            dist/SHA256SUMS.txt
+          generate_release_notes: true

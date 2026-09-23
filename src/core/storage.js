@@ -4,7 +4,7 @@
  */
 
 import {
-  createDefaultState, defaultCategories, defaultCurrencies, LIMIT_PERIODS, STATE_VERSION,
+  createDefaultState, defaultCategories, defaultCurrencies, flagForCurrency, LIMIT_PERIODS, STATE_VERSION,
 } from './model.js';
 import { APP_VERSION } from './version.js';
 import { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } from './i18n.js';
@@ -81,6 +81,9 @@ export function migrateState(raw) {
   ).map((currency) => ({
     ...currency,
     rate: Number.isFinite(Number(currency.rate)) && Number(currency.rate) > 0 ? Number(currency.rate) : 1,
+    flag: typeof currency.flag === 'string' && currency.flag
+      ? currency.flag
+      : flagForCurrency(String(currency.code).toUpperCase()),
   }));
   const entries = Array.isArray(raw.entries)
     ? raw.entries.filter((e) => e && typeof e.id === 'string' && typeof e.date === 'string'

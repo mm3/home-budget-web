@@ -6,6 +6,7 @@ import {
   exportRows, summaryByCurrency,
 } from '../src/core/exporter.js';
 import { readZip } from '../src/core/zip.js';
+import { encodeText } from '../src/core/pdf.js';
 import { parseXlsx, excelSerialToIso } from '../src/core/xlsx.js';
 
 const categories = [
@@ -49,14 +50,12 @@ test('XLSX export can be parsed back', async () => {
 
 test('PDF export contains the summary and the rows', () => {
   const text = new TextDecoder('latin1').decode(buildPdfExport(entries, { ...context, subtitle: 'September 2026' }));
-  assert.match(text, /Home Budget/);
-  assert.match(text, /September 2026/);
-  assert.match(text, /Expenses \\\(EUR\\\)/);
-  assert.match(text, /Income \\\(EUR\\\)/);
-  assert.match(text, /Balance \\\(EUR\\\)/);
-  assert.match(text, /22\.09\.2026/);
+  for (const value of ['Home Budget', 'September 2026', 'Expenses (EUR)', 'Income (EUR)',
+    'Balance (EUR)', '22.09.2026']) {
+    assert.ok(text.includes(encodeText(value)), `the PDF is missing ${value}`);
+  }
   const withoutSubtitle = new TextDecoder('latin1').decode(buildPdfExport(entries.slice(0, 1), context));
-  assert.match(withoutSubtitle, /1 entry/);
+  assert.ok(withoutSubtitle.includes(encodeText('1 entry')));
 });
 
 test('chart data has one point per period and an average of the used periods', () => {
@@ -80,7 +79,7 @@ test('the PDF export contains the chart', () => {
   const text = new TextDecoder('latin1').decode(
     buildPdfExport(entries, { ...context, today: '2026-09-22', chartCurrency: 'EUR' }),
   );
-  assert.match(text, /Sep 26/);
+  assert.ok(text.includes(encodeText('Sep 26')));
   assert.match(text, /re f/);
 });
 
@@ -92,7 +91,7 @@ test('exports work without translated labels and without a chart currency', asyn
   assert.match(chart, /Expenses \(EUR\)/, 'English defaults are used');
   assert.match(decoder.decode(files.get('xl/worksheets/sheet2.xml')), /Period/, 'the data sheet uses English headers');
   const pdf = new TextDecoder('latin1').decode(buildPdfExport(entries, plain));
-  assert.match(pdf, /average/);
+  assert.ok(pdf.includes(encodeText('average')));
   const noChart = await readZip(await buildXlsxExport([], plain));
   assert.ok(![...noChart.keys()].some((name) => name.includes('chart')));
 });
@@ -105,4 +104,18 @@ test('summaries are grouped per currency', () => {
   assert.equal(summary[1].net, -900);
   assert.deepEqual(breakdownLines(entries, categories, currencies, 'EUR'), ['Daily: 12.50 € (100%)']);
   assert.deepEqual(summaryByCurrency([], categories, currencies), []);
+});
+
+test('the PDF follows the interface language', () => {
+  const labels = {
+    expenses: 'Расходы', income: 'Доход', balance: 'Баланс',
+    date: 'Дата', category: 'Категория', note: 'Заметка', amount: 'Сумма',
+  };
+  const pdf = new TextDecoder('latin1').decode(buildPdfExport(entries, { ...context, labels }));
+  for (const value of Object.values(labels)) {
+    assert.ok(pdf.includes(encodeText(value)), `the PDF is missing ${value}`);
+  }
+  assert.ok(pdf.includes(encodeText('Расходы (EUR)')), 'the currency stays next to the label');
+  const english = new TextDecoder('latin1').decode(buildPdfExport(entries, context));
+  assert.ok(english.includes(encodeText('Balance (EUR)')), 'English is the fallback');
 });

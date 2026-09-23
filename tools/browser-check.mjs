@@ -6,10 +6,10 @@
  *   node tools/browser-check.mjs [dist/home-budget.html] [--shots <dir>]
  */
 
-import { spawn } from 'node:child_process';
 import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { launchChromium, sleep } from './cdp.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -29,72 +29,6 @@ const given = positional[0];
 const file = given ? resolve(root, given) : latestBuild(args.includes('--min'));
 const shotIndex = args.indexOf('--shots');
 const shotDir = shotIndex >= 0 ? resolve(args[shotIndex + 1]) : join(root, 'dist', 'screenshots');
-const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
-const PORT = 9333 + Math.floor(Math.random() * 300);
-
-function sleep(ms) {
-  return new Promise((done) => setTimeout(done, ms));
-}
-
-class Cdp {
-  constructor(socket) {
-    this.socket = socket;
-    this.id = 0;
-    this.pending = new Map();
-    this.sessionId = null;
-    this.events = [];
-    socket.addEventListener('message', (event) => {
-      const message = JSON.parse(event.data);
-      if (message.id && this.pending.has(message.id)) {
-        const { resolve: done, reject } = this.pending.get(message.id);
-        this.pending.delete(message.id);
-        if (message.error) reject(new Error(message.error.message));
-        else done(message.result);
-      } else if (message.method) {
-        this.events.push(message);
-      }
-    });
-  }
-
-  static async connect(url) {
-    const socket = new WebSocket(url);
-    await new Promise((done, fail) => {
-      socket.addEventListener('open', done, { once: true });
-      socket.addEventListener('error', () => fail(new Error('Cannot connect to Chromium')), { once: true });
-    });
-    return new Cdp(socket);
-  }
-
-  send(method, params = {}, sessionId = this.sessionId) {
-    this.id += 1;
-    const id = this.id;
-    const payload = { id, method, params };
-    if (sessionId) payload.sessionId = sessionId;
-    this.socket.send(JSON.stringify(payload));
-    return new Promise((done, fail) => {
-      this.pending.set(id, { resolve: done, reject: fail });
-      setTimeout(() => {
-        if (this.pending.has(id)) {
-          this.pending.delete(id);
-          fail(new Error(`Timeout waiting for ${method}`));
-        }
-      }, 30000);
-    });
-  }
-
-  /** Runs an expression in the page and returns its value. */
-  async evaluate(expression) {
-    const result = await this.send('Runtime.evaluate', {
-      expression: `(async () => { ${expression} })()`,
-      awaitPromise: true,
-      returnByValue: true,
-    });
-    if (result.exceptionDetails) {
-      throw new Error(result.exceptionDetails.exception?.description || 'Page error');
-    }
-    return result.result.value;
-  }
-}
 
 const checks = [];
 function check(name, condition, detail = '') {
@@ -104,31 +38,7 @@ function check(name, condition, detail = '') {
 
 async function main() {
   mkdirSync(shotDir, { recursive: true });
-  const chrome = spawn(CHROME, [
-    '--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
-    '--allow-file-access-from-files', `--remote-debugging-port=${PORT}`,
-    `--user-data-dir=/tmp/hb-chrome-${PORT}`, 'about:blank',
-  ], { stdio: ['ignore', 'pipe', 'pipe'] });
-
-  let wsUrl = null;
-  for (let attempt = 0; attempt < 50 && !wsUrl; attempt += 1) {
-    await sleep(200);
-    try {
-      const response = await fetch(`http://127.0.0.1:${PORT}/json/version`);
-      wsUrl = (await response.json()).webSocketDebuggerUrl;
-    } catch {
-      // not up yet
-    }
-  }
-  if (!wsUrl) {
-    chrome.kill();
-    throw new Error('Chromium did not start');
-  }
-
-  const cdp = await Cdp.connect(wsUrl);
-  const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' }, null);
-  const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true }, null);
-  cdp.sessionId = sessionId;
+  const { cdp, chrome } = await launchChromium();
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
   await cdp.send('Log.enable');
@@ -320,7 +230,10 @@ async function main() {
       xlsxSize: xlsx.length,
       xlsxHasChart: xlsxText.includes('charts/chart1.xml'),
       pdfHead: pdf.slice(0, 8),
-      pdfHasChart: pdf.includes('re f') && pdf.includes('Expenses'),
+      pdfHasChart: pdf.includes('re f') && pdf.includes('/Contents'),
+      pdfHasFont: pdf.includes('/Identity-H') && pdf.includes('/CIDFontType2')
+        && pdf.includes('/FontFile2') && pdf.includes('beginbfchar'),
+      pdfCyrillic: /<[0-9a-f]{4}> <04[0-9a-f]{2}>/i.test(pdf),
     };
   `);
   check('CSV export has a header and one row per entry',
@@ -330,6 +243,7 @@ async function main() {
   check('PDF export starts with the PDF header', exported.pdfHead.startsWith('%PDF-1.4'));
   check('the spreadsheet contains a chart part', exported.xlsxHasChart);
   check('the PDF contains the drawn chart', exported.pdfHasChart);
+  check('the PDF embeds the unicode font', exported.pdfHasFont);
 
   const imported = await cdp.evaluate(`
     const csv = 'Datum;Betrag;Kategorie;Kommentar\\n20.09.2026;-15,75;Groceries;Rimi\\n21.09.2026;-3,20;Pets;Food for the cat\\n';
@@ -384,6 +298,64 @@ async function main() {
   await sleep(700);
   const afterReload = await cdp.evaluate('return window.homeBudget.store.entries.length;');
   check('data survives a reload', afterReload === persisted, `${persisted} -> ${afterReload}`);
+
+  const head = await cdp.evaluate(`
+    const meta = (name, attribute = 'name') =>
+      (document.querySelector('meta[' + attribute + '="' + name + '"]') || {}).content || '';
+    return {
+      cache: meta('Cache-Control', 'http-equiv'),
+      expires: meta('Expires', 'http-equiv'),
+      theme: meta('theme-color'),
+      webApp: meta('mobile-web-app-capable'),
+      appleApp: meta('apple-mobile-web-app-capable'),
+      appleBar: meta('apple-mobile-web-app-status-bar-style'),
+      appleTitle: meta('apple-mobile-web-app-title'),
+      version: meta('application-version'),
+      appleIcon: !!document.querySelector('link[rel="apple-touch-icon"]'),
+      title: document.title,
+    };
+  `);
+  check('the page asks to be cached forever',
+    head.cache.includes('immutable') && head.cache.includes('max-age=31536000') && !!head.expires,
+    head.cache);
+  check('the page carries the single page app metadata',
+    head.theme === '#4f46e5' && head.webApp === 'yes' && head.appleApp === 'yes'
+      && head.appleBar === 'black-translucent' && head.appleTitle === 'Home Budget' && head.appleIcon,
+    JSON.stringify(head));
+
+  const currencies = await cdp.evaluate(`
+    const store = window.homeBudget.store;
+    const rub = store.currencies.find((currency) => currency.code === 'RUB');
+    return {
+      rub: rub ? rub.symbol + ' ' + rub.flag : null,
+      withoutFlag: store.currencies.filter((currency) => !currency.flag).map((currency) => currency.code),
+      count: store.currencies.length,
+    };
+  `);
+  check('the ruble is one of the currencies', currencies.rub === '\u20bd \ud83c\uddf7\ud83c\uddfa', currencies.rub);
+  check('every currency has a flag', currencies.withoutFlag.length === 0,
+    `${currencies.count} currencies`);
+
+  const russianPdf = await cdp.evaluate(`
+    window.homeBudget.store.updateSettings({ language: 'ru' });
+    await new Promise((done) => setTimeout(done, 200));
+    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('\u0417\u0430\u043f\u0438\u0441\u0438')).click();
+    await new Promise((done) => setTimeout(done, 150));
+    let blob = null;
+    const original = URL.createObjectURL;
+    URL.createObjectURL = (value) => { blob = value; return original.call(URL, value); };
+    [...document.querySelectorAll('.transfer button')].find((button) => button.textContent === 'PDF').click();
+    await new Promise((done) => setTimeout(done, 400));
+    URL.createObjectURL = original;
+    const pdf = await blob.text();
+    window.homeBudget.store.updateSettings({ language: 'en' });
+    return {
+      cyrillic: /<[0-9a-f]{4}> <04[0-9a-f]{2}>/i.test(pdf),
+      questionMarks: (pdf.match(/<[0-9a-f]{4}> <003f>/gi) || []).length,
+    };
+  `);
+  check('a Russian PDF holds real cyrillic text, not question marks',
+    russianPdf.cyrillic && russianPdf.questionMarks === 0, JSON.stringify(russianPdf));
 
   // screenshots
   const shots = [

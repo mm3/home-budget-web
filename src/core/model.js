@@ -51,21 +51,48 @@ export const ICON_CHOICES = ['\u2615', '\ud83d\udd01', '\ud83d\udcc5', '\ud83d\u
  */
 export function defaultCurrencies() {
   return [
-    { code: 'EUR', symbol: '€', decimals: 2, rate: 1 },
-    { code: 'USD', symbol: '$', decimals: 2, rate: 0.92 },
-    { code: 'GBP', symbol: '£', decimals: 2, rate: 1.17 },
-    { code: 'CHF', symbol: 'Fr', decimals: 2, rate: 1.04 },
-    { code: 'SEK', symbol: 'kr', decimals: 2, rate: 0.088 },
-    { code: 'NOK', symbol: 'kr', decimals: 2, rate: 0.086 },
-    { code: 'DKK', symbol: 'kr', decimals: 2, rate: 0.134 },
-    { code: 'PLN', symbol: 'zł', decimals: 2, rate: 0.23 },
-    { code: 'CZK', symbol: 'Kč', decimals: 2, rate: 0.04 },
-    { code: 'UAH', symbol: '₴', decimals: 2, rate: 0.022 },
-    { code: 'TRY', symbol: '₺', decimals: 2, rate: 0.026 },
-    { code: 'CAD', symbol: 'C$', decimals: 2, rate: 0.66 },
-    { code: 'AUD', symbol: 'A$', decimals: 2, rate: 0.6 },
-    { code: 'JPY', symbol: '¥', decimals: 0, rate: 0.0059 },
+    { code: 'EUR', symbol: '€', flag: '🇪🇺', decimals: 2, rate: 1 },
+    { code: 'USD', symbol: '$', flag: '🇺🇸', decimals: 2, rate: 0.92 },
+    { code: 'GBP', symbol: '£', flag: '🇬🇧', decimals: 2, rate: 1.17 },
+    { code: 'CHF', symbol: 'Fr', flag: '🇨🇭', decimals: 2, rate: 1.04 },
+    { code: 'SEK', symbol: 'kr', flag: '🇸🇪', decimals: 2, rate: 0.088 },
+    { code: 'NOK', symbol: 'kr', flag: '🇳🇴', decimals: 2, rate: 0.086 },
+    { code: 'DKK', symbol: 'kr', flag: '🇩🇰', decimals: 2, rate: 0.134 },
+    { code: 'PLN', symbol: 'zł', flag: '🇵🇱', decimals: 2, rate: 0.23 },
+    { code: 'CZK', symbol: 'Kč', flag: '🇨🇿', decimals: 2, rate: 0.04 },
+    { code: 'RUB', symbol: '₽', flag: '🇷🇺', decimals: 2, rate: 0.0098 },
+    { code: 'UAH', symbol: '₴', flag: '🇺🇦', decimals: 2, rate: 0.022 },
+    { code: 'TRY', symbol: '₺', flag: '🇹🇷', decimals: 2, rate: 0.026 },
+    { code: 'KZT', symbol: '₸', flag: '🇰🇿', decimals: 2, rate: 0.0019 },
+    { code: 'GEL', symbol: '₾', flag: '🇬🇪', decimals: 2, rate: 0.34 },
+    { code: 'RON', symbol: 'lei', flag: '🇷🇴', decimals: 2, rate: 0.2 },
+    { code: 'HUF', symbol: 'Ft', flag: '🇭🇺', decimals: 0, rate: 0.0025 },
+    { code: 'BGN', symbol: 'лв', flag: '🇧🇬', decimals: 2, rate: 0.51 },
+    { code: 'CAD', symbol: 'C$', flag: '🇨🇦', decimals: 2, rate: 0.66 },
+    { code: 'AUD', symbol: 'A$', flag: '🇦🇺', decimals: 2, rate: 0.6 },
+    { code: 'NZD', symbol: 'NZ$', flag: '🇳🇿', decimals: 2, rate: 0.55 },
+    { code: 'JPY', symbol: '¥', flag: '🇯🇵', decimals: 0, rate: 0.0059 },
+    { code: 'CNY', symbol: '¥', flag: '🇨🇳', decimals: 2, rate: 0.13 },
+    { code: 'INR', symbol: '₹', flag: '🇮🇳', decimals: 2, rate: 0.011 },
+    { code: 'ILS', symbol: '₪', flag: '🇮🇱', decimals: 2, rate: 0.25 },
   ];
+}
+
+/** Flags for the currencies people add by hand; the code's country is a good guess. */
+const FLAGS_BY_CODE = {
+  AED: '🇦🇪', ARS: '🇦🇷', AMD: '🇦🇲', AZN: '🇦🇿', BRL: '🇧🇷', BYN: '🇧🇾', CLP: '🇨🇱', COP: '🇨🇴',
+  EGP: '🇪🇬', HKD: '🇭🇰', IDR: '🇮🇩', ISK: '🇮🇸', KRW: '🇰🇷', MDL: '🇲🇩', MXN: '🇲🇽', MYR: '🇲🇾',
+  NGN: '🇳🇬', PHP: '🇵🇭', PKR: '🇵🇰', RSD: '🇷🇸', SAR: '🇸🇦', SGD: '🇸🇬', THB: '🇹🇭', TWD: '🇹🇼',
+  UZS: '🇺🇿', VND: '🇻🇳', ZAR: '🇿🇦',
+};
+
+/**
+ * The flag shown next to a currency. Known codes get their country's flag, the
+ * rest get a neutral exchange symbol, so every currency has an icon.
+ */
+export function flagForCurrency(code) {
+  const known = defaultCurrencies().find((currency) => currency.code === code);
+  return known ? known.flag : (FLAGS_BY_CODE[code] || '💱');
 }
 
 /** A fresh, empty application state. */
@@ -166,7 +193,10 @@ export function createCurrency(input) {
   const symbol = String(input.symbol ?? '').trim() || code;
   const rate = input.rate === undefined || input.rate === null || input.rate === '' ? 1 : Number(input.rate);
   if (!Number.isFinite(rate) || rate <= 0) throw new AppError('The rate must be a positive number');
-  return { code, symbol, decimals, rate };
+  const given = String(input.flag ?? '').trim();
+  if ([...given].length > 3) throw new AppError('The flag must be a single emoji');
+  const flag = given || flagForCurrency(code);
+  return { code, symbol, flag, decimals, rate };
 }
 
 /**

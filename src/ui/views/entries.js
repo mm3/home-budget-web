@@ -18,7 +18,7 @@ export function entriesView(app) {
       value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
     }))];
   const currencyOptions = [{ value: '', label: t('entries.allCurrencies') },
-    ...store.currencies.map((item) => ({ value: item.code, label: item.code }))];
+    ...store.currencies.map((item) => ({ value: item.code, label: `${item.flag || ''} ${item.code}`.trim() }))];
 
   const update = (changes) => app.setUi({ filter: { ...filter, ...changes } });
 
@@ -119,7 +119,9 @@ export function entryForm(app, entry) {
     entry ? entry.categoryId : store.settings.defaultCategoryId,
   ));
   const currencySelect = el('select', {}, options(
-    store.currencies.map((item) => ({ value: item.code, label: `${item.code} ${item.symbol}` })),
+    store.currencies.map((item) => ({
+      value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
+    })),
     entry ? entry.currency : store.settings.defaultCurrency,
   ));
   const noteInput = el('input', { type: 'text', maxlength: '200', value: entry ? entry.note : '' });

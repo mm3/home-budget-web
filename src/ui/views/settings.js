@@ -24,7 +24,9 @@ export function settingsView(app) {
         })), store.settings.defaultCategoryId))),
         field(t('common.currency'), el('select', {
           on: { change: (event) => app.run(() => store.updateSettings({ defaultCurrency: event.target.value })) },
-        }, options(store.currencies.map((item) => ({ value: item.code, label: `${item.code} ${item.symbol}` })),
+        }, options(store.currencies.map((item) => ({
+          value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
+        })),
           store.settings.defaultCurrency))),
         field(t('settings.language'), el('select', {
           on: { change: (event) => app.run(() => store.updateSettings({ language: event.target.value })) },
@@ -109,6 +111,7 @@ export function settingsView(app) {
         ])),
         el('tbody', {}, store.currencies.map((item) => el('tr', {}, [
           el('td', {}, [
+            el('span.currency-flag', { text: item.flag || '' }),
             el('strong', { text: item.code }),
             item.code === store.settings.defaultCurrency ? el('span.badge', { text: t('common.default') }) : null,
           ]),
@@ -234,6 +237,7 @@ function currencyForm(app) {
   const t = app.t;
   const code = el('input', { type: 'text', placeholder: 'SEK', maxlength: '5', size: '6' });
   const symbol = el('input', { type: 'text', placeholder: 'kr', maxlength: '4', size: '4' });
+  const flag = el('input', { type: 'text', placeholder: '\ud83c\uddf8\ud83c\uddea', maxlength: '8', size: '3' });
   const decimals = el('input', { type: 'number', min: '0', max: '4', value: '2', size: '2' });
   const rate = el('input', { type: 'number', min: '0.0001', step: '0.0001', value: '1', size: '4' });
   const message = el('p.error');
@@ -245,11 +249,13 @@ function currencyForm(app) {
           app.store.addCurrency({
             code: code.value,
             symbol: symbol.value,
+            flag: flag.value,
             decimals: Number(decimals.value),
             rate: Number(rate.value),
           });
           code.value = '';
           symbol.value = '';
+          flag.value = '';
         } catch (error) {
           render(message, app.errorText(error));
         }
@@ -258,6 +264,7 @@ function currencyForm(app) {
   }, [
     field(t('settings.currencyCode'), code),
     field(t('settings.currencySymbol'), symbol),
+    field(t('settings.currencyFlag'), flag, t('settings.currencyFlagHint')),
     field(t('settings.currencyDecimals'), decimals),
     field(t('settings.rate'), rate, t('settings.rateHint', { currency: app.store.settings.defaultCurrency })),
     el('button', { type: 'submit', text: t('settings.addCurrency') }),

@@ -262,6 +262,7 @@ tbody tr:hover { background: var(--surface-2); }
 tbody tr:last-child td { border-bottom: 0; }
 .row-actions { white-space: nowrap; text-align: right; }
 .category-icon { font-size: 1.05em; margin-right: 7px; line-height: 1; }
+.currency-flag { font-size: 1.05em; margin-right: 6px; line-height: 1; }
 .legend-icon { font-size: 1em; }
 .small { font-size: .78rem; }
 .row-2 { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: end; }

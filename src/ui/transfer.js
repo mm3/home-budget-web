@@ -52,6 +52,12 @@ function context(app) {
     chartCount: 12,
     labels: {
       expenses: app.t('common.expenses'),
+      income: app.t('common.income'),
+      balance: app.t('common.balance'),
+      date: app.t('common.date'),
+      category: app.t('common.category'),
+      note: app.t('common.note'),
+      amount: app.t('common.amount'),
       average: app.t('stats.averageColumn'),
       statistics: app.t('nav.stats'),
       period: app.t('stats.periodColumn'),

@@ -75,7 +75,12 @@ test('categories and currencies are validated', () => {
   assert.throws(() => createCategory({ name: '  ' }), /name is required/);
   assert.throws(() => createCategory({ name: 'x'.repeat(41) }), /at most 40/);
 
-  assert.deepEqual(createCurrency({ code: 'sek', symbol: ' kr ' }), { code: 'SEK', symbol: 'kr', decimals: 2, rate: 1 });
+  assert.deepEqual(createCurrency({ code: 'sek', symbol: ' kr ' }),
+    { code: 'SEK', symbol: 'kr', flag: '🇸🇪', decimals: 2, rate: 1 });
+  assert.equal(createCurrency({ code: 'RUB' }).flag, '🇷🇺', 'known codes get their own flag');
+  assert.equal(createCurrency({ code: 'XYZ' }).flag, '💱', 'unknown codes still get an icon');
+  assert.equal(createCurrency({ code: 'SEK', flag: ' 🏴 ' }).flag, '🏴', 'a given flag wins');
+  assert.throws(() => createCurrency({ code: 'SEK', flag: 'abcd' }), /single emoji/);
   assert.equal(createCurrency({ code: 'SEK', rate: '0.09' }).rate, 0.09);
   assert.throws(() => createCurrency({ code: 'SEK', rate: 0 }), /positive number/);
   assert.throws(() => createCurrency({ code: 'SEK', rate: 'abc' }), /positive number/);
@@ -91,6 +96,10 @@ test('the default currencies carry rates and the state carries the app version',
   assert.equal(currencies[0].rate, 1);
   assert.ok(currencies.every((currency) => currency.rate > 0));
   assert.ok(currencies.some((currency) => currency.decimals === 0), 'currencies without decimals exist');
+  assert.ok(currencies.every((currency) => currency.flag), 'every currency has a flag');
+  const rub = currencies.find((currency) => currency.code === 'RUB');
+  assert.equal(rub.symbol, '₽');
+  assert.equal(new Set(currencies.map((currency) => currency.code)).size, currencies.length, 'no duplicates');
   assert.equal(createDefaultState().appVersion, APP_VERSION);
 });
 

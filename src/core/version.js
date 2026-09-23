@@ -2,7 +2,7 @@
  * The single place where the application version lives.
  * The build stamps it into the file name, the bundle banner and the page.
  */
-export const APP_VERSION = '3.0.0';
+export const APP_VERSION = '3.1.0';
 
 /** Storage document version; raised when the saved shape changes. */
 export const DATA_VERSION = 3;

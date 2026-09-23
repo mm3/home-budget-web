@@ -8,8 +8,29 @@
 <meta name="application-name" content="Home Budget">
 <meta name="application-version" content="/*VERSION*/">
 <meta name="generator" content="Home Budget /*VERSION*/">
+<meta name="robots" content="index, follow">
 <title>Home Budget /*VERSION*/</title>
+
+<!-- The file never changes once it is built: its name carries the version, so any
+     copy of it can be kept forever. Servers should send the same rule as a header;
+     these tags state the intent for proxies and for anyone saving the file. -->
+<meta http-equiv="Cache-Control" content="public, max-age=31536000, immutable">
+<meta http-equiv="Expires" content="Tue, 31 Dec 2069 23:59:59 GMT">
+<meta http-equiv="Pragma" content="cache">
+
+<!-- Installable single page app: no server, no navigation, everything in this file. -->
+<meta name="theme-color" content="#4f46e5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Home Budget">
+<meta name="format-detection" content="telephone=no">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Home Budget">
+<meta property="og:description" content="A home budget that is one offline HTML file.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f46e5'/%3E%3Cpath d='M7 14l9-7 9 7v11H7z' fill='white'/%3E%3Ccircle cx='16' cy='18' r='3.4' fill='%2322c55e'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%234f46e5'/%3E%3Cpath d='M39 79l51-40 51 40v62H39z' fill='white'/%3E%3Ccircle cx='90' cy='101' r='19' fill='%2322c55e'/%3E%3C/svg%3E">
+<!--MANIFEST-->
 <style>/*STYLES*/</style>
 </head>
 <body data-mode="auto">
