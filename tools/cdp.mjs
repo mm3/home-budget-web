@@ -107,43 +107,85 @@ export class Cdp {
   }
 }
 
-/** Starts headless Chromium and attaches to a fresh tab. */
-export async function launchChromium(extraArguments = []) {
-  if (!CHROME) {
-    throw new Error('No Chrome or Chromium found. Install one, or point CHROME_PATH at it.');
-  }
-  const port = 9333 + Math.floor(Math.random() * 300);
-  const chrome = spawn(CHROME, [
-    '--headless=new', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
-    // CI containers often have a tiny /dev/shm, which crashes the renderer.
-    '--disable-dev-shm-usage', '--disable-extensions',
-    '--allow-file-access-from-files', `--remote-debugging-port=${port}`,
-    `--user-data-dir=/tmp/hb-chrome-${port}`, ...extraArguments, 'about:blank',
-  ], { stdio: ['ignore', 'pipe', 'pipe'] });
-  // Without this a failed spawn throws an unhandled 'error' event and kills the run
-  // with a stack trace instead of a sentence saying which browser was missing.
-  let spawnError = null;
-  chrome.on('error', (error) => { spawnError = error; });
+/** Flags that keep a browser predictable on a CI runner and in a container. */
+const FLAGS = [
+  '--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--hide-scrollbars',
+  // CI containers often have a tiny /dev/shm, which crashes the renderer.
+  '--disable-dev-shm-usage', '--disable-extensions',
+  '--no-first-run', '--no-default-browser-check', '--disable-background-networking',
+  '--disable-sync', '--disable-component-update', '--metrics-recording-only',
+  '--allow-file-access-from-files',
+];
 
-  let wsUrl = null;
-  for (let attempt = 0; attempt < 50 && !wsUrl; attempt += 1) {
+/** Starts a browser once and waits for the DevTools port to answer. */
+async function startBrowser(headlessFlag, extraArguments, waitMs) {
+  const port = 9333 + Math.floor(Math.random() * 300);
+  const args = [headlessFlag, ...FLAGS, `--remote-debugging-port=${port}`,
+    `--user-data-dir=/tmp/hb-chrome-${port}`, ...extraArguments, 'about:blank'];
+  const chrome = spawn(CHROME, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+
+  // The browser's own output is the only thing that explains a browser which
+  // starts and then gives up, so it is kept and shown when the wait runs out.
+  let output = '';
+  const collect = (chunk) => {
+    output = (output + chunk).slice(-4000);
+  };
+  chrome.stdout.on('data', collect);
+  chrome.stderr.on('data', collect);
+  // Without this a failed spawn throws an unhandled 'error' event and kills the
+  // run with a stack trace instead of a sentence saying what went wrong.
+  let failure = null;
+  chrome.on('error', (error) => { failure = error.message; });
+  chrome.on('exit', (code, signal) => {
+    if (code !== 0 && failure === null) failure = `it exited with ${signal || `code ${code}`}`;
+  });
+
+  const deadline = Date.now() + waitMs;
+  while (Date.now() < deadline) {
     await sleep(200);
     try {
       const response = await fetch(`http://127.0.0.1:${port}/json/version`);
-      wsUrl = (await response.json()).webSocketDebuggerUrl;
+      const { webSocketDebuggerUrl } = await response.json();
+      if (webSocketDebuggerUrl) return { chrome, wsUrl: webSocketDebuggerUrl };
     } catch {
       // not up yet
     }
   }
-  if (!wsUrl) {
-    chrome.kill();
-    throw new Error(spawnError
-      ? `Could not start ${CHROME}: ${spawnError.message}`
-      : `${CHROME} did not answer on the DevTools port`);
+  chrome.kill('SIGKILL');
+  return { chrome: null, wsUrl: null, failure, output: output.trim(), args };
+}
+
+/**
+ * Starts a headless browser and attaches to a fresh tab.
+ *
+ * The headless flag is tried in both spellings: `--headless=new` is what recent
+ * Chrome wants, `--headless` what older builds understand, and a runner may have
+ * either. When neither answers, the error carries the browser's own output -
+ * without it, "did not answer on the DevTools port" says nothing about why.
+ */
+export async function launchChromium(extraArguments = []) {
+  if (!CHROME) {
+    throw new Error('No Chrome or Chromium found. Install one, or point CHROME_PATH at it.');
   }
-  const cdp = await Cdp.connect(wsUrl);
-  const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' }, null);
-  const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true }, null);
-  cdp.sessionId = sessionId;
-  return { cdp, chrome };
+  const waitMs = Number(process.env.CHROME_TIMEOUT_MS || 30000);
+  const attempts = [];
+  for (const headlessFlag of ['--headless=new', '--headless']) {
+    const result = await startBrowser(headlessFlag, extraArguments, waitMs / 2);
+    if (result.wsUrl) {
+      const cdp = await Cdp.connect(result.wsUrl);
+      const { targetId } = await cdp.send('Target.createTarget', { url: 'about:blank' }, null);
+      const { sessionId } = await cdp.send('Target.attachToTarget', { targetId, flatten: true }, null);
+      cdp.sessionId = sessionId;
+      return { cdp, chrome: result.chrome };
+    }
+    attempts.push({ headlessFlag, ...result });
+  }
+
+  const detail = attempts.map(({ headlessFlag, failure, output }) => {
+    const lines = [`  with ${headlessFlag}: ${failure || 'no answer on the DevTools port'}`];
+    if (output) lines.push(...output.split('\n').slice(-12).map((line) => `    ${line}`));
+    return lines.join('\n');
+  }).join('\n');
+  throw new Error(`${CHROME} would not start.\n${detail}\n`
+    + '  Set CHROME_PATH to another browser, or CHROME_TIMEOUT_MS higher if it is only slow.');
 }

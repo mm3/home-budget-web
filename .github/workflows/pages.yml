@@ -36,14 +36,18 @@ jobs:
         # runners usually ship one; this installs one when they do not, and
         # tools/cdp.mjs finds whichever is there (CHROME_PATH overrides it).
         run: |
-          if command -v google-chrome >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1 \
-             || command -v chromium-browser >/dev/null 2>&1; then
-            echo "Using $(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          else
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$BROWSER" ]; then
             curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
             sudo apt-get update
             sudo apt-get install -y /tmp/chrome.deb
+            BROWSER="$(command -v google-chrome)"
           fi
+          echo "Using $BROWSER - $("$BROWSER" --version)"
+          # Ubuntu 24.04 blocks unprivileged user namespaces, which stops Chrome's
+          # sandbox from starting. The checks pass --no-sandbox, and this covers the
+          # rest; the runner is thrown away after the job either way.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
       - name: Check the published build
         run: npm run site-check
       - uses: actions/upload-pages-artifact@v3

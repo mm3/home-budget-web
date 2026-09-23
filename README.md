@@ -266,5 +266,10 @@ app really works offline.
 Both need a real browser. `tools/cdp.mjs` looks for one in this order: `CHROME_PATH`, then
 `google-chrome`, `chromium` or `chromium-browser` in the usual places, then a Chromium that
 Playwright has downloaded - so it works on a laptop, in a container and on a CI runner without
-anything being configured. If none is found it says so in one line instead of failing with a stack
-trace, and the workflows install Chrome when the runner does not already have one.
+anything being configured, and the workflows install Chrome when the runner does not already have
+one. The headless flag is tried in both spellings (`--headless=new` and `--headless`), since a
+runner may have a Chrome that only understands one of them.
+
+When the browser will not start, the error carries **the browser's own output**, not just
+"no answer on the DevTools port" - that line alone says nothing about why. `CHROME_TIMEOUT_MS`
+raises the 30 second wait for a slow machine.
