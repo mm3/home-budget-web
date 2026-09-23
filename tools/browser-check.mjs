@@ -127,6 +127,41 @@ async function main() {
     'return document.querySelectorAll(".category-icon").length > 3;',
   ));
 
+  // The card for a week, a month or a year has to divide by the sub-periods that
+  // have passed inside it - days, weeks, months - not repeat the period's own
+  // total. With a single entry made today, the week card must read a quarter of
+  // it on a Thursday, and the year card a ninth of it in September.
+  const pace = await cdp.evaluate(`
+    const app = window.homeBudget;
+    const store = app.store;
+    const today = store.today();
+    store.clearEntries();
+    store.updateSettings({ language: 'en' });
+    store.addEntry({ amount: 12000, categoryId: 'daily', currency: store.settings.defaultCurrency,
+      date: today, note: 'pace' });
+    app.setTab('home');
+    await new Promise((done) => setTimeout(done, 200));
+    const cards = [...document.querySelectorAll('.cards .stat')].map((card) => ({
+      title: card.querySelector('.stat-title').textContent,
+      value: card.querySelector('.stat-value').textContent,
+      sub: card.querySelector('.stat-sub').textContent,
+    }));
+    return { cards, today };
+  `);
+  const paceNumber = (text) => Number(text.replace(/[^0-9.,]/g, '').replace(/\s/g, '').replace(',', '.'));
+  const paceOk = pace.cards.length === 4
+    // Today: the long-run average per day, and today is the only day with data.
+    && /\/ day$/.test(pace.cards[0].sub)
+    // The other three name the span they are paced over, and none of them can
+    // just echo the period total.
+    && /day this week$/.test(pace.cards[1].sub)
+    && /week this month$/.test(pace.cards[2].sub)
+    && /month this year$/.test(pace.cards[3].sub)
+    && [1, 2, 3].every((index) => paceNumber(pace.cards[index].sub) <= paceNumber(pace.cards[index].value) + 0.01);
+  check('a card paces its period by the days, weeks or months that passed in it',
+    paceOk, JSON.stringify(pace.cards));
+
+
   const budgets = await cdp.evaluate(`
     const store = window.homeBudget.store;
     store.updateCategory('groceries', { limit: 30000 });

@@ -1,4 +1,4 @@
-# Home Budget 3.9.0 (browser version)
+# Home Budget 3.10.0 (browser version)
 
 <table>
 <tr>
@@ -47,7 +47,11 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
   everywhere - **23.09.2026** - in the list, in the form, in the filters and in the PDF.
 - **Statistics:** sums and averages per **day, week, month and year**, a bar chart of the last
   periods (days / weeks / months / years) with an **average line**, a donut chart and a ranking per
-  category, plus highlights such as the largest single expense. Month and week names follow the
+  category, plus highlights such as the largest single expense. The cards on the home screen show the
+  **pace inside the period now running** - this week per day, this month per week, this year per month -
+  divided by the days, weeks or months that have actually passed, so a quiet Monday is counted as a day
+  and not skipped. The statistics table shows the other average, the one per whole period, which is what
+  says how much a typical week of yours costs. Month and week names follow the
   interface language, on screen and in the exports - "Сентябрь 2026", "September 2026", "39-я неделя".
 - **Export:** CSV, Excel (.xlsx) and PDF of exactly the entries the filters show. The PDF starts with a
   drawn bar chart (vector graphics, average line included) and the spreadsheet gets a second sheet with
@@ -142,7 +146,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.9.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.10.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -182,7 +186,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.9.0` is pushed.
+built files to a release when a tag like `v3.10.0` is pushed.
 
 ## Building
 
@@ -287,16 +291,18 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-120 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+122 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
-budget calculations per limit period, currency conversion, unique flags and symbols, localized period
+budget calculations per limit period, the two kinds of average (the long-run one per whole period and
+the pace inside the period now running, which divides by the days, weeks or months that have actually
+passed in it), currency conversion, unique flags and symbols, localized period
 labels, deleting entries versus resetting everything, version consistency, translation completeness
 (every language has every key exactly once and with the same placeholders), and the import detection
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (47 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (48 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German

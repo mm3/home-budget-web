@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  byCategory, groupByPeriod, highlights, ofCurrency, overview, periodStarts, periodSummary, series, totals,
+  byCategory, elapsedSubPeriods, groupByPeriod, highlights, ofCurrency, overview, periodStarts,
+  periodSummary, series, totals,
 } from '../src/core/stats.js';
 
 const categories = [
@@ -28,6 +29,55 @@ test('entries are grouped by period', () => {
   assert.deepEqual([...groupByPeriod(entries, 'month').keys()], ['2026-09', '2026-08']);
   assert.equal(groupByPeriod(entries, 'day').get('2026-09-22').length, 3);
   assert.deepEqual([...groupByPeriod(entries, 'year').keys()], ['2026']);
+});
+
+test('a period counts the sub-periods that have already passed in it', () => {
+  // 22.09.2026 is a Tuesday: two days into its week, and its month has reached
+  // its fourth calendar week (the one that starts on 31.08 counts, because the
+  // first two days of September fall in it).
+  assert.equal(elapsedSubPeriods('week', '2026-09-22'), 2);
+  assert.equal(elapsedSubPeriods('month', '2026-09-22'), 4);
+  assert.equal(elapsedSubPeriods('year', '2026-09-22'), 9);
+  // A day has nothing finer under it here, so it has no rate of its own.
+  assert.equal(elapsedSubPeriods('day', '2026-09-22'), 0);
+  // The first day of a period is one sub-period in, never zero.
+  assert.equal(elapsedSubPeriods('week', '2026-09-21'), 1);
+  assert.equal(elapsedSubPeriods('month', '2026-09-01'), 1);
+  assert.equal(elapsedSubPeriods('year', '2026-01-01'), 1);
+  assert.equal(elapsedSubPeriods('year', '2026-12-31'), 12);
+});
+
+test('the pace inside a period divides by the sub-periods that passed, not the ones with entries', () => {
+  const week = periodSummary(entries, categories, 'week', '2026-09-22');
+  // Everything in this week was spent on one of its two elapsed days. Counting
+  // only the days that have entries would say 2200 a day; two days passed, so
+  // the honest pace is half of that.
+  assert.equal(week.current.expense, 2200);
+  assert.equal(week.subPeriod, 'day');
+  assert.equal(week.subPeriods, 2);
+  assert.equal(week.rateExpense, 1100);
+
+  const month = periodSummary(entries, categories, 'month', '2026-09-22');
+  assert.equal(month.current.expense, 4200);
+  assert.equal(month.subPeriod, 'week');
+  assert.equal(month.rateExpense, Math.round(4200 / 4));
+  assert.equal(month.rateIncome, Math.round(200000 / 4));
+
+  const year = periodSummary(entries, categories, 'year', '2026-09-22');
+  assert.equal(year.subPeriod, 'month');
+  assert.equal(year.rateExpense, Math.round(7200 / 9));
+
+  // A day has no sub-period, so it reports no rate - the card falls back to the
+  // long-run average there.
+  const day = periodSummary(entries, categories, 'day', '2026-09-22');
+  assert.equal(day.subPeriod, null);
+  assert.equal(day.subPeriods, 0);
+  assert.equal(day.rateExpense, 0);
+
+  // An empty period paces at nothing rather than dividing by zero.
+  const empty = periodSummary([], categories, 'month', '2026-09-22');
+  assert.equal(empty.rateExpense, 0);
+  assert.equal(empty.rateIncome, 0);
 });
 
 test('periodSummary reports the current period and the average', () => {

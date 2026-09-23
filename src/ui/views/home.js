@@ -9,7 +9,12 @@ import { el, field, options } from '../dom.js';
 const PERIOD_TITLES = {
   day: 'period.today', week: 'period.thisWeek', month: 'period.thisMonth', year: 'period.thisYear',
 };
-const PER_LABELS = { day: 'period.perDay', week: 'period.perWeek', month: 'period.perMonth', year: 'period.perYear' };
+// What each card says under its figure. The week, the month and the year show
+// the pace inside the period now running - a week by its days, a month by its
+// weeks, a year by its months - because that is the number that says whether
+// the period is going well. A day has nothing finer to divide by, so that card
+// keeps the long-run average instead: what a day of yours usually costs.
+const RATE_TEXTS = { week: 'home.rateDay', month: 'home.rateWeek', year: 'home.rateMonth' };
 const CHART_LENGTH = { day: 14, week: 12, month: 12, year: 5 };
 
 export function homeView(app) {
@@ -168,10 +173,12 @@ function statCard(app, summary, currency) {
     el('span.stat-title', { text: app.t(PERIOD_TITLES[summary.period]) }),
     el('strong.stat-value', { text: formatMoney(summary.current.expense, currency) }),
     el('span.stat-sub', {
-      text: app.t('home.average', {
-        amount: formatMoney(summary.averageExpense, currency),
-        per: app.t(PER_LABELS[summary.period]),
-      }),
+      text: RATE_TEXTS[summary.period]
+        ? app.t(RATE_TEXTS[summary.period], { amount: formatMoney(summary.rateExpense, currency) })
+        : app.t('home.average', {
+          amount: formatMoney(summary.averageExpense, currency),
+          per: app.t('period.perDay'),
+        }),
     }),
     summary.current.income
       ? el('span.stat-sub.income', {

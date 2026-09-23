@@ -30,9 +30,41 @@ export function groupByPeriod(entries, period) {
   return groups;
 }
 
+/** The period one step finer than each of these; a day has nothing under it. */
+const SUB_PERIOD = { week: 'day', month: 'week', year: 'month' };
+
 /**
- * Figures for the period that contains `today`, plus the average per period
- * over all periods that have data (the current one included).
+ * How many sub-periods the current period has already touched: days into this
+ * week, weeks into this month, months into this year.
+ *
+ * Elapsed, not "with entries". A day on which nothing was spent is still a day
+ * that passed, and counting only the days with entries would turn a quiet week
+ * into a high daily rate - exactly the wrong way round. The month is counted as
+ * the calendar weeks its elapsed days fall in, because a week crosses the first
+ * of the month and both halves still belong to the month a person is looking at.
+ *
+ * @returns {number} 0 for a day, which has no sub-period here
+ */
+export function elapsedSubPeriods(period, today = todayIso()) {
+  const sub = SUB_PERIOD[period];
+  if (!sub) return 0;
+  const seen = new Set();
+  // At most 366 steps, once per card, so the plain walk is worth its clarity.
+  for (let day = periodStart(today, period); day <= today; day = addDays(day, 1)) {
+    seen.add(periodKey(day, sub));
+  }
+  return seen.size;
+}
+
+/**
+ * Figures for the period that contains `today`, in two different senses of
+ * "average", because both answer a real question:
+ *
+ * - `averageExpense` is the average over all periods that have data - what a
+ *   typical week of yours costs. The statistics table shows this one.
+ * - `rateExpense` is the pace inside the period now running - what this month
+ *   has cost per week so far. The cards on the home screen show this one, and
+ *   it is the figure that tells you whether the month is going well.
  */
 export function periodSummary(entries, categories, period, today = todayIso(), texts = undefined) {
   const currentKey = periodKey(today, period);
@@ -46,6 +78,8 @@ export function periodSummary(entries, categories, period, today = todayIso(), t
     incomeSum += groupTotals.income;
   }
   const periodsWithData = groups.size;
+  const subPeriod = SUB_PERIOD[period] || null;
+  const subPeriods = elapsedSubPeriods(period, today);
   return {
     period,
     key: currentKey,
@@ -54,6 +88,10 @@ export function periodSummary(entries, categories, period, today = todayIso(), t
     periodsWithData,
     averageExpense: periodsWithData ? Math.round(expenseSum / periodsWithData) : 0,
     averageIncome: periodsWithData ? Math.round(incomeSum / periodsWithData) : 0,
+    subPeriod,
+    subPeriods,
+    rateExpense: subPeriods ? Math.round(current.expense / subPeriods) : 0,
+    rateIncome: subPeriods ? Math.round(current.income / subPeriods) : 0,
     totalExpense: expenseSum,
     totalIncome: incomeSum,
   };
