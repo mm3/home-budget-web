@@ -382,6 +382,24 @@ async function main() {
       && install.gone && /Installed/i.test(install.toast),
     JSON.stringify(install));
 
+  const icons = await cdp.evaluate(`
+    const load = (href) => new Promise((done) => {
+      const image = new Image();
+      image.onload = () => done(image.width > 0);
+      image.onerror = () => done(false);
+      image.src = href;
+    });
+    const icon = document.querySelector('link[rel=icon]');
+    const apple = document.querySelector('link[rel="apple-touch-icon"]');
+    return {
+      inline: icon.getAttribute('href').startsWith('data:image/svg+xml,'),
+      iconLoads: await load(icon.href),
+      appleLoads: await load(apple.href),
+    };
+  `);
+  check('the icons are inline and actually decode',
+    icons.inline && icons.iconLoads && icons.appleLoads, JSON.stringify(icons));
+
   const links = await cdp.evaluate(`
     [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Settings')).click();
     await new Promise((done) => setTimeout(done, 200));

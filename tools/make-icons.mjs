@@ -13,9 +13,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { encodePng } from './png.mjs';
 
-const INDIGO = [79, 70, 229];
-const GREEN = [34, 197, 94];
-const WHITE = [255, 255, 255];
+const GREEN = [21, 128, 61];        // the background: money, but not neon
+const GREEN_LIGHT = [34, 197, 94];  // a soft top-left lift, so the square is not flat
+const GOLD = [217, 119, 6];         // the coin's rim
+const GOLD_LIGHT = [251, 191, 36];  // its face
+const DARK = [20, 83, 45];          // the currency sign cut into the coin
 const SAMPLES = 4;
 
 /** Is (x, y), in 0..1 coordinates, inside a rounded square of the given radius? */
@@ -25,12 +27,24 @@ function inRoundedSquare(x, y, radius) {
   return dx * dx + dy * dy <= radius * radius;
 }
 
-function inTriangle(x, y, [ax, ay], [bx, by], [cx, cy]) {
-  const sign = (px, py, qx, qy, rx, ry) => (px - rx) * (qy - ry) - (qx - rx) * (py - ry);
-  const d1 = sign(x, y, ax, ay, bx, by);
-  const d2 = sign(x, y, bx, by, cx, cy);
-  const d3 = sign(x, y, cx, cy, ax, ay);
-  return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+/** Mixes two colours; t = 0 is the first, t = 1 the second. */
+function mix(first, second, t) {
+  return [0, 1, 2].map((index) => first[index] + (second[index] - first[index]) * t);
+}
+
+/**
+ * The euro sign, drawn as geometry rather than text: an open ring with the
+ * right side cut away, crossed by two bars. The default currency is the euro
+ * and the app bar already carries the same glyph.
+ */
+function inEuro(x, y) {
+  const dx = x - 0.525;
+  const dy = y - 0.5;
+  const radius = Math.hypot(dx, dy);
+  const openToTheRight = dx > 0 && Math.abs(dy) < dx * 0.78;
+  if (radius <= 0.165 && radius >= 0.113 && !openToTheRight) return true;
+  const bar = x >= 0.335 && x <= 0.60;
+  return bar && (Math.abs(y - 0.468) <= 0.023 || Math.abs(y - 0.552) <= 0.023);
 }
 
 /** Colour of the icon at (x, y) in 0..1 coordinates, or null where it is transparent. */
@@ -41,12 +55,14 @@ function colourAt(x, y, { maskable }) {
   const scale = maskable ? 0.76 : 1;
   const px = 0.5 + (x - 0.5) / scale;
   const py = 0.5 + (y - 0.5) / scale;
-  const dx = px - 0.5;
-  const dy = py - 0.6;
-  if (dx * dx + dy * dy <= 0.115 * 0.115) return GREEN;
-  if (inTriangle(px, py, [0.5, 0.2], [0.16, 0.45], [0.84, 0.45])) return WHITE;
-  if (px >= 0.245 && px <= 0.755 && py >= 0.44 && py <= 0.79) return WHITE;
-  return INDIGO;
+
+  const distance = Math.hypot(px - 0.5, py - 0.5);
+  if (distance <= 0.345) {
+    if (inEuro(px, py)) return DARK;
+    // A lighter face inside a darker rim is what reads as a coin at 32 pixels.
+    return distance <= 0.295 ? GOLD_LIGHT : GOLD;
+  }
+  return mix(GREEN_LIGHT, GREEN, Math.min(1, (x + y) / 1.6));
 }
 
 function render(size, options) {
