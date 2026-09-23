@@ -2,7 +2,15 @@
  * The single place where the application version lives.
  * The build stamps it into the file name, the bundle banner and the page.
  */
-export const APP_VERSION = '3.4.0';
+export const APP_VERSION = '3.5.0';
+
+/**
+ * Where the app lives. Both are shown in Settings -> About and written into the
+ * build banner, and the site build uses the address as its canonical URL.
+ * Change them here if the project moves.
+ */
+export const REPO_URL = 'https://github.com/mm3/home-budget-web';
+export const SITE_URL = 'https://mm3.github.io/home-budget-web/';
 
 /** Storage document version; raised when the saved shape changes. */
 export const DATA_VERSION = 3;

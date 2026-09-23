@@ -25,9 +25,14 @@ const siteDir = join(root, 'site');
 
 /** Reads the single version source so the build never disagrees with the app. */
 function readVersion() {
+  return readConstant('APP_VERSION');
+}
+
+/** Reads one string constant out of the single version source. */
+function readConstant(name) {
   const text = readFileSync(join(source, 'core', 'version.js'), 'utf8');
-  const match = text.match(/APP_VERSION\s*=\s*'([^']+)'/);
-  if (!match) throw new Error('APP_VERSION not found in src/core/version.js');
+  const match = text.match(new RegExp(`${name}\\s*=\\s*'([^']+)'`));
+  if (!match) throw new Error(`${name} not found in src/core/version.js`);
   return match[1];
 }
 
@@ -97,7 +102,9 @@ self.addEventListener('fetch', (event) => {
 }
 
 /** The head snippet that turns the page into an installable app on the site build. */
-const SITE_HEAD = `<link rel="manifest" href="manifest.webmanifest">
+const SITE_HEAD = `<link rel="canonical" href="${readConstant('SITE_URL')}">
+<meta property="og:url" content="${readConstant('SITE_URL')}">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <script>
 // Registered only in the published build; the standalone file has no server to ask.
@@ -111,8 +118,8 @@ function render({ minify, head = '' }) {
   const { code, moduleCount } = bundle('main.js', source);
   const css = readFileSync(join(source, 'app.css'), 'utf8');
   const template = readFileSync(join(source, 'index.html'), 'utf8');
-  const banner = `/*! Home Budget ${version} - offline single file build, `
-    + `https://github.com/ (no dependencies) */\n`;
+  const banner = `/*! Home Budget ${version} - offline single file build, no dependencies\n`
+    + ` * ${readConstant('REPO_URL')} */\n`;
   const html = template
     .replaceAll('/*VERSION*/', version)
     .replace('<!--MANIFEST-->', () => head)

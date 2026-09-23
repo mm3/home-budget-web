@@ -1,4 +1,10 @@
-# Home Budget 3.4.0 (browser version)
+# Home Budget 3.5.0 (browser version)
+
+**[Open the app](https://mm3.github.io/home-budget-web/)** &nbsp;·&nbsp;
+[Download the single file](https://mm3.github.io/home-budget-web/home-budget.html) &nbsp;·&nbsp;
+[Source](https://github.com/mm3/home-budget-web)
+
+[![Pages](https://github.com/mm3/home-budget-web/actions/workflows/pages.yml/badge.svg)](https://github.com/mm3/home-budget-web/actions/workflows/pages.yml)
 
 A home budget app that is **one HTML file**. All JavaScript, CSS and even the PDF font are inlined,
 there are no external requests, no frameworks and no build-time dependencies. Open the file from a
@@ -112,7 +118,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.4.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.5.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -139,9 +145,12 @@ The page also asks to be cached forever (`Cache-Control: public, max-age=3153600
 honest here: a built file never changes, and a new release is a new file. When you serve the versioned
 file yourself, send that same header.
 
+It is live at **https://mm3.github.io/home-budget-web/**, and the same build downloads from
+`.../home-budget.html` (always the latest) or `.../home-budget-<version>.html` (that exact release).
+
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.4.0` is pushed.
+built files to a release when a tag like `v3.5.0` is pushed.
 
 ## Building
 
@@ -162,7 +171,9 @@ build either way - in the banner, the `<title>`, the meta tag, the footer, the A
 footer and the saved data.
 
 The version lives in `src/core/version.js` and nowhere else, and a unit test fails if `package.json`
-drifts away from it.
+drifts away from it. The two addresses - the published page and the repository - live in that same
+file: they go into the build banner, into **Settings → About** and, for the site build, into the
+page's canonical URL. Move the project and only that one file changes.
 
 There are **no dependencies** — Node 22 (or newer) runs everything. `tools/bundle.mjs` contains a
 small ES module bundler and a conservative minifier: it strips comments and redundant whitespace but
@@ -235,7 +246,7 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-113 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+114 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
 budget calculations per limit period, currency conversion, unique flags and symbols, localized period
@@ -244,7 +255,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (40 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (42 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
@@ -256,8 +267,9 @@ confirms that deleting the entries keeps the settings while resetting really res
 when a label of a different length or a hint under one field pushes its control off the line its
 neighbours sit on, adds five thousand entries at once to check that the list pages instead of drawing
 them all, refuses the amounts that would break the totals, checks that no native date input is left in the page
-and that dates are shown, typed and refused in the app's own format, and takes the screenshots in this
-README. It fails if anything logs an error to the console.
+and that dates are shown, typed and refused in the app's own format, confirms that **About** links to
+the published page and to the repository and that the page still loads nothing from the network, and
+takes the screenshots in this README. It fails if anything logs an error to the console.
 
 `tools/site-check.mjs` serves `site/` over HTTP, checks the manifest and the icons, waits for the
 service worker to fill its cache, then **switches the network off and reloads** to prove the published

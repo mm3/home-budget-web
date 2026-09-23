@@ -3,7 +3,7 @@
 import { CUSTOM_LANGUAGE, EN, LANGUAGES, sanitizeTranslation, translationKeys } from '../../core/i18n.js';
 import { formatMoney, parseAmount, toPlainAmount } from '../../core/format.js';
 import { ICON_CHOICES, LIMIT_PERIODS } from '../../core/model.js';
-import { APP_VERSION } from '../../core/version.js';
+import { APP_VERSION, REPO_URL, SITE_URL } from '../../core/version.js';
 import { el, field, options, render } from '../dom.js';
 import { download, MIME } from '../files.js';
 
@@ -141,6 +141,10 @@ export function settingsView(app) {
       el('header.card-head', {}, [el('h2', { text: t('settings.about') })]),
       el('p', { text: t('settings.version', { version: APP_VERSION }) }),
       el('p.muted', { text: t('settings.aboutText') }),
+      el('p.about-links', {}, [
+        el('a', { href: SITE_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.webApp') }),
+        el('a', { href: REPO_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.sourceCode') }),
+      ]),
     ]),
 
     el('section.card', {}, [

@@ -347,6 +347,25 @@ async function main() {
       && head.appleBar === 'black-translucent' && head.appleTitle === 'Home Budget' && head.appleIcon,
     JSON.stringify(head));
 
+  const links = await cdp.evaluate(`
+    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Settings')).click();
+    await new Promise((done) => setTimeout(done, 200));
+    const anchors = [...document.querySelectorAll('.about-links a')];
+    return {
+      count: anchors.length,
+      hrefs: anchors.map((anchor) => anchor.getAttribute('href')),
+      texts: anchors.map((anchor) => anchor.textContent),
+      safe: anchors.every((anchor) => anchor.rel.includes('noopener') && anchor.target === '_blank'),
+      external: [...document.querySelectorAll('link[rel=stylesheet], script[src], img[src^=http]')].length,
+    };
+  `);
+  check('About links to the published page and to the repository',
+    links.count === 2 && links.hrefs.every((href) => /^https:\/\//.test(href))
+      && links.hrefs.some((href) => href.includes('github.io'))
+      && links.hrefs.some((href) => href.includes('github.com')) && links.safe,
+    JSON.stringify(links));
+  check('the page still loads nothing from the network', links.external === 0, String(links.external));
+
   const currencies = await cdp.evaluate(`
     const store = window.homeBudget.store;
     const rub = store.currencies.find((currency) => currency.code === 'RUB');
