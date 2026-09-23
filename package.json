@@ -1,0 +1,16 @@
+{
+  "name": "home-budget-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline single-file home budget app for the browser",
+  "scripts": {
+    "build": "node tools/build.mjs --all",
+    "build:readable": "node tools/build.mjs",
+    "build:min": "node tools/build.mjs --minify",
+    "test": "node --test 'test/*.test.js'",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-include='src/core/**' --test-coverage-lines=90 --test-coverage-branches=90 --test-coverage-functions=90 'test/*.test.js'",
+    "browser-check": "node tools/browser-check.mjs dist/home-budget.html && node tools/browser-check.mjs dist/home-budget.min.html --shots dist/screenshots-min",
+    "check": "npm run coverage && npm run build && npm run browser-check"
+  }
+}
