@@ -100,6 +100,10 @@ test('the default currencies carry rates and the state carries the app version',
   const rub = currencies.find((currency) => currency.code === 'RUB');
   assert.equal(rub.symbol, '₽');
   assert.equal(new Set(currencies.map((currency) => currency.code)).size, currencies.length, 'no duplicates');
+  // Three Nordic crowns and two yen would otherwise be told apart by the code alone.
+  const symbols = currencies.map((currency) => currency.symbol);
+  assert.equal(new Set(symbols).size, symbols.length, `symbols repeat: ${symbols.join(' ')}`);
+  assert.equal(new Set(currencies.map((currency) => currency.flag)).size, currencies.length, 'flags repeat');
   assert.equal(createDefaultState().appVersion, APP_VERSION);
 });
 

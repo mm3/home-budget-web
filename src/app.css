@@ -241,7 +241,13 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 .filters-box[open] > summary { margin-bottom: 8px; }
 .entry-row { cursor: pointer; }
 .filter-actions { display: flex; gap: 8px; }
-.inline-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-top: 12px; }
+.inline-form { display: flex; flex-wrap: wrap; gap: 34px 10px; align-items: flex-end; margin-top: 12px; padding-bottom: 14px; }
+/* A hint hangs below its field instead of growing it: otherwise the field with a
+   hint is taller than its neighbours and the whole row of inputs shifts. The field
+   is given a minimum width so the hint fits underneath without covering its neighbour. */
+.inline-form .field { position: relative; }
+.inline-form .field.has-hint { min-width: 160px; }
+.inline-form .field-hint { position: absolute; top: calc(100% + 3px); left: 0; width: 100%; line-height: 1.25; }
 
 /* ---------- lists and tables ---------- */
 .summary { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; font-size: .9rem; font-weight: 600; }

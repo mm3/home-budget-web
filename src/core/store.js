@@ -295,7 +295,16 @@ export class BudgetStore {
     this.#changed();
   }
 
-  /** Deletes all entries but keeps the settings. */
+  /**
+   * Throws everything away: entries, categories, currencies and settings all go
+   * back to what a fresh installation has. Deleting the entries does NOT do this.
+   */
+  resetAll() {
+    this.state = createDefaultState();
+    this.#changed();
+  }
+
+  /** Deletes all entries but keeps the categories, currencies and settings. */
   clearEntries() {
     const removed = this.state.entries.length;
     this.state.entries = [];

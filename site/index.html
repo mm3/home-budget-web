@@ -6,10 +6,10 @@
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="Offline home budget: entries, categories, statistics, CSV/XLSX/PDF export and import.">
 <meta name="application-name" content="Home Budget">
-<meta name="application-version" content="3.1.0">
-<meta name="generator" content="Home Budget 3.1.0">
+<meta name="application-version" content="3.2.0">
+<meta name="generator" content="Home Budget 3.2.0">
 <meta name="robots" content="index, follow">
-<title>Home Budget 3.1.0</title>
+<title>Home Budget 3.2.0</title>
 
 <!-- The file never changes once it is built: its name carries the version, so any
      copy of it can be kept forever. Servers should send the same rule as a header;
@@ -38,13 +38,13 @@ if ('serviceWorker' in navigator) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 </script>
-<style>/*! Home Budget 3.1.0 */
-:root{--bg:#f4f5f8;--surface:#ffffff;--surface-2:#eef0f4;--border:#e2e5ea;--text:#171a21;--muted:#667085;--accent:#4f46e5;--accent-text:#ffffff;--income:#15803d;--expense:#c2410c;--danger:#dc2626;--warn:#b45309;--bar-expense:#f97316;--bar-income:#22c55e;--radius:14px;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.06);color-scheme:light}body.dark{--bg:#0f1116;--surface:#171a21;--surface-2:#1f232c;--border:#2a2f3a;--text:#e7e9ee;--muted:#98a2b3;--accent:#818cf8;--accent-text:#0f1116;--income:#4ade80;--expense:#fb923c;--danger:#f87171;--warn:#fbbf24;--shadow:none;color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}h1,h2,h3{margin:0;font-size:1rem}h2{font-size:1.05rem}p{margin:0}button,input,select{font:inherit;color:inherit}.muted{color:var(--muted);font-size:.88rem}.block{display:block}.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.income{color:var(--income)}.expense{color:var(--expense)}.error{color:var(--danger);margin-top:6px}.warning{color:var(--warn)}.spacer{flex:1}.app-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border)}.brand{display:flex;align-items:center;gap:8px;font-size:1.05rem}.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--accent-text);font-weight:700}.tabs{display:flex;gap:4px}.tab{display:flex;align-items:center;gap:7px;padding:8px 14px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}.tab:hover{background:var(--surface-2);color:var(--text)}.tab.active{background:var(--surface-2);color:var(--text)}.tab-icon{font-size:1.05rem}.main{max-width:1080px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-direction:column;gap:16px}.app-footer{padding:0 16px 28px;text-align:center;color:var(--muted);font-size:.8rem}.toast{max-width:1080px;margin:12px auto -4px;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--income) 14%,transparent);color:var(--income);font-weight:600}.toast.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}.stat{display:flex;flex-direction:column;gap:2px}.stat-title{color:var(--muted);font-weight:600;font-size:.85rem}.stat-value{font-size:1.45rem;font-variant-numeric:tabular-nums}.stat-sub{color:var(--muted);font-size:.78rem}.quick-card{padding-bottom:12px}.quick-form{display:flex;gap:10px;align-items:stretch}.quick-input-wrap{position:relative;flex:1}.quick-input{width:100%;padding:14px 44px 14px 14px;font-size:1.5rem;font-variant-numeric:tabular-nums;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}.quick-currency{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.1rem}.quick-message{margin-top:8px;font-size:.88rem;min-height:1.2em;color:var(--muted)}.quick-message.ok{color:var(--income)}.quick-message.error{color:var(--danger)}button{padding:9px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-weight:600;cursor:pointer}button:hover{background:var(--surface-2)}button:disabled{opacity:.5;cursor:not-allowed}button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}button.primary:hover{filter:brightness(1.08)}button.danger{color:var(--danger)}button.link{border:0;background:none;padding:4px 6px;color:var(--accent);font-weight:600}button.link.danger{color:var(--danger)}.button-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.file-button{display:inline-flex;align-items:center;padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-weight:600;cursor:pointer;background:var(--surface)}.segmented{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}.segmented button{border:0;border-radius:0;background:var(--surface);padding:7px 12px;color:var(--muted)}.segmented button.active{background:var(--surface-2);color:var(--text)}input,select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);max-width:100%}input[type="color"]{padding:2px;width:48px;height:36px}input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}.field{display:flex;flex-direction:column;gap:4px}.field-label{color:var(--muted);font-size:.8rem;font-weight:600}.field-hint{color:var(--muted);font-size:.75rem}.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.filters-box{margin-bottom:4px}.filters-box>summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:.85rem;padding:4px 0}.filters-box[open]>summary{margin-bottom:8px}.entry-row{cursor:pointer}.filter-actions{display:flex;gap:8px}.inline-form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:12px}.summary{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;font-size:.9rem;font-weight:600}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}th{text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:0 8px 8px;border-bottom:1px solid var(--border)}th.num{text-align:right}td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle}tbody tr:hover{background:var(--surface-2)}tbody tr:last-child td{border-bottom:0}.row-actions{white-space:nowrap;text-align:right}.category-icon{font-size:1.05em;margin-right:7px;line-height:1}.currency-flag{font-size:1.05em;margin-right:6px;line-height:1}.legend-icon{font-size:1em}.small{font-size:.78rem}.row-2{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:end}.icon-input{width:64px;font-size:1.2rem;text-align:center}.rate-input{width:110px;text-align:right}.converted-note{margin-top:-6px}.app-version{opacity:.8}.icon-picker{display:flex;flex-wrap:wrap;gap:4px}.icon-choice{padding:4px 7px;font-size:1.05rem;border-radius:8px}.card-summary{font-weight:700;font-size:1.05rem;cursor:pointer}.translation-table{max-height:320px;overflow:auto}.translation-table input{width:100%}.fill.over{background:var(--danger) !important}.badge.over{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}.dot{display:inline-block;width:10px;height:10px;margin-right:8px;border-radius:50%;vertical-align:baseline}.badge{margin-left:8px;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-size:.7rem;font-weight:700}.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:99px;background:var(--surface-2)}.entry-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}.entry{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer}.entry:last-child{border-bottom:0}.entry:hover{background:var(--surface-2)}.entry-main{display:flex;flex-direction:column;flex:1;min-width:0}.entry-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.entry-sub{color:var(--muted);font-size:.8rem}.entry-amount{font-weight:700;font-variant-numeric:tabular-nums}.facts{margin:0;padding-left:18px;color:var(--muted);display:flex;flex-direction:column;gap:6px}.bar-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.bar-head{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;margin-bottom:5px}.track{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}.fill{height:100%;border-radius:99px}.chart-box{width:100%;height:220px}.chart-box.tall{height:280px}.chart{width:100%;height:100%;display:block}.bar-expense{fill:var(--bar-expense)}.bar-income{fill:var(--bar-income)}.grid{stroke:var(--border);stroke-width:1}svg .grid{fill:none}.chart-label{fill:var(--muted);font-size:10px}.donut-empty{fill:none;stroke:var(--surface-2);stroke-width:26}.donut-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.donut{width:160px;height:160px;flex:none}.legend{display:flex;gap:14px;margin-top:8px;color:var(--muted);font-size:.8rem;align-items:center}.toggle{display:inline-flex;align-items:center;gap:5px;cursor:pointer}.toggle input{width:14px;height:14px}.chart-scale{fill:var(--muted);font-size:10px}.average-line{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}.average-label{fill:var(--accent);font-size:10px;font-weight:600}.key::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:3px;background:var(--bar-expense)}.key.income::before{background:var(--bar-income)}.legend-list{list-style:none;margin:0;padding:0;flex:1;min-width:160px}.legend-list li{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.88rem}.legend-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.legend-value{color:var(--muted);font-variant-numeric:tabular-nums}.transfer{display:grid;grid-template-columns:1fr 1fr;gap:16px}.transfer-block{display:flex;flex-direction:column;gap:8px}.transfer-block h3{font-size:.95rem}.import-preview{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px}.dialog{width:min(440px,calc(100vw - 32px));border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);padding:16px}.dialog::backdrop{background:rgba(15,17,22,.45)}.dialog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.dialog-form{display:flex;flex-direction:column;gap:12px}.dialog-actions{display:flex;gap:8px;align-items:center;margin-top:4px}@media (max-width:720px){body[data-mode="auto"] .tab-label{display:none}body[data-mode="auto"] .grid,body[data-mode="auto"] .transfer{grid-template-columns:1fr}body[data-mode="auto"] .app-bar{gap:10px}body[data-mode="auto"] .hide-sm,body[data-mode="auto"] .row-actions{display:none}body[data-mode="auto"] .main{padding:14px 12px 32px}}body[data-mode="mobile"] .tab-label{display:none}body[data-mode="mobile"] .grid,body[data-mode="mobile"] .transfer{grid-template-columns:1fr}body[data-mode="mobile"] .hide-sm,body[data-mode="mobile"] .row-actions{display:none}body[data-mode="mobile"] .main{max-width:560px;padding:14px 12px 32px}body[data-mode="mobile"] .cards{grid-template-columns:repeat(2,1fr)}body[data-mode="mobile"] .app-bar{position:sticky}body[data-mode="mobile"] .tabs{flex:1;justify-content:space-around}body[data-mode="desktop"] .main{max-width:1080px}body[data-mode="desktop"] .grid{grid-template-columns:1.3fr 1fr}</style>
+<style>/*! Home Budget 3.2.0 */
+:root{--bg:#f4f5f8;--surface:#ffffff;--surface-2:#eef0f4;--border:#e2e5ea;--text:#171a21;--muted:#667085;--accent:#4f46e5;--accent-text:#ffffff;--income:#15803d;--expense:#c2410c;--danger:#dc2626;--warn:#b45309;--bar-expense:#f97316;--bar-income:#22c55e;--radius:14px;--shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.06);color-scheme:light}body.dark{--bg:#0f1116;--surface:#171a21;--surface-2:#1f232c;--border:#2a2f3a;--text:#e7e9ee;--muted:#98a2b3;--accent:#818cf8;--accent-text:#0f1116;--income:#4ade80;--expense:#fb923c;--danger:#f87171;--warn:#fbbf24;--shadow:none;color-scheme:dark}*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}h1,h2,h3{margin:0;font-size:1rem}h2{font-size:1.05rem}p{margin:0}button,input,select{font:inherit;color:inherit}.muted{color:var(--muted);font-size:.88rem}.block{display:block}.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.income{color:var(--income)}.expense{color:var(--expense)}.error{color:var(--danger);margin-top:6px}.warning{color:var(--warn)}.spacer{flex:1}.app-bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border)}.brand{display:flex;align-items:center;gap:8px;font-size:1.05rem}.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--accent-text);font-weight:700}.tabs{display:flex;gap:4px}.tab{display:flex;align-items:center;gap:7px;padding:8px 14px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}.tab:hover{background:var(--surface-2);color:var(--text)}.tab.active{background:var(--surface-2);color:var(--text)}.tab-icon{font-size:1.05rem}.main{max-width:1080px;margin:0 auto;padding:18px 16px 40px;display:flex;flex-direction:column;gap:16px}.app-footer{padding:0 16px 28px;text-align:center;color:var(--muted);font-size:.8rem}.toast{max-width:1080px;margin:12px auto -4px;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--income) 14%,transparent);color:var(--income);font-weight:600}.toast.error{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}.stat{display:flex;flex-direction:column;gap:2px}.stat-title{color:var(--muted);font-weight:600;font-size:.85rem}.stat-value{font-size:1.45rem;font-variant-numeric:tabular-nums}.stat-sub{color:var(--muted);font-size:.78rem}.quick-card{padding-bottom:12px}.quick-form{display:flex;gap:10px;align-items:stretch}.quick-input-wrap{position:relative;flex:1}.quick-input{width:100%;padding:14px 44px 14px 14px;font-size:1.5rem;font-variant-numeric:tabular-nums;border:1px solid var(--border);border-radius:12px;background:var(--surface-2)}.quick-currency{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.1rem}.quick-message{margin-top:8px;font-size:.88rem;min-height:1.2em;color:var(--muted)}.quick-message.ok{color:var(--income)}.quick-message.error{color:var(--danger)}button{padding:9px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-weight:600;cursor:pointer}button:hover{background:var(--surface-2)}button:disabled{opacity:.5;cursor:not-allowed}button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}button.primary:hover{filter:brightness(1.08)}button.danger{color:var(--danger)}button.link{border:0;background:none;padding:4px 6px;color:var(--accent);font-weight:600}button.link.danger{color:var(--danger)}.button-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.file-button{display:inline-flex;align-items:center;padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-weight:600;cursor:pointer;background:var(--surface)}.segmented{display:inline-flex;border:1px solid var(--border);border-radius:10px;overflow:hidden}.segmented button{border:0;border-radius:0;background:var(--surface);padding:7px 12px;color:var(--muted)}.segmented button.active{background:var(--surface-2);color:var(--text)}input,select{padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);max-width:100%}input[type="color"]{padding:2px;width:48px;height:36px}input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}.field{display:flex;flex-direction:column;gap:4px}.field-label{color:var(--muted);font-size:.8rem;font-weight:600}.field-hint{color:var(--muted);font-size:.75rem}.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.filters-box{margin-bottom:4px}.filters-box>summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:.85rem;padding:4px 0}.filters-box[open]>summary{margin-bottom:8px}.entry-row{cursor:pointer}.filter-actions{display:flex;gap:8px}.inline-form{display:flex;flex-wrap:wrap;gap:34px 10px;align-items:flex-end;margin-top:12px;padding-bottom:14px}.inline-form .field{position:relative}.inline-form .field.has-hint{min-width:160px}.inline-form .field-hint{position:absolute;top:calc(100% + 3px);left:0;width:100%;line-height:1.25}.summary{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0;font-size:.9rem;font-weight:600}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}th{text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:0 8px 8px;border-bottom:1px solid var(--border)}th.num{text-align:right}td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle}tbody tr:hover{background:var(--surface-2)}tbody tr:last-child td{border-bottom:0}.row-actions{white-space:nowrap;text-align:right}.category-icon{font-size:1.05em;margin-right:7px;line-height:1}.currency-flag{font-size:1.05em;margin-right:6px;line-height:1}.legend-icon{font-size:1em}.small{font-size:.78rem}.row-2{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:end}.icon-input{width:64px;font-size:1.2rem;text-align:center}.rate-input{width:110px;text-align:right}.converted-note{margin-top:-6px}.app-version{opacity:.8}.icon-picker{display:flex;flex-wrap:wrap;gap:4px}.icon-choice{padding:4px 7px;font-size:1.05rem;border-radius:8px}.card-summary{font-weight:700;font-size:1.05rem;cursor:pointer}.translation-table{max-height:320px;overflow:auto}.translation-table input{width:100%}.fill.over{background:var(--danger) !important}.badge.over{background:color-mix(in srgb,var(--danger) 16%,transparent);color:var(--danger)}.dot{display:inline-block;width:10px;height:10px;margin-right:8px;border-radius:50%;vertical-align:baseline}.badge{margin-left:8px;padding:1px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted);font-size:.7rem;font-weight:700}.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;list-style:none}.chip{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:99px;background:var(--surface-2)}.entry-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}.entry{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--border);cursor:pointer}.entry:last-child{border-bottom:0}.entry:hover{background:var(--surface-2)}.entry-main{display:flex;flex-direction:column;flex:1;min-width:0}.entry-title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.entry-sub{color:var(--muted);font-size:.8rem}.entry-amount{font-weight:700;font-variant-numeric:tabular-nums}.facts{margin:0;padding-left:18px;color:var(--muted);display:flex;flex-direction:column;gap:6px}.bar-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}.bar-head{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;margin-bottom:5px}.track{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}.fill{height:100%;border-radius:99px}.chart-box{width:100%;height:220px}.chart-box.tall{height:280px}.chart{width:100%;height:100%;display:block}.bar-expense{fill:var(--bar-expense)}.bar-income{fill:var(--bar-income)}.grid{stroke:var(--border);stroke-width:1}svg .grid{fill:none}.chart-label{fill:var(--muted);font-size:10px}.donut-empty{fill:none;stroke:var(--surface-2);stroke-width:26}.donut-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.donut{width:160px;height:160px;flex:none}.legend{display:flex;gap:14px;margin-top:8px;color:var(--muted);font-size:.8rem;align-items:center}.toggle{display:inline-flex;align-items:center;gap:5px;cursor:pointer}.toggle input{width:14px;height:14px}.chart-scale{fill:var(--muted);font-size:10px}.average-line{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:5 4}.average-label{fill:var(--accent);font-size:10px;font-weight:600}.key::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:3px;background:var(--bar-expense)}.key.income::before{background:var(--bar-income)}.legend-list{list-style:none;margin:0;padding:0;flex:1;min-width:160px}.legend-list li{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.88rem}.legend-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.legend-value{color:var(--muted);font-variant-numeric:tabular-nums}.transfer{display:grid;grid-template-columns:1fr 1fr;gap:16px}.transfer-block{display:flex;flex-direction:column;gap:8px}.transfer-block h3{font-size:.95rem}.import-preview{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px}.dialog{width:min(440px,calc(100vw - 32px));border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);padding:16px}.dialog::backdrop{background:rgba(15,17,22,.45)}.dialog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.dialog-form{display:flex;flex-direction:column;gap:12px}.dialog-actions{display:flex;gap:8px;align-items:center;margin-top:4px}@media (max-width:720px){body[data-mode="auto"] .tab-label{display:none}body[data-mode="auto"] .grid,body[data-mode="auto"] .transfer{grid-template-columns:1fr}body[data-mode="auto"] .app-bar{gap:10px}body[data-mode="auto"] .hide-sm,body[data-mode="auto"] .row-actions{display:none}body[data-mode="auto"] .main{padding:14px 12px 32px}}body[data-mode="mobile"] .tab-label{display:none}body[data-mode="mobile"] .grid,body[data-mode="mobile"] .transfer{grid-template-columns:1fr}body[data-mode="mobile"] .hide-sm,body[data-mode="mobile"] .row-actions{display:none}body[data-mode="mobile"] .main{max-width:560px;padding:14px 12px 32px}body[data-mode="mobile"] .cards{grid-template-columns:repeat(2,1fr)}body[data-mode="mobile"] .app-bar{position:sticky}body[data-mode="mobile"] .tabs{flex:1;justify-content:space-around}body[data-mode="desktop"] .main{max-width:1080px}body[data-mode="desktop"] .grid{grid-template-columns:1.3fr 1fr}</style>
 </head>
 <body data-mode="auto">
 <div id="app"></div>
 <noscript>This app needs JavaScript. Everything runs locally in your browser; nothing is sent anywhere.</noscript>
-<script>/*! Home Budget 3.1.0 - offline single file build, https://github.com/ (no dependencies) */
+<script>/*! Home Budget 3.2.0 - offline single file build, https://github.com/ (no dependencies) */
 (function () {
 'use strict';
 const __cache = {};
@@ -62,7 +62,7 @@ return { };
 __modules["ui/app.js"] = function () {
 const { BudgetStore } = __require("core/store.js");
 const { AppError } = __require("core/model.js");
-const { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES } = __require("core/i18n.js");
+const { createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES, periodTexts } = __require("core/i18n.js");
 const { APP_VERSION } = __require("core/version.js");
 const { loadState, migrateState, pickStorage, saveState } = __require("core/storage.js");
 const { append, clear, el, render } = __require("ui/dom.js");
@@ -109,8 +109,13 @@ const signature = `${language}|${settings.language === CUSTOM_LANGUAGE ? JSON.st
 if (this.translatorSignature !== signature) {
 this.translatorSignature = signature;
 this.translatorFunction = createTranslator(language, settings.customTranslation);
+this.translatedPeriods = periodTexts(this.translatorFunction);
 }
 return this.translatorFunction;
+}
+periodTexts() {
+this.translator();
+return this.translatedPeriods;
 }
 detectedLanguage() {
 const navigatorLanguages = typeof navigator === 'object' && navigator
@@ -232,6 +237,11 @@ clearEntries() {
 if (!window.confirm(this.t('settings.confirmDeleteAll'))) return;
 const removed = this.store.clearEntries();
 this.notify(this.t('settings.deletedEntries', { count: removed }));
+}
+resetAll() {
+if (!window.confirm(this.t('settings.confirmResetAll'))) return;
+this.store.resetAll();
+this.notify(this.t('settings.resetDone'));
 }
 restore(rawState) {
 const state = migrateState(rawState);
@@ -525,6 +535,10 @@ replaceState(state) {
 this.state = state;
 this.#changed();
 }
+resetAll() {
+this.state = createDefaultState();
+this.#changed();
+}
 clearEntries() {
 const removed = this.state.entries.length;
 this.state.entries = [];
@@ -625,9 +639,9 @@ return [
 { code: 'USD', symbol: '$', flag: '🇺🇸', decimals: 2, rate: 0.92 },
 { code: 'GBP', symbol: '£', flag: '🇬🇧', decimals: 2, rate: 1.17 },
 { code: 'CHF', symbol: 'Fr', flag: '🇨🇭', decimals: 2, rate: 1.04 },
-{ code: 'SEK', symbol: 'kr', flag: '🇸🇪', decimals: 2, rate: 0.088 },
-{ code: 'NOK', symbol: 'kr', flag: '🇳🇴', decimals: 2, rate: 0.086 },
-{ code: 'DKK', symbol: 'kr', flag: '🇩🇰', decimals: 2, rate: 0.134 },
+{ code: 'SEK', symbol: 'Skr', flag: '🇸🇪', decimals: 2, rate: 0.088 },
+{ code: 'NOK', symbol: 'Nkr', flag: '🇳🇴', decimals: 2, rate: 0.086 },
+{ code: 'DKK', symbol: 'Dkr', flag: '🇩🇰', decimals: 2, rate: 0.134 },
 { code: 'PLN', symbol: 'zł', flag: '🇵🇱', decimals: 2, rate: 0.23 },
 { code: 'CZK', symbol: 'Kč', flag: '🇨🇿', decimals: 2, rate: 0.04 },
 { code: 'RUB', symbol: '₽', flag: '🇷🇺', decimals: 2, rate: 0.0098 },
@@ -642,7 +656,7 @@ return [
 { code: 'AUD', symbol: 'A$', flag: '🇦🇺', decimals: 2, rate: 0.6 },
 { code: 'NZD', symbol: 'NZ$', flag: '🇳🇿', decimals: 2, rate: 0.55 },
 { code: 'JPY', symbol: '¥', flag: '🇯🇵', decimals: 0, rate: 0.0059 },
-{ code: 'CNY', symbol: '¥', flag: '🇨🇳', decimals: 2, rate: 0.13 },
+{ code: 'CNY', symbol: 'CN¥', flag: '🇨🇳', decimals: 2, rate: 0.13 },
 { code: 'INR', symbol: '₹', flag: '🇮🇳', decimals: 2, rate: 0.011 },
 { code: 'ILS', symbol: '₪', flag: '🇮🇱', decimals: 2, rate: 0.25 },
 ];
@@ -937,7 +951,13 @@ default: throw new Error(`Unknown period: ${period}`);
 }
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
 'July', 'August', 'September', 'October', 'November', 'December'];
-function periodLabel(key, period, style = 'short') {
+const PERIOD_TEXTS = {
+months: MONTH_NAMES,
+week: 'Week {week}, {year}',
+weekShort: 'W{week}',
+};
+function periodLabel(key, period, style = 'short', texts = PERIOD_TEXTS) {
+const months = texts.months && texts.months.length === 12 ? texts.months : MONTH_NAMES;
 switch (period) {
 case 'day': {
 const [year, month, day] = key.split('-');
@@ -945,12 +965,15 @@ return style === 'short' ? `${day}.${month}` : `${day}.${month}.${year}`;
 }
 case 'week': {
 const [year, week] = key.split('-W');
-return style === 'short' ? `W${Number(week)}` : `Week ${Number(week)}, ${year}`;
+const pattern = style === 'short'
+? (texts.weekShort || PERIOD_TEXTS.weekShort)
+: (texts.week || PERIOD_TEXTS.week);
+return pattern.replace('{week}', String(Number(week))).replace('{year}', year);
 }
 case 'month': {
 const [year, month] = key.split('-');
-const name = MONTH_NAMES[Number(month) - 1];
-return style === 'short' ? `${name.slice(0, 3)} ${year.slice(2)}` : `${name} ${year}`;
+const name = months[Number(month) - 1];
+return style === 'short' ? `${[...name].slice(0, 3).join('')} ${year.slice(2)}` : `${name} ${year}`;
 }
 case 'year': return key;
 default: throw new Error(`Unknown period: ${period}`);
@@ -961,10 +984,10 @@ if (!isIsoDate(isoDate)) return '';
 const [year, month, day] = isoDate.split('-');
 return `${day}.${month}.${year}`;
 }
-return { formatMoney, toPlainAmount, parseAmount, todayIso, toIsoDate, isIsoDate, parseDateLoose, addDays, addMonths, startOfWeek, isoWeek, periodKey, periodStart, periodEnd, previousPeriodStart, periodLabel, formatDate, GROUP_SEPARATOR, PERIODS };
+return { formatMoney, toPlainAmount, parseAmount, todayIso, toIsoDate, isIsoDate, parseDateLoose, addDays, addMonths, startOfWeek, isoWeek, periodKey, periodStart, periodEnd, previousPeriodStart, periodLabel, formatDate, GROUP_SEPARATOR, PERIODS, MONTH_NAMES, PERIOD_TEXTS };
 };
 __modules["core/version.js"] = function () {
-const APP_VERSION = '3.1.0';
+const APP_VERSION = '3.2.0';
 const DATA_VERSION = 3;
 return { APP_VERSION, DATA_VERSION };
 };
@@ -980,6 +1003,20 @@ const EN = {
 'app.title': 'Home Budget',
 'app.storedIn': 'Stored in your browser ({storage}) · works offline',
 'nav.home': 'Home',
+'month.1': 'January',
+'month.2': 'February',
+'month.3': 'March',
+'month.4': 'April',
+'month.5': 'May',
+'month.6': 'June',
+'month.7': 'July',
+'month.8': 'August',
+'month.9': 'September',
+'month.10': 'October',
+'month.11': 'November',
+'month.12': 'December',
+'periodLabel.week': 'Week {week}, {year}',
+'periodLabel.weekShort': 'W{week}',
 'nav.entries': 'Entries',
 'nav.stats': 'Stats',
 'nav.settings': 'Settings',
@@ -1102,7 +1139,7 @@ const EN = {
 'settings.newCategory': '+ New category',
 'settings.editCategory': 'Edit category',
 'settings.createCategory': 'New category',
-'settings.limit': 'Monthly limit',
+'settings.limit': 'Limit',
 'settings.limitHint': 'Leave empty for no limit',
 'settings.confirmDeleteCategory': 'Delete this category?',
 'settings.moveEntries': '"{category}" has {count} entries. Move them to which category? Type its name, or cancel.',
@@ -1111,7 +1148,7 @@ const EN = {
 'settings.currencyCode': 'Code',
 'settings.currencySymbol': 'Symbol',
 'settings.currencyFlag': 'Flag',
-'settings.currencyFlagHint': 'One emoji; left empty a matching flag is chosen.',
+'settings.currencyFlagHint': 'Emoji; picked for you if empty',
 'settings.currencyDecimals': 'Decimals',
 'settings.addCurrency': 'Add currency',
 'settings.data': 'Data',
@@ -1119,6 +1156,10 @@ const EN = {
 'settings.backup': 'Download backup (JSON)',
 'settings.restore': 'Restore backup',
 'settings.deleteAll': 'Delete all entries',
+'settings.resetAll': 'Reset everything',
+'settings.confirmResetAll': 'Reset everything? Entries, categories, currencies and settings all go back to the defaults.',
+'settings.resetDone': 'Everything has been reset to the defaults',
+'settings.deleteHint': 'Deleting the entries keeps your categories, currencies and settings. Resetting undoes all of it.',
 'settings.confirmDeleteAll': 'Delete all entries? The categories and settings stay.',
 'settings.deletedEntries': '{count} entries deleted',
 'settings.backupDownloaded': 'Backup downloaded',
@@ -1159,6 +1200,20 @@ const RU = {
 'app.title': 'Домашний бюджет',
 'app.storedIn': 'Хранится в вашем браузере ({storage}) · работает офлайн',
 'nav.home': 'Главная',
+'month.1': 'Январь',
+'month.2': 'Февраль',
+'month.3': 'Март',
+'month.4': 'Апрель',
+'month.5': 'Май',
+'month.6': 'Июнь',
+'month.7': 'Июль',
+'month.8': 'Август',
+'month.9': 'Сентябрь',
+'month.10': 'Октябрь',
+'month.11': 'Ноябрь',
+'month.12': 'Декабрь',
+'periodLabel.week': '{week}-я неделя, {year}',
+'periodLabel.weekShort': 'Н{week}',
 'nav.entries': 'Записи',
 'nav.stats': 'Статистика',
 'nav.settings': 'Настройки',
@@ -1281,7 +1336,7 @@ const RU = {
 'settings.newCategory': '+ Новая категория',
 'settings.editCategory': 'Изменить категорию',
 'settings.createCategory': 'Новая категория',
-'settings.limit': 'Месячный лимит',
+'settings.limit': 'Лимит',
 'settings.limitHint': 'Пусто — без лимита',
 'settings.confirmDeleteCategory': 'Удалить эту категорию?',
 'settings.moveEntries': 'В категории «{category}» записей: {count}. В какую категорию их перенести? Введите название или отмените.',
@@ -1290,7 +1345,7 @@ const RU = {
 'settings.currencyCode': 'Код',
 'settings.currencySymbol': 'Символ',
 'settings.currencyFlag': 'Флаг',
-'settings.currencyFlagHint': 'Одно эмодзи; если оставить пустым, флаг подберётся сам.',
+'settings.currencyFlagHint': 'Эмодзи; подберётся само',
 'settings.currencyDecimals': 'Знаков',
 'settings.addCurrency': 'Добавить валюту',
 'settings.data': 'Данные',
@@ -1298,6 +1353,10 @@ const RU = {
 'settings.backup': 'Скачать резервную копию (JSON)',
 'settings.restore': 'Восстановить из копии',
 'settings.deleteAll': 'Удалить все записи',
+'settings.resetAll': 'Сбросить всё',
+'settings.confirmResetAll': 'Сбросить всё? Записи, категории, валюты и настройки вернутся к значениям по умолчанию.',
+'settings.resetDone': 'Всё сброшено к значениям по умолчанию',
+'settings.deleteHint': 'Удаление записей сохраняет категории, валюты и настройки. Сброс отменяет и их.',
 'settings.confirmDeleteAll': 'Удалить все записи? Категории и настройки останутся.',
 'settings.deletedEntries': 'Удалено записей: {count}',
 'settings.backupDownloaded': 'Копия скачана',
@@ -1338,6 +1397,20 @@ const DE = {
 'app.title': 'Haushaltsbudget',
 'app.storedIn': 'Im Browser gespeichert ({storage}) · funktioniert offline',
 'nav.home': 'Start',
+'month.1': 'Januar',
+'month.2': 'Februar',
+'month.3': 'März',
+'month.4': 'April',
+'month.5': 'Mai',
+'month.6': 'Juni',
+'month.7': 'Juli',
+'month.8': 'August',
+'month.9': 'September',
+'month.10': 'Oktober',
+'month.11': 'November',
+'month.12': 'Dezember',
+'periodLabel.week': 'Woche {week}, {year}',
+'periodLabel.weekShort': 'W{week}',
 'nav.entries': 'Einträge',
 'nav.stats': 'Statistik',
 'nav.settings': 'Einstellungen',
@@ -1460,7 +1533,7 @@ const DE = {
 'settings.newCategory': '+ Neue Kategorie',
 'settings.editCategory': 'Kategorie bearbeiten',
 'settings.createCategory': 'Neue Kategorie',
-'settings.limit': 'Monatslimit',
+'settings.limit': 'Limit',
 'settings.limitHint': 'Leer lassen für kein Limit',
 'settings.confirmDeleteCategory': 'Diese Kategorie löschen?',
 'settings.moveEntries': '„{category}" hat {count} Einträge. In welche Kategorie sollen sie? Namen eingeben oder abbrechen.',
@@ -1469,7 +1542,7 @@ const DE = {
 'settings.currencyCode': 'Code',
 'settings.currencySymbol': 'Symbol',
 'settings.currencyFlag': 'Flagge',
-'settings.currencyFlagHint': 'Ein Emoji; leer gelassen wird eine passende Flagge gewählt.',
+'settings.currencyFlagHint': 'Emoji; sonst automatisch',
 'settings.currencyDecimals': 'Nachkommastellen',
 'settings.addCurrency': 'Währung hinzufügen',
 'settings.data': 'Daten',
@@ -1477,6 +1550,10 @@ const DE = {
 'settings.backup': 'Sicherung laden (JSON)',
 'settings.restore': 'Sicherung einspielen',
 'settings.deleteAll': 'Alle Einträge löschen',
+'settings.resetAll': 'Alles zurücksetzen',
+'settings.confirmResetAll': 'Alles zurücksetzen? Einträge, Kategorien, Währungen und Einstellungen gehen auf die Standardwerte zurück.',
+'settings.resetDone': 'Alles wurde auf die Standardwerte zurückgesetzt',
+'settings.deleteHint': 'Das Löschen der Einträge behält Kategorien, Währungen und Einstellungen. Das Zurücksetzen nimmt auch die zurück.',
 'settings.confirmDeleteAll': 'Alle Einträge löschen? Kategorien und Einstellungen bleiben.',
 'settings.deletedEntries': '{count} Einträge gelöscht',
 'settings.backupDownloaded': 'Sicherung geladen',
@@ -1534,6 +1611,13 @@ const template = (texts && texts[key]) || EN[key] || key;
 return params ? fill(template, params) : template;
 };
 }
+function periodTexts(t) {
+return {
+months: Array.from({ length: 12 }, (unused, index) => t(`month.${index + 1}`)),
+week: t('periodLabel.week'),
+weekShort: t('periodLabel.weekShort'),
+};
+}
 function fill(template, params) {
 return String(template).replace(/\{(\w+)\}/g, (match, name) => (
 Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
@@ -1548,7 +1632,7 @@ if (typeof value === 'string' && value.trim()) clean[key] = value;
 }
 return clean;
 }
-return { translationKeys, bundledTexts, detectLanguage, createTranslator, fill, sanitizeTranslation, DEFAULT_LANGUAGE, LANGUAGES, CUSTOM_LANGUAGE, EN, RU, DE };
+return { translationKeys, bundledTexts, detectLanguage, createTranslator, periodTexts, fill, sanitizeTranslation, DEFAULT_LANGUAGE, LANGUAGES, CUSTOM_LANGUAGE, EN, RU, DE };
 };
 __modules["core/storage.js"] = function () {
 const { createDefaultState, defaultCategories, defaultCurrencies, flagForCurrency, LIMIT_PERIODS, STATE_VERSION } = __require("core/model.js");
@@ -1718,7 +1802,8 @@ function byId(id) {
 return document.getElementById(id);
 }
 function field(labelText, control, hint) {
-return el('label.field', {}, [el('span.field-label', { text: labelText }), control,
+return el(hint ? 'label.field.has-hint' : 'label.field', {},
+[el('span.field-label', { text: labelText }), control,
 hint ? el('span.field-hint', { text: hint }) : null]);
 }
 function options(items, selected) {
@@ -1913,7 +1998,7 @@ groups.get(key).push(entry);
 }
 return groups;
 }
-function periodSummary(entries, categories, period, today = todayIso()) {
+function periodSummary(entries, categories, period, today = todayIso(), texts = undefined) {
 const currentKey = periodKey(today, period);
 const groups = groupByPeriod(entries, period);
 const current = totals(groups.get(currentKey) || [], categories);
@@ -1928,7 +2013,7 @@ const periodsWithData = groups.size;
 return {
 period,
 key: currentKey,
-label: periodLabel(currentKey, period, 'long'),
+label: periodLabel(currentKey, period, 'long', texts),
 current,
 periodsWithData,
 averageExpense: periodsWithData ? Math.round(expenseSum / periodsWithData) : 0,
@@ -1937,8 +2022,8 @@ totalExpense: expenseSum,
 totalIncome: incomeSum,
 };
 }
-function overview(entries, categories, today = todayIso()) {
-return PERIODS.map((period) => periodSummary(entries, categories, period, today));
+function overview(entries, categories, today = todayIso(), texts = undefined) {
+return PERIODS.map((period) => periodSummary(entries, categories, period, today, texts));
 }
 function periodStarts(period, count, today = todayIso()) {
 const starts = [];
@@ -1954,15 +2039,15 @@ default: cursor = `${Number(cursor.slice(0, 4)) - 1}-01-01`;
 }
 return starts;
 }
-function series(entries, categories, period, count, today = todayIso()) {
+function series(entries, categories, period, count, today = todayIso(), texts = undefined) {
 const groups = groupByPeriod(entries, period);
 return periodStarts(period, count, today).map((start) => {
 const key = periodKey(start, period);
 const groupTotals = totals(groups.get(key) || [], categories);
 return {
 key,
-label: periodLabel(key, period),
-fullLabel: periodLabel(key, period, 'long'),
+label: periodLabel(key, period, 'short', texts),
+fullLabel: periodLabel(key, period, 'long', texts),
 ...groupTotals,
 };
 });
@@ -2053,6 +2138,7 @@ today: app.store.today(),
 chartCurrency: app.viewCurrency(),
 chartPeriod: app.ui.statsPeriod,
 chartCount: 12,
+periodTexts: app.periodTexts(),
 labels: {
 expenses: app.t('common.expenses'),
 income: app.t('common.income'),
@@ -2318,6 +2404,7 @@ context.categories,
 context.chartPeriod || 'month',
 context.chartCount || 12,
 context.today,
+context.periodTexts,
 ).map((point) => ({ label: point.label, value: Number(toPlainAmount(point.expense, currency.decimals)) }));
 const withData = points.filter((point) => point.value > 0);
 const average = withData.length
@@ -3398,9 +3485,9 @@ const currencyCode = app.viewCurrency();
 const currency = store.currency(currencyCode);
 const entries = store.entriesIn(currencyCode);
 const today = store.today();
-const summaries = overview(entries, store.categories, today);
+const summaries = overview(entries, store.categories, today, app.periodTexts());
 const period = app.ui.homePeriod;
-const points = series(entries, store.categories, period, CHART_LENGTH[period], today);
+const points = series(entries, store.categories, period, CHART_LENGTH[period], today, app.periodTexts());
 const breakdown = byCategory(entries, store.categories);
 const recent = (store.settings.convertToDefault ? store.list() : store.list({ currency: currencyCode })).slice(0, 8);
 const budgets = store.budgets(currencyCode, today);
@@ -3842,7 +3929,9 @@ on: { change: (event) => restore(app, event.target.files[0]) },
 }),
 ]),
 el('button.danger', { type: 'button', text: t('settings.deleteAll'), on: { click: () => app.clearEntries() } }),
+el('button.danger', { type: 'button', text: t('settings.resetAll'), on: { click: () => app.resetAll() } }),
 ]),
+el('p.muted', { text: t('settings.deleteHint') }),
 ]),
 ];
 }
@@ -4053,9 +4142,9 @@ const code = app.viewCurrency();
 const currency = store.currency(code);
 const entries = store.entriesIn(code);
 const today = store.today();
-const summaries = overview(entries, store.categories, today);
+const summaries = overview(entries, store.categories, today, app.periodTexts());
 const period = app.ui.statsPeriod;
-const points = series(entries, store.categories, period, LENGTHS[period], today);
+const points = series(entries, store.categories, period, LENGTHS[period], today, app.periodTexts());
 const facts = highlights(entries, store.categories);
 const breakdown = byCategory(entries, store.categories);
 const used = store.usedCurrencies();

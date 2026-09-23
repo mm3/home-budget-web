@@ -2,7 +2,7 @@
   "name": "Home Budget",
   "short_name": "Budget",
   "description": "Offline home budget: entries, categories, statistics, CSV/XLSX/PDF export and import.",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "id": "./",
   "start_url": "./",
   "scope": "./",

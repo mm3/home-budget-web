@@ -45,7 +45,9 @@ export const ICON_CHOICES = ['\u2615', '\ud83d\udd01', '\ud83d\udcc5', '\ud83d\u
   '\ud83c\udf81', '\u2708\ufe0f', '\ud83d\udcda', '\ud83c\udfcb\ufe0f', '\ud83d\udc76', '\ud83d\udd27', '\ud83d\udcb3', '\u2753'];
 
 /**
- * Currencies a new installation knows about. `rate` is how much one unit is worth in the
+ * Currencies a new installation knows about. Symbols are kept distinct on purpose:
+ * three Nordic crowns and two yen would otherwise share one sign, and an amount has
+ * to say which currency it is in. `rate` is how much one unit is worth in the
  * default currency; these values are only a starting point and are meant to be edited in the
  * settings, because an offline app cannot look rates up.
  */
@@ -55,9 +57,9 @@ export function defaultCurrencies() {
     { code: 'USD', symbol: '$', flag: '🇺🇸', decimals: 2, rate: 0.92 },
     { code: 'GBP', symbol: '£', flag: '🇬🇧', decimals: 2, rate: 1.17 },
     { code: 'CHF', symbol: 'Fr', flag: '🇨🇭', decimals: 2, rate: 1.04 },
-    { code: 'SEK', symbol: 'kr', flag: '🇸🇪', decimals: 2, rate: 0.088 },
-    { code: 'NOK', symbol: 'kr', flag: '🇳🇴', decimals: 2, rate: 0.086 },
-    { code: 'DKK', symbol: 'kr', flag: '🇩🇰', decimals: 2, rate: 0.134 },
+    { code: 'SEK', symbol: 'Skr', flag: '🇸🇪', decimals: 2, rate: 0.088 },
+    { code: 'NOK', symbol: 'Nkr', flag: '🇳🇴', decimals: 2, rate: 0.086 },
+    { code: 'DKK', symbol: 'Dkr', flag: '🇩🇰', decimals: 2, rate: 0.134 },
     { code: 'PLN', symbol: 'zł', flag: '🇵🇱', decimals: 2, rate: 0.23 },
     { code: 'CZK', symbol: 'Kč', flag: '🇨🇿', decimals: 2, rate: 0.04 },
     { code: 'RUB', symbol: '₽', flag: '🇷🇺', decimals: 2, rate: 0.0098 },
@@ -72,7 +74,7 @@ export function defaultCurrencies() {
     { code: 'AUD', symbol: 'A$', flag: '🇦🇺', decimals: 2, rate: 0.6 },
     { code: 'NZD', symbol: 'NZ$', flag: '🇳🇿', decimals: 2, rate: 0.55 },
     { code: 'JPY', symbol: '¥', flag: '🇯🇵', decimals: 0, rate: 0.0059 },
-    { code: 'CNY', symbol: '¥', flag: '🇨🇳', decimals: 2, rate: 0.13 },
+    { code: 'CNY', symbol: 'CN¥', flag: '🇨🇳', decimals: 2, rate: 0.13 },
     { code: 'INR', symbol: '₹', flag: '🇮🇳', decimals: 2, rate: 0.011 },
     { code: 'ILS', symbol: '₪', flag: '🇮🇱', decimals: 2, rate: 0.25 },
   ];

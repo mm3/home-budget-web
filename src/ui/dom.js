@@ -54,8 +54,11 @@ export function byId(id) {
 
 /** A labelled form field. */
 export function field(labelText, control, hint) {
-  return el('label.field', {}, [el('span.field-label', { text: labelText }), control,
-    hint ? el('span.field-hint', { text: hint }) : null]);
+  // has-hint lets a row of fields reserve room for the hint underneath, so the
+  // hint neither grows the field nor overlaps the one next to it.
+  return el(hint ? 'label.field.has-hint' : 'label.field', {},
+    [el('span.field-label', { text: labelText }), control,
+      hint ? el('span.field-hint', { text: hint }) : null]);
 }
 
 /** An <option> list for a <select>. */

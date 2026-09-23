@@ -206,6 +206,30 @@ async function main() {
   `);
   check('statistics show day, week, month and year', stats.rows.length === 4 && stats.hasChart, stats.rows.join(' '));
 
+  const localized = await cdp.evaluate(`
+    const read = () => [...document.querySelectorAll('.period-summary h3, .summary-card h3, .stats-row')]
+      .map((node) => node.textContent).join(' | ');
+    const store = window.homeBudget.store;
+    const labels = (language) => {
+      store.updateSettings({ language });
+      return window.homeBudget.periodTexts();
+    };
+    const english = labels('en');
+    const russian = labels('ru');
+    const german = labels('de');
+    store.updateSettings({ language: 'en' });
+    return {
+      english: english.months[8] + ' / ' + english.week,
+      russian: russian.months[8] + ' / ' + russian.week,
+      german: german.months[8] + ' / ' + german.week,
+      shown: read().slice(0, 60),
+    };
+  `);
+  check('month and week names follow the language',
+    localized.english.startsWith('September') && localized.russian.startsWith('Сентябрь')
+      && localized.german.startsWith('September') && localized.russian.includes('неделя'),
+    JSON.stringify(localized));
+
   const exported = await cdp.evaluate(`
     [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Entries')).click();
     await new Promise((done) => setTimeout(done, 100));
@@ -336,7 +360,14 @@ async function main() {
   check('every currency has a flag', currencies.withoutFlag.length === 0,
     `${currencies.count} currencies`);
 
+  const nordic = await cdp.evaluate(`
+    const symbols = window.homeBudget.store.currencies.map((currency) => currency.symbol);
+    return { repeated: symbols.filter((symbol, index) => symbols.indexOf(symbol) !== index) };
+  `);
+  check('no two currencies share a symbol', nordic.repeated.length === 0, nordic.repeated.join(' '));
+
   const russianPdf = await cdp.evaluate(`
+    window.homeBudget.store.quickAdd('15');
     window.homeBudget.store.updateSettings({ language: 'ru' });
     await new Promise((done) => setTimeout(done, 200));
     [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('\u0417\u0430\u043f\u0438\u0441\u0438')).click();
@@ -374,6 +405,7 @@ async function main() {
     });
     await cdp.evaluate(`
       const app = window.homeBudget;
+      app.ui.message = null; // no leftover toast from the checks above on the screenshots
       app.store.updateSettings({ uiMode: '${shot.mode}', language: '${shot.language || 'en'}' });
       app.setTab('${shot.tab.toLowerCase()}');
       ${shot.scrollTo ? `const anchor = document.querySelector('${shot.scrollTo}'); if (anchor) anchor.closest('.card').scrollIntoView({ block: 'start' }); else window.scrollTo(0, 0);` : 'window.scrollTo(0, 0);'}
@@ -383,6 +415,30 @@ async function main() {
     writeFileSync(join(shotDir, `${shot.name}.png`), Buffer.from(data, 'base64'));
   }
   console.log(`  screenshots in ${shotDir}`);
+
+  const reset = await cdp.evaluate(`
+    window.confirm = () => true;
+    const store = window.homeBudget.store;
+    store.addCategory({ name: 'Scratch category' });
+    store.updateSettings({ theme: 'dark' });
+    store.quickAdd('9');
+    await new Promise((done) => setTimeout(done, 100));
+    window.homeBudget.clearEntries();
+    await new Promise((done) => setTimeout(done, 150));
+    const afterDelete = { entries: store.entries.length, theme: store.settings.theme,
+      mine: store.categories.some((category) => category.name === 'Scratch category') };
+    window.homeBudget.resetAll();
+    await new Promise((done) => setTimeout(done, 150));
+    const afterReset = { entries: store.entries.length, theme: store.settings.theme,
+      mine: store.categories.some((category) => category.name === 'Scratch category') };
+    return { afterDelete, afterReset };
+  `);
+  check('deleting the entries keeps categories and settings',
+    reset.afterDelete.entries === 0 && reset.afterDelete.mine && reset.afterDelete.theme === 'dark',
+    JSON.stringify(reset.afterDelete));
+  check('resetting everything really restores the defaults',
+    !reset.afterReset.mine && reset.afterReset.theme === 'auto',
+    JSON.stringify(reset.afterReset));
 
   check('no errors in the browser console', problems.length === 0, problems.slice(0, 3).join(' | '));
 

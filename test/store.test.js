@@ -246,3 +246,25 @@ test('replaceState and clearEntries', () => {
   assert.equal(store.category('daily').name, 'Daily');
   assert.equal(new BudgetStore().settings.defaultCurrency, 'EUR');
 });
+
+test('deleting the entries keeps the settings, resetting does not', () => {
+  const store = makeStore();
+  store.addCategory({ name: 'My own category' });
+  store.addCurrency({ code: 'XTS', symbol: 'T' });
+  store.updateSettings({ theme: 'dark' });
+  store.quickAdd('12.50');
+  const categories = store.categories.length;
+
+  assert.equal(store.clearEntries(), 1);
+  assert.equal(store.entries.length, 0);
+  assert.equal(store.categories.length, categories, 'the categories stay');
+  assert.ok(store.currencies.some((currency) => currency.code === 'XTS'), 'the currencies stay');
+  assert.equal(store.settings.theme, 'dark', 'the settings stay');
+
+  store.quickAdd('5');
+  store.resetAll();
+  assert.equal(store.entries.length, 0);
+  assert.ok(!store.categories.some((category) => category.name === 'My own category'));
+  assert.ok(!store.currencies.some((currency) => currency.code === 'XTS'));
+  assert.equal(store.settings.theme, 'auto');
+});

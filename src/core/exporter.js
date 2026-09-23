@@ -61,6 +61,7 @@ export function chartData(entries, context) {
     context.chartPeriod || 'month',
     context.chartCount || 12,
     context.today,
+    context.periodTexts,
   ).map((point) => ({ label: point.label, value: Number(toPlainAmount(point.expense, currency.decimals)) }));
   const withData = points.filter((point) => point.value > 0);
   const average = withData.length

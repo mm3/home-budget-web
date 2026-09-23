@@ -14,9 +14,9 @@ export function statsView(app) {
   const currency = store.currency(code);
   const entries = store.entriesIn(code);
   const today = store.today();
-  const summaries = overview(entries, store.categories, today);
+  const summaries = overview(entries, store.categories, today, app.periodTexts());
   const period = app.ui.statsPeriod;
-  const points = series(entries, store.categories, period, LENGTHS[period], today);
+  const points = series(entries, store.categories, period, LENGTHS[period], today, app.periodTexts());
   const facts = highlights(entries, store.categories);
   const breakdown = byCategory(entries, store.categories);
   const used = store.usedCurrencies();
