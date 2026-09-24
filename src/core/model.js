@@ -200,6 +200,22 @@ export function slugify(name) {
  * Validates and normalizes an entry.
  * @throws {AppError} when a field is missing or wrong
  */
+/**
+ * The categories of an entry, in order, without repeats. Takes either shape:
+ * a list, or the single categoryId that every entry had before this existed.
+ */
+export function entryCategoryIds(input) {
+  const raw = Array.isArray(input.categoryIds) && input.categoryIds.length
+    ? input.categoryIds
+    : [input.categoryId];
+  const seen = [];
+  for (const id of raw) {
+    const text = id === undefined || id === null ? '' : String(id).trim();
+    if (text && !seen.includes(text)) seen.push(text);
+  }
+  return seen;
+}
+
 export function createEntry(input, now = new Date()) {
   const amount = Number(input.amount);
   if (!Number.isFinite(amount) || !Number.isInteger(amount)) {
@@ -209,7 +225,8 @@ export function createEntry(input, now = new Date()) {
   if (Math.abs(amount) > MAX_AMOUNT) throw new AppError('This amount is too large');
   const date = input.date === undefined || input.date === null || input.date === '' ? todayIso(now) : input.date;
   if (!isIsoDate(date)) throw new AppError('Date must be yyyy-mm-dd');
-  if (!input.categoryId) throw new AppError('Category is required');
+  const categoryIds = entryCategoryIds(input);
+  if (!categoryIds.length) throw new AppError('Category is required');
   if (!input.currency) throw new AppError('Currency is required');
   const note = String(input.note ?? '').trim();
   if (note.length > MAX_NOTE_LENGTH) throw new AppError(`Note must be at most ${MAX_NOTE_LENGTH} characters`);
@@ -217,7 +234,12 @@ export function createEntry(input, now = new Date()) {
     id: input.id || newId(),
     date,
     amount,
-    categoryId: String(input.categoryId),
+    // Both, and only ever written here: categoryId is the first of categoryIds,
+    // the one that decides whether the entry is money in or money out. Every
+    // reader that asks "which category is this" wants that one; every reader
+    // that asks "does this involve category X" wants the list.
+    categoryId: categoryIds[0],
+    categoryIds,
     currency: String(input.currency).toUpperCase(),
     note,
     createdAt: input.createdAt || new Date(now).toISOString(),

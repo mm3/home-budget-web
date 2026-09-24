@@ -2,7 +2,7 @@
 
 import { toCsv } from './csv.js';
 import { formatDate, formatMoney, toPlainAmount } from './format.js';
-import { findCategory, findCurrency } from './model.js';
+import { entryCategoryIds, findCategory, findCurrency } from './model.js';
 import { buildPdf } from './pdf.js';
 import { buildXlsx } from './xlsx.js';
 import { APP_VERSION } from './version.js';
@@ -25,7 +25,9 @@ export function exportRows(entries, { categories, currencies }) {
     const signed = category.kind === 'income' ? entry.amount : -entry.amount;
     return {
       date: entry.date,
-      category: category.name,
+      // All of them, separated by a bar, which is what the importer reads back.
+      // The first one is the one that decides income or expense.
+      category: entryCategoryIds(entry).map((id) => findCategory(categories, id).name).join(' | '),
       kind: category.kind === 'income' ? 'Income' : 'Expense',
       amount: Number(toPlainAmount(signed, currency.decimals)),
       currency: currency.code,

@@ -82,7 +82,7 @@ export class BudgetStore {
 
   addEntry(input) {
     const entry = createEntry(input, this.clock());
-    if (!this.categories.some((category) => category.id === entry.categoryId)) {
+    if (!entry.categoryIds.every((id) => this.categories.some((category) => category.id === id))) {
       throw new AppError('Unknown category');
     }
     this.state.entries.push(entry);
@@ -113,7 +113,7 @@ export class BudgetStore {
     for (const input of entries) {
       try {
         const entry = createEntry(input, this.clock());
-        if (!this.categories.some((category) => category.id === entry.categoryId)) continue;
+        if (!entry.categoryIds.every((id) => this.categories.some((c) => c.id === id))) continue;
         this.state.entries.push(entry);
         added += 1;
       } catch {
@@ -134,10 +134,11 @@ export class BudgetStore {
       .filter((entry) => {
         if (filter.from && entry.date < filter.from) return false;
         if (filter.to && entry.date > filter.to) return false;
-        if (filter.categoryId && entry.categoryId !== filter.categoryId) return false;
+        if (filter.categoryId && !entry.categoryIds.includes(filter.categoryId)) return false;
         if (filter.currency && entry.currency !== filter.currency) return false;
         if (text) {
-          const haystack = `${entry.note} ${this.category(entry.categoryId).name}`.toLowerCase();
+          const names = entry.categoryIds.map((id) => this.category(id).name).join(' ');
+          const haystack = `${entry.note} ${names}`.toLowerCase();
           if (!haystack.includes(text)) return false;
         }
         return true;
@@ -176,11 +177,31 @@ export class BudgetStore {
     return updated;
   }
 
-  /** Number of entries per category id. */
+  /**
+   * The currencies with the default one first. Everywhere a currency is listed
+   * - the table in the settings, the pickers in the forms and the filters - the
+   * one almost every entry will use is the one to reach first, and hunting for
+   * it alphabetically is a small daily annoyance. The stored order is left
+   * alone; this is only how the list is read.
+   */
+  currenciesByDefault() {
+    const code = this.settings.defaultCurrency;
+    return [...this.currencies].sort((a, b) => {
+      if (a.code === code) return -1;
+      if (b.code === code) return 1;
+      return 0;
+    });
+  }
+
+  /**
+   * Number of entries per category id. An entry in three categories is counted
+   * by all three: the question this answers is "would deleting this category
+   * touch anything", and the answer is yes for every one of them.
+   */
   categoryUsage() {
     const usage = new Map();
     for (const entry of this.state.entries) {
-      usage.set(entry.categoryId, (usage.get(entry.categoryId) || 0) + 1);
+      for (const id of entry.categoryIds) usage.set(id, (usage.get(id) || 0) + 1);
     }
     return usage;
   }
@@ -200,7 +221,12 @@ export class BudgetStore {
       }
       if (!this.categories.some((category) => category.id === moveToId)) throw new AppError('Unknown category');
       for (const entry of this.state.entries) {
-        if (entry.categoryId === id) entry.categoryId = moveToId;
+        if (!entry.categoryIds.includes(id)) continue;
+        // The replacement may already be on the entry, which is why this goes
+        // through a set rather than swapping the id in place.
+        const moved = entry.categoryIds.map((current) => (current === id ? moveToId : current));
+        entry.categoryIds = [...new Set(moved)];
+        entry.categoryId = entry.categoryIds[0];
       }
     }
     this.categories.splice(index, 1);
@@ -357,7 +383,8 @@ export class BudgetStore {
         const from = periodStart(today, period);
         const to = periodEnd(today, period);
         const used = entries
-          .filter((entry) => entry.categoryId === category.id && entry.date >= from && entry.date <= to)
+          .filter((entry) => entry.categoryIds.includes(category.id)
+            && entry.date >= from && entry.date <= to)
           .reduce((sum, entry) => sum + entry.amount, 0);
         return {
           category,

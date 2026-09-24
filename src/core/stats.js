@@ -6,7 +6,7 @@
 import {
   addDays, addMonths, PERIODS, periodKey, periodLabel, periodStart, todayIso,
 } from './format.js';
-import { findCategory } from './model.js';
+import { entryCategoryIds, findCategory } from './model.js';
 
 /** Sums one currency of a list of entries, split into expense and income. */
 export function totals(entries, categories) {
@@ -141,9 +141,16 @@ export function byCategory(entries, categories) {
   const sums = new Map();
   let total = 0;
   for (const entry of entries) {
-    const category = findCategory(categories, entry.categoryId);
-    if (category.kind === 'income') continue;
-    sums.set(category.id, (sums.get(category.id) || 0) + entry.amount);
+    if (findCategory(categories, entry.categoryId).kind === 'income') continue;
+    // The whole amount, in every category it was filed under. An entry in both
+    // Groceries and Gifts is a hundred euro of groceries and a hundred euro of
+    // gifts: each answers "how much did I spend that involved this", and the
+    // two are not meant to be added together. The shares are of what was
+    // actually spent, so they can add to more than a hundred percent - which is
+    // the honest way to say that some money is counted under two headings.
+    for (const id of entryCategoryIds(entry)) {
+      sums.set(id, (sums.get(id) || 0) + entry.amount);
+    }
     total += entry.amount;
   }
   return [...sums.entries()]
@@ -155,6 +162,43 @@ export function byCategory(entries, categories) {
         color: category.color,
         amount,
         share: total ? Math.round((amount / total) * 100) : 0,
+      };
+    })
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
+}
+
+/**
+ * The same spending grouped by the *combination* of categories an entry is in,
+ * so that each block holds money that belongs to nobody else and the blocks add
+ * up to what was spent. This is what a pie chart needs: counting an entry in
+ * two categories twice would make a circle of 140%, and drawing only its first
+ * category would quietly hide the second.
+ *
+ * The colour comes from the first category of the combination, the one that
+ * decides whether the entry is money in or out.
+ */
+export function byCategoryGroup(entries, categories) {
+  const groups = new Map();
+  let total = 0;
+  for (const entry of entries) {
+    if (findCategory(categories, entry.categoryId).kind === 'income') continue;
+    const ids = entryCategoryIds(entry);
+    const key = ids.join('+');
+    const group = groups.get(key) || { ids, amount: 0 };
+    group.amount += entry.amount;
+    groups.set(key, group);
+    total += entry.amount;
+  }
+  return [...groups.entries()]
+    .map(([id, group]) => {
+      const named = group.ids.map((one) => findCategory(categories, one));
+      return {
+        id,
+        ids: group.ids,
+        name: named.map((category) => category.name).join(' + '),
+        color: named[0].color,
+        amount: group.amount,
+        share: total ? Math.round((group.amount / total) * 100) : 0,
       };
     })
     .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));

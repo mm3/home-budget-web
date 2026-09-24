@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  byCategory, elapsedSubPeriods, groupByPeriod, highlights, ofCurrency, overview, periodStarts,
+  byCategory, byCategoryGroup, elapsedSubPeriods, groupByPeriod, highlights, ofCurrency, overview,
+  periodStarts,
   periodSummary, series, totals,
 } from '../src/core/stats.js';
 
@@ -137,4 +138,29 @@ test('ofCurrency filters and highlights summarise', () => {
   assert.deepEqual(result.busiestDay, { date: '2026-08-10', amount: 3000 });
   assert.equal(result.daysWithSpending, 3);
   assert.deepEqual(highlights([], categories), { largest: null, busiestDay: null, daysWithSpending: 0 });
+});
+
+test('an entry in several categories counts in full under each, and once on the chart', () => {
+  const shared = [
+    { id: 'a', date: '2026-09-22', amount: 10000, categoryIds: ['daily', 'food'], categoryId: 'daily', currency: 'EUR' },
+    { id: 'b', date: '2026-09-22', amount: 4000, categoryIds: ['food'], categoryId: 'food', currency: 'EUR' },
+  ];
+
+  // Per category: the whole hundred euro is daily spending and the whole
+  // hundred is food, because each answers a different question. The two are
+  // not meant to be added together, and the shares say so by coming to 171%.
+  const totalsPerCategory = byCategory(shared, categories);
+  assert.deepEqual(totalsPerCategory.map((row) => [row.id, row.amount]), [['food', 14000], ['daily', 10000]]);
+  assert.equal(totalsPerCategory.reduce((sum, row) => sum + row.share, 0), 171);
+
+  // On the chart the same money is grouped by the whole combination, so the
+  // blocks hold different money and come to exactly what was spent.
+  const blocks = byCategoryGroup(shared, categories);
+  assert.deepEqual(blocks.map((row) => [row.name, row.amount, row.share]),
+    [['Daily + Food', 10000, 71], ['Food', 4000, 29]]);
+  assert.equal(blocks.reduce((sum, row) => sum + row.amount, 0), 14000);
+  assert.equal(blocks[0].color, categories[0].color, 'the first category gives the block its colour');
+
+  // The overall totals never double count: fourteen thousand was spent.
+  assert.equal(totals(shared, categories).expense, 14000);
 });

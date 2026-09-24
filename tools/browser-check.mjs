@@ -962,6 +962,91 @@ async function main() {
       && follows.afterEntries === follows.held,
     JSON.stringify(follows));
 
+  // The default currency is the first thing in every list of currencies: it is
+  // the one almost every entry uses, and hunting for it alphabetically is a
+  // small daily annoyance.
+  const ordering = await cdp.evaluate(`
+    const app = window.homeBudget;
+    app.store.updateSettings({ defaultCurrency: 'RUB', language: 'en' });
+    app.setTab('settings');
+    await new Promise((done) => setTimeout(done, 250));
+    const table = [...document.querySelectorAll('.entries-table tbody tr strong')].map((cell) => cell.textContent);
+    const picker = [...document.querySelectorAll('.filters select')]
+      .map((select) => [...select.options].map((option) => option.value))
+      .find((values) => values.includes('RUB')) || [];
+    app.store.updateSettings({ defaultCurrency: 'EUR' });
+    return { firstInTable: table[0], firstInPicker: picker[0], count: table.length };
+  `);
+  check('the default currency is at the top of every currency list',
+    ordering.firstInTable === 'RUB' && ordering.firstInPicker === 'RUB' && ordering.count > 20,
+    JSON.stringify(ordering));
+
+  // The four spans the rest of the app thinks in, one press each.
+  const quick = await cdp.evaluate(`
+    const app = window.homeBudget;
+    app.setTab('entries');
+    await new Promise((done) => setTimeout(done, 200));
+    const box = document.querySelector('.filters-box');
+    if (box) box.open = true;
+    await new Promise((done) => setTimeout(done, 200));
+    const buttons = [...document.querySelectorAll('.filter-buttons button')].map((one) => one.textContent);
+    const spans = [];
+    for (let index = 0; index < 4; index += 1) {
+      document.querySelectorAll('.filter-buttons button')[index].click();
+      await new Promise((done) => setTimeout(done, 150));
+      spans.push(app.ui.filter.from + '..' + app.ui.filter.to);
+    }
+    document.querySelectorAll('.filter-buttons button')[4].click();
+    await new Promise((done) => setTimeout(done, 150));
+    const cleared = Object.keys(app.ui.filter).length;
+    return { buttons, spans, cleared };
+  `);
+  check('today, this week, this month and this year are one press each',
+    quick.buttons.length === 5 && quick.cleared === 0
+      && new Set(quick.spans).size === 4
+      && quick.spans[0].split('..')[0] === quick.spans[0].split('..')[1],
+    JSON.stringify(quick));
+
+  // An entry can be in several categories. The whole amount counts under each
+  // of them - that is what makes "everything to do with the car" answerable -
+  // and the chart groups by the whole combination so the circle still comes to
+  // what was actually spent rather than to more than it.
+  const many = await cdp.evaluate(`
+    const app = window.homeBudget;
+    const store = app.store;
+    store.clearEntries();
+    store.updateSettings({ language: 'en' });
+    const today = store.today();
+    store.addEntry({ amount: 10000, categoryIds: ['daily', 'groceries'],
+      currency: store.settings.defaultCurrency, date: today, note: 'both' });
+    store.addEntry({ amount: 4000, categoryIds: ['groceries'],
+      currency: store.settings.defaultCurrency, date: today, note: 'one' });
+    app.setTab('home');
+    await new Promise((done) => setTimeout(done, 250));
+    const legend = [...document.querySelectorAll('.legend-list li')].map((row) => row.textContent);
+    const slices = document.querySelectorAll('.donut path').length;
+    // The entry list shows every category of an entry, not just the first.
+    app.setTab('entries');
+    await new Promise((done) => setTimeout(done, 250));
+    const cells = [...document.querySelectorAll('.entries-table tbody tr td:nth-child(2)')]
+      .map((cell) => cell.textContent.trim());
+    // Filtering by a category finds an entry that is only also in it.
+    app.setUi({ filter: { categoryId: 'daily' } });
+    await new Promise((done) => setTimeout(done, 250));
+    const filtered = document.querySelectorAll('.entries-table tbody tr').length;
+    app.setUi({ filter: {} });
+    const stored = store.entries.map((entry) => entry.categoryIds.join('+'));
+    store.clearEntries();
+    return { legend, slices, cells, filtered, stored };
+  `);
+  check('an entry can be in several categories, counted in full under each',
+    many.slices === 2
+      && many.legend.some((row) => /Daily \+ Groceries/.test(row))
+      && many.cells.some((cell) => /Daily \+ Groceries/.test(cell))
+      && many.filtered === 1
+      && many.stored.includes('daily+groceries'),
+    JSON.stringify(many));
+
   // Nothing may make the page wider than the phone it is on. This is the check
   // that would have caught the budget row: a figure that could not wrap ran out
   // of its card, the layout viewport grew to hold it, and every dialog on that

@@ -3,7 +3,7 @@
 import { barChart, donutChart } from '../../core/charts.js';
 import { MAX_AMOUNT } from '../../core/model.js';
 import { formatDate, formatMoney, PERIOD_PHRASES, PERIODS } from '../../core/format.js';
-import { byCategory, overview, series } from '../../core/stats.js';
+import { byCategoryGroup, overview, series } from '../../core/stats.js';
 import { el, field, options } from '../dom.js';
 
 const PERIOD_TITLES = {
@@ -36,7 +36,10 @@ export function homeView(app) {
   const summaries = overview(entries, store.categories, today, app.periodTexts());
   const period = app.ui.homePeriod;
   const points = series(entries, store.categories, period, CHART_LENGTH[period], today, app.periodTexts());
-  const breakdown = byCategory(entries, store.categories);
+  // Blocks of whole combinations, not of single categories: an entry in two of
+  // them would otherwise be drawn twice and the circle would come to more than
+  // everything that was spent.
+  const breakdown = byCategoryGroup(entries, store.categories);
   const recent = (store.settings.convertToDefault ? store.list() : store.list({ currency: currencyCode })).slice(0, 8);
   const budgets = store.budgets(currencyCode, today);
 
@@ -65,8 +68,8 @@ export function homeView(app) {
         breakdown.length ? el('div.donut-box', {}, [
           el('div', { html: donutChart(breakdown) }),
           el('ul.legend-list', {}, breakdown.slice(0, 6).map((item) => el('li', {}, [
-            el('span.legend-icon', { text: store.category(item.id).icon }),
-            el('span.legend-name', { text: app.categoryName(store.category(item.id)) }),
+            el('span.legend-icon', { text: item.ids.map((id) => store.category(id).icon).join('') }),
+            el('span.legend-name', { text: app.categoryNames(item.ids) }),
             el('span.legend-value', { text: `${formatMoney(item.amount, currency)} · ${item.share}%` }),
           ]))),
         ]) : el('p.muted', { text: t('home.noExpenses') }),
@@ -261,11 +264,11 @@ function entryRow(app, entry, currency) {
     ? app.store.convert(entry.amount, entry.currency, currency.code)
     : entry.amount;
   return el('li.entry', { on: { click: () => app.editEntry(entry.id) } }, [
-    el('span.category-icon', { text: category.icon }),
+    el('span.category-icon', { text: entry.categoryIds.map((id) => app.store.category(id).icon).join('') }),
     el('span.entry-main', {}, [
-      el('span.entry-title', { text: entry.note || app.categoryName(category) }),
+      el('span.entry-title', { text: entry.note || app.categoryNames(entry.categoryIds) }),
       el('span.entry-sub', {
-        text: `${formatDate(entry.date)} · ${app.categoryName(category)}`
+        text: `${formatDate(entry.date)} · ${app.categoryNames(entry.categoryIds)}`
           + (app.store.settings.convertToDefault && entry.currency !== currency.code ? ` · ${entry.currency}` : ''),
       }),
     ]),

@@ -82,7 +82,7 @@ test('rows are converted into entries', () => {
   assert.equal(result.entries.length, 3);
   assert.deepEqual(result.entries[0], {
     date: '2026-09-22', amount: 1250, categoryId: 'daily', categoryName: 'Daily',
-    isIncome: false, currency: 'EUR', note: 'coffee',
+    categoryNames: ['Daily'], isIncome: false, currency: 'EUR', note: 'coffee',
   });
   assert.equal(result.entries[1].amount, 1500, 'a minus sign only marks an expense');
   assert.equal(result.entries[1].categoryId, null);
@@ -131,4 +131,20 @@ test('dates and currencies are read from several notations', () => {
   assert.equal(readCurrency('SEK', codes), 'SEK');
   assert.equal(readCurrency('', codes), null);
   assert.equal(readCurrency('nonsense', codes), null);
+});
+
+test('a cell naming several categories is read as several', () => {
+  const rows = parseCsv('Date,Amount,Category,Currency,Note\n'
+    + '2026-09-22,12.50,Daily | Groceries | Presents,EUR,a joint one\n').rows;
+  const result = convertRows(rows, detectStructure(rows), context);
+  assert.deepEqual(result.entries[0].categoryNames, ['Daily', 'Groceries', 'Presents']);
+  // The first one is known and decides the kind; the other two have to be made.
+  assert.equal(result.entries[0].categoryId, 'daily');
+  assert.equal(result.entries[0].isIncome, false);
+  assert.deepEqual(result.newCategories, ['Groceries', 'Presents']);
+
+  // One name still reads as one, and empty pieces are ignored.
+  const single = convertRows(parseCsv('Date,Amount,Category,Currency\n2026-09-22,5,| Daily |,EUR\n').rows,
+    detectStructure(parseCsv('Date,Amount,Category,Currency\n2026-09-22,5,| Daily |,EUR\n').rows), context);
+  assert.deepEqual(single.entries[0].categoryNames, ['Daily']);
 });

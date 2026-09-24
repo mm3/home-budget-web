@@ -1,4 +1,4 @@
-# Home Budget 3.18.0 (browser version)
+# Home Budget 3.19.0 (browser version)
 
 <table>
 <tr>
@@ -42,8 +42,11 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
   **Budget** for planned shopping, Groceries, Transport, Home and Income. Every category has an emoji,
   a colour and an optional **limit with its own period** (per day, week, month or year); the limits show
   up as progress bars on the home screen and turn red when exceeded.
-- **Entries:** full form for date, category, currency and note; filter by period, category,
-  currency or text; tap a row (or click *Edit*) to change it. Dates are written the same way
+- **Entries:** full form for date, category, currency and note. An entry can be in **several
+  categories** - one main one, which decides whether it is money in or out, and any number of others
+  the whole amount also counts under, so "everything to do with the car" is a question the app can
+  answer. Filter by period, category, currency or text, with **Today / This week / This month / This
+  year** one press each; tap a row (or click *Edit*) to change it. Dates are written the same way
   everywhere - **23.09.2026** - in the list, in the form, in the filters and in the PDF.
 - **Statistics:** sums and averages per **day, week, month and year**, a bar chart of the last
   periods (days / weeks / months / years) with an **average line**, a donut chart and a ranking per
@@ -156,7 +159,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.18.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.19.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -196,7 +199,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.18.0` is pushed.
+built files to a release when a tag like `v3.19.0` is pushed.
 
 ## Building
 
@@ -302,7 +305,7 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-126 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+128 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
 budget calculations per limit period, the currency a locale suggests (region before language, never one
@@ -314,7 +317,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (53 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (56 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German

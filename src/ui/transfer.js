@@ -22,6 +22,7 @@ export function transferPanel(app, entries) {
     el('div.transfer', {}, [
       el('div.transfer-block', {}, [
         el('h3', { text: t('transfer.exportTitle') }),
+        el('p.muted', { text: t('transfer.exportHint') }),
         el('div.button-row', {}, [
           el('button', { type: 'button', text: 'CSV', on: { click: () => exportCsv(app, entries) } }),
           el('button', { type: 'button', text: 'Excel (.xlsx)', on: { click: () => exportXlsx(app, entries) } }),
@@ -179,9 +180,14 @@ function importPreview(app) {
 function runImport(app, result) {
   const store = app.store;
   const prepared = result.entries.map((entry) => {
-    const categoryId = entry.categoryId
-      || (entry.categoryName ? store.categoryByNameOrCreate(entry.categoryName).id : store.settings.defaultCategoryId);
-    return { ...entry, categoryId };
+    const names = entry.categoryNames && entry.categoryNames.length
+      ? entry.categoryNames
+      : [entry.categoryName].filter(Boolean);
+    const ids = names.map((name) => store.categoryByNameOrCreate(name).id);
+    const categoryIds = ids.length
+      ? [...new Set(ids)]
+      : [entry.categoryId || store.settings.defaultCategoryId];
+    return { ...entry, categoryIds };
   });
   const added = store.addEntries(prepared);
   app.setUi({ importPreview: null });

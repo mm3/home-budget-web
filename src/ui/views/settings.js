@@ -24,7 +24,7 @@ export function settingsView(app) {
         })), store.settings.defaultCategoryId))),
         field(t('common.currency'), el('select', {
           on: { change: (event) => app.run(() => store.updateSettings({ defaultCurrency: event.target.value })) },
-        }, options(store.currencies.map((item) => ({
+        }, options(store.currenciesByDefault().map((item) => ({
           value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
         })),
           store.settings.defaultCurrency))),
@@ -115,7 +115,7 @@ export function settingsView(app) {
           el('th.num', { text: t('settings.rate') }),
           el('th', {}),
         ])),
-        el('tbody', {}, store.currencies.map((item) => el('tr', {}, [
+        el('tbody', {}, store.currenciesByDefault().map((item) => el('tr', {}, [
           el('td', {}, [
             el('span.currency-flag', { text: item.flag || '' }),
             el('strong', { text: item.code }),

@@ -198,11 +198,19 @@ export function convertRows(rows, structure, context) {
       skipped.push({ row: rowNumber, reason: 'unreadable date' });
       return;
     }
-    const categoryName = mapping.category === null ? '' : String(row[mapping.category] ?? '').trim();
+    // A cell may name several categories, separated by a bar, which is how the
+    // export writes them. The first one decides whether the row is money in or
+    // out; the others are labels the amount also counts under.
+    const cell = mapping.category === null ? '' : String(row[mapping.category] ?? '').trim();
+    const categoryNames = cell.split('|').map((name) => name.trim()).filter(Boolean);
+    const categoryName = categoryNames[0] || '';
     let category = categoryName ? byName.get(categoryName.toLowerCase()) : null;
     if (categoryName && !category) {
       if (!newCategories.includes(categoryName)) newCategories.push(categoryName);
       category = { id: null, name: categoryName, kind: amount < 0 ? 'expense' : 'income' };
+    }
+    for (const name of categoryNames.slice(1)) {
+      if (!byName.get(name.toLowerCase()) && !newCategories.includes(name)) newCategories.push(name);
     }
     const note = mapping.note === null ? '' : String(row[mapping.note] ?? '').trim();
     const isIncome = category ? category.kind === 'income' : false;
@@ -211,6 +219,7 @@ export function convertRows(rows, structure, context) {
       amount: Math.abs(amount),
       categoryId: category && category.id ? category.id : null,
       categoryName: category ? category.name : null,
+      categoryNames,
       isIncome,
       currency,
       note: note.slice(0, 200),

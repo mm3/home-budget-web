@@ -4,6 +4,43 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.19.0
+
+**An entry can be in several categories.** One of them is the main one - it
+decides whether the entry is money in or money out - and any number of others
+are labels the whole amount also counts under. That is what makes "how much did
+I spend on anything to do with the car" a question the app can answer.
+
+Counting it that way means the per-category totals deliberately add up to more
+than was spent: a hundred euro filed under both Groceries and Presents is a
+hundred euro of groceries *and* a hundred euro of presents, and the two are not
+meant to be summed. The shares say so by coming to more than 100%.
+
+A pie chart cannot do that without lying, so the donut groups by the whole
+**combination** instead: one block for "Daily + Groceries", another for
+"Groceries" alone. Each block holds money that belongs to no other block, and
+they come to exactly what was spent. The overall totals never double count.
+
+Everything that asks about a category now asks about all of them: the filter,
+the search, the entry count beside a category in the settings, and a category
+limit, which covers anything filed under it. Moving entries out of a deleted
+category replaces it wherever it appears. The export writes the names separated
+by a bar and the importer reads them back, creating any it does not know.
+
+Stored data gains `categoryIds` (`DATA_VERSION` 4). An entry written by an older
+version has one category and becomes a list of one; nothing is lost, and a
+document that was already broken is repaired exactly as it was before.
+
+**The default currency is first** in every list of currencies - the table in the
+settings, the pickers in the forms and the filters. The stored order is left
+alone; this is only how the list is read.
+
+**Today, this week, this month and this year** are one press each in the entry
+filters, instead of only "this month".
+
+**Export and import → Export data**, with what it exports said underneath
+rather than in the heading.
+
 ## 3.18.0
 
 **All nine findings of the visual sweep, fixed.** `docs/visual-review.md` has

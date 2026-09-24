@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   loadState, MemoryStorage, migrateState, pickStorage, saveState, STORAGE_KEY,
 } from '../src/core/storage.js';
+import { STATE_VERSION } from '../src/core/model.js';
 
 test('MemoryStorage behaves like the Web Storage API', () => {
   const storage = new MemoryStorage({ a: '1' });
@@ -71,7 +72,9 @@ test('data from version 1 gains icons, limits and language settings', () => {
     },
     entries: [{ id: 'e', date: '2026-01-01', amount: 100, categoryId: 'daily', currency: 'EUR' }],
   });
-  assert.equal(upgraded.version, 3);
+  assert.equal(upgraded.version, STATE_VERSION, 'an old document is written back at the current version');
+  assert.deepEqual(upgraded.entries[0].categoryIds, ['daily'],
+    'a single category becomes a list of one');
   assert.equal(upgraded.settings.categories[0].limitPeriod, 'month');
   assert.equal(upgraded.settings.currencies[0].rate, 1, 'currencies without a rate get 1');
   assert.equal(upgraded.settings.convertToDefault, false);

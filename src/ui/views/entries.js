@@ -1,10 +1,16 @@
 /** Entries screen: filters, the list itself, and the export / import panel. */
 
-import { formatDate, formatMoney, periodStart, todayIso } from '../../core/format.js';
+import { formatDate, formatMoney, periodStart, PERIODS, todayIso } from '../../core/format.js';
 import { AppError, MAX_AMOUNT } from '../../core/model.js';
 import { totals } from '../../core/stats.js';
 import { actionButton, dateField, el, field, fieldSlot, options, render } from '../dom.js';
 import { transferPanel } from '../transfer.js';
+
+// Today, this week, this month, this year - the four spans the rest of the app
+// already thinks in, offered as one press each.
+const PERIOD_TITLES = {
+  day: 'period.today', week: 'period.thisWeek', month: 'period.thisMonth', year: 'period.thisYear',
+};
 
 /** Entries drawn before the list asks whether to show more. */
 export const PAGE_SIZE = 200;
@@ -26,7 +32,7 @@ export function entriesView(app) {
       value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
     }))];
   const currencyOptions = [{ value: '', label: t('entries.allCurrencies') },
-    ...store.currencies.map((item) => ({ value: item.code, label: `${item.flag || ''} ${item.code}`.trim() }))];
+    ...store.currenciesByDefault().map((item) => ({ value: item.code, label: `${item.flag || ''} ${item.code}`.trim() }))];
 
   const update = (changes) => app.setUi({ filter: { ...filter, ...changes } });
 
@@ -56,9 +62,11 @@ export function entriesView(app) {
             on: { input: (event) => update({ text: event.target.value }) },
           })),
           fieldSlot(el('div.filter-buttons', {}, [
-            el('button', { type: 'button', text: t('period.thisMonth'), on: { click: () => update({
-              from: periodStart(store.today(), 'month'), to: store.today(),
-            }) } }),
+            ...PERIODS.map((period) => el('button', {
+              type: 'button',
+              text: t(PERIOD_TITLES[period]),
+              on: { click: () => update({ from: periodStart(store.today(), period), to: store.today() }) },
+            })),
             el('button', { type: 'button', text: t('common.clear'), on: { click: () => app.setUi({ filter: {} }) } }),
           ])),
         ]),
@@ -103,7 +111,10 @@ function entryRow(app, entry) {
   };
   return el('tr.entry-row', { on: { click: open } }, [
     el('td', { text: formatDate(entry.date) }),
-    el('td', {}, [el('span.category-icon', { text: category.icon }), app.categoryName(category)]),
+    el('td', {}, [
+      el('span.category-icon', { text: entry.categoryIds.map((id) => app.store.category(id).icon).join('') }),
+      app.categoryNames(entry.categoryIds),
+    ]),
     el('td.hide-sm', { text: entry.note }),
     el('td', {
       class: `num ${category.kind === 'income' ? 'income' : 'expense'}`,
@@ -142,8 +153,33 @@ export function entryForm(app, entry) {
     })),
     entry ? entry.categoryId : store.settings.defaultCategoryId,
   ));
+  // The main category decides whether this is money in or money out, so it stays
+  // a single choice. The rest are labels: the entry's whole amount counts under
+  // each of them, which is what makes "how much did I spend on anything to do
+  // with the car" a question the app can answer.
+  const extra = new Set((entry ? entry.categoryIds : []).slice(1));
+  const alsoChips = el('ul.chips.also-chips', {}, store.categories.map((category) => {
+    const box = el('input', {
+      type: 'checkbox',
+      checked: extra.has(category.id),
+      on: { change: (event) => (event.target.checked ? extra.add(category.id) : extra.delete(category.id)) },
+    });
+    const chip = el('li', {}, el('label.chip', {}, [
+      box,
+      el('span.chip-label', { text: `${category.icon} ${app.categoryName(category)}` }),
+    ]));
+    // The main category is not also an extra one; the chip hides while it is.
+    const sync = () => {
+      const isMain = category.id === categorySelect.value;
+      chip.hidden = isMain;
+      if (isMain) extra.delete(category.id);
+    };
+    categorySelect.addEventListener('change', sync);
+    sync();
+    return chip;
+  }));
   const currencySelect = el('select', {}, options(
-    store.currencies.map((item) => ({
+    store.currenciesByDefault().map((item) => ({
       value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
     })),
     entry ? entry.currency : store.settings.defaultCurrency,
@@ -162,7 +198,7 @@ export function entryForm(app, entry) {
           const data = {
             amount: Math.abs(amount),
             date: dateInput.value,
-            categoryId: categorySelect.value,
+            categoryIds: [categorySelect.value, ...extra],
             currency: currency.code,
             note: noteInput.value,
           };
@@ -177,6 +213,7 @@ export function entryForm(app, entry) {
   }, [
     field(t('common.amount'), amountInput),
     field(t('common.category'), categorySelect),
+    field(t('entries.alsoIn'), alsoChips, t('entries.alsoInHint')),
     field(t('common.date'), dateInput),
     field(t('common.currency'), currencySelect),
     field(t('common.note'), noteInput),

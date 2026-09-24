@@ -240,6 +240,11 @@ export class App {
     return category.nameKey ? this.t(category.nameKey) : category.name;
   }
 
+  /** The names of an entry's categories, in the order they were put on it. */
+  categoryNames(ids) {
+    return ids.map((id) => this.categoryName(this.store.category(id))).join(' + ');
+  }
+
   /** "3 entries" / "1 entry" in the chosen language. */
   countText(count) {
     return count === 1 ? this.t('common.entriesOne') : this.t('common.entries', { count });

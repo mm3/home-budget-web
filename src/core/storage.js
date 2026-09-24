@@ -4,7 +4,8 @@
  */
 
 import {
-  createDefaultState, defaultCategories, defaultCurrencies, flagForCurrency, LIMIT_PERIODS, STATE_VERSION,
+  createDefaultState, defaultCategories, defaultCurrencies, flagForCurrency, LIMIT_PERIODS,
+  STATE_VERSION,
 } from './model.js';
 import { APP_VERSION } from './version.js';
 import { CUSTOM_LANGUAGE, LANGUAGES, sanitizeTranslation } from './i18n.js';
@@ -120,7 +121,18 @@ export function migrateState(raw) {
       id: entry.id,
       date: entry.date,
       amount: Math.round(entry.amount),
-      categoryId: typeof entry.categoryId === 'string' ? entry.categoryId : 'daily',
+      ...(() => {
+        // An entry written before an entry could be in more than one category
+        // has only categoryId; it becomes a list of one. Anything that is not a
+        // string is not an id, and goes to the default category as it always
+        // did - repairing a broken document, not guessing what it meant.
+        const raw = Array.isArray(entry.categoryIds) ? entry.categoryIds : [entry.categoryId];
+        const ids = [...new Set(raw
+          .filter((id) => typeof id === 'string' && id.trim())
+          .map((id) => id.trim()))];
+        const categoryIds = ids.length ? ids : ['daily'];
+        return { categoryId: categoryIds[0], categoryIds };
+      })(),
       currency: typeof entry.currency === 'string' ? entry.currency.toUpperCase() : 'EUR',
       note: typeof entry.note === 'string' ? entry.note : '',
       createdAt: typeof entry.createdAt === 'string' ? entry.createdAt : new Date(0).toISOString(),
