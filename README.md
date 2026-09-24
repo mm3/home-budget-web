@@ -1,4 +1,4 @@
-# Home Budget 3.16.0 (browser version)
+# Home Budget 3.17.0 (browser version)
 
 <table>
 <tr>
@@ -156,7 +156,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.16.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.17.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -196,7 +196,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.16.0` is pushed.
+built files to a release when a tag like `v3.17.0` is pushed.
 
 ## Building
 
@@ -335,6 +335,12 @@ the published page and to the repository, that the page still loads nothing from
 that the install button appears only when the browser offers one and opens the dialog on the click
 and never before, and
 takes the screenshots in this README. It fails if anything logs an error to the console.
+
+`tools/visual-sweep.mjs` (`npm run sweep`) renders every screen and dialog in every language, theme
+and layout over five shapes of data - 198 screens - and measures what a person cannot check 198
+times: a control past the edge of the screen, two controls on top of each other, words outside the
+box that holds them, a target too small for a finger, text too pale to read. It keeps a screenshot
+of every screen it flagged. `docs/visual-review.md` is the last read-through of those flags.
 
 `tools/site-check.mjs` serves `site/` over HTTP, checks the manifest and the icons, waits for the
 service worker to fill its cache, drives the **Update** button - counting the requests the server

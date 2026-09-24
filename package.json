@@ -1,6 +1,6 @@
 {
   "name": "home-budget-web",
-  "version": "3.16.0",
+  "version": "3.17.0",
   "engines": {
     "node": ">=22"
   },
@@ -20,6 +20,7 @@
     "icons": "node tools/make-icons.mjs",
     "font": "node tools/make-font.mjs",
     "site-check": "node tools/site-check.mjs",
+    "sweep": "node tools/visual-sweep.mjs",
     "qr": "node tools/make-qr.mjs",
     "demo": "node tools/make-demo.mjs"
   }

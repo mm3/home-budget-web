@@ -4,6 +4,27 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.17.0
+
+**A visual sweep, and a report of what it found.** `npm run sweep` renders every
+screen and every dialog in every language, theme and layout over five shapes of
+data - empty, ordinary, long names, amounts at the allowed maximum, many
+currencies at once - and measures the things nobody can check 198 times by eye:
+a control past the edge of the screen, two controls on top of each other, words
+outside the box holding them, a target too small for a finger, text too pale to
+read against what is behind it. Every screen it flags is kept as a screenshot.
+
+`docs/visual-review.md` is the read-through of those flags. Nine findings
+survived it, none of them fixed in this release - the worst is that a single
+category makes the donut chart draw nothing at all, and the one with the longest
+reach is a budget row that does not fit its card, drags the whole page wider
+than the phone, and takes every dialog on that page off the screen with it.
+
+Two things the tool itself had to learn before its output could be trusted:
+Chrome reports real rectangles for a collapsed `<details>` and for rows scrolled
+out of a clipping box, and on a phone the visual viewport widens to fit content
+that does not fit, so the obvious test for a page overflowing never fires.
+
 ## 3.16.0
 
 **The workflows moved to Node 24, runtime and scripts both.** GitHub removed
