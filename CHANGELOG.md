@@ -6,9 +6,11 @@ is always the difference from the release being replaced.
 
 ## 3.16.0
 
-**The workflows ran on a Node that no longer exists.** GitHub removed Node 20
-from its runners on 23 September 2026; actions still pinned to it warned first
-and then stop working. Every action is moved to the major that runs on Node 24:
+**The workflows moved to Node 24, runtime and scripts both.** GitHub removed
+Node 20 from its runners on 23 September 2026; actions still pinned to it warned
+first and then stop working. These are two separate settings and both had to
+move: the runtime the actions themselves run on, and the Node this project's own
+scripts are given.
 
 | action | was | now |
 |---|---|---|
@@ -18,10 +20,9 @@ and then stop working. Every action is moved to the major that runs on Node 24:
 | `actions/deploy-pages` | v4 | v5 |
 | `softprops/action-gh-release` | v2 | v3 |
 
-`node-version` stays at 22 on purpose. That is the Node this project's own
-scripts and tests are checked against, and it has nothing to do with the runtime
-the actions themselves run on - the two are separate, and the warning was only
-ever about the second.
+`node-version` is now `24`. `package.json` declares `engines: { node: ">=22" }`,
+because 22 is what the project is developed against and nothing here needs
+anything newer - the workflows simply run the version the runners are on.
 
 ## 3.15.0
 

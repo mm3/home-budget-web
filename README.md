@@ -221,7 +221,8 @@ drifts away from it. The two addresses - the published page and the repository -
 file: they go into the build banner, into **Settings → About** and, for the site build, into the
 page's canonical URL. Move the project and only that one file changes.
 
-There are **no dependencies** — Node 22 (or newer) runs everything. `tools/bundle.mjs` contains a
+There are **no dependencies** — Node 22 (or newer) runs everything; `package.json` says as much in
+`engines`, and the workflows run 24, which is what the runners are on. `tools/bundle.mjs` contains a
 small ES module bundler and a conservative minifier: it strips comments and redundant whitespace but
 never renames anything, so the minified file stays debuggable and behaves identically. Both builds
 are verified by the same browser check.

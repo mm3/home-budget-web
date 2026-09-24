@@ -23,16 +23,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # The action versions below are the ones that run on Node 24. GitHub
-      # removed Node 20 from the runners on 23.09.2026, so anything still
-      # pinned to it warns first and then stops working. node-version stays
-      # at 22 on purpose: that is the Node this project's own scripts and
-      # tests are checked against, and it is unrelated to the runtime the
-      # actions themselves use.
+      # Node 24 throughout: the action versions below are the majors that run
+      # on it, and the scripts get it too. GitHub removed Node 20 from the
+      # runners on 23.09.2026, so anything still pinned to it warns first and
+      # then stops working. The two are separate settings - the runtime the
+      # actions themselves use, and the Node this project's scripts run on -
+      # and both had to move.
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Unit tests and coverage
         run: npm run coverage
       - name: Build the site
