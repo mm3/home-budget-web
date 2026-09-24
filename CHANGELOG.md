@@ -4,6 +4,32 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 4.0.0
+
+**The major version is now the document version.** Saved data has been at
+version 4 since an entry gained its list of categories; the app was still called
+3.20.0. From here the two are the same number by rule - `4.x.y` writes documents
+of version 4 - and a unit test fails if either moves without the other.
+
+That is the whole of this release: no feature changes, nothing to migrate,
+nothing to relearn. A 3.19.0 or 3.20.0 installation updates to 4.0.0 and finds
+its entries, categories, currencies, rates and settings exactly where it left
+them, because the format they are stored in has not moved either.
+
+What it buys is a question a backup file could not answer before. A JSON backup
+carries a document version; a release carries a release number; and until now
+nothing connected them, so "will this file open in that version" meant opening
+both and looking. Now the major version answers it: anything 4.x reads a
+version 4 document, and a release that has to break the format has to say so in
+the only number people actually read.
+
+The 3.x line ends here. What it built, in short: an entry may be in several
+**categories** at once; the currency **follows the language** until the first
+entry or the first choice; the cards pace the **period now running**; limits
+have their own periods; the app **updates itself** past every cache; the lists
+are drawn by the page; and the visual **sweep** renders 198 screens before every
+release.
+
 ## 3.20.0
 
 **The drop-down lists are the app's own now.** A `<select>` used to hand its

@@ -1,4 +1,4 @@
-# Home Budget 3.20.0 (browser version)
+# Home Budget 4.0.0 (browser version)
 
 <table>
 <tr>
@@ -92,7 +92,10 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
   still read "🇪🇺 EUR €"; the group names come from `<optgroup>` and are there either way.
 - **Storage:** everything stays in the browser's `localStorage`, which holds roughly **30 000 entries**
   (see *Limits* below). `sessionStorage` and an in-memory store are used as fallbacks when a browser
-  blocks storage, so the app still runs in private mode. A JSON backup can be downloaded and restored.
+  blocks storage, so the app still runs in private mode. A JSON backup can be downloaded and restored;
+  it carries a **document version**, and that version is the app's **major version** - `4.x.y` writes
+  and reads version 4 - so a backup file says which releases can open it without opening either. An
+  older document is upgraded on load and nothing in it is lost.
 - **Update it:** **Settings → About → Update the app** asks the published page whether it has changed,
   past every cache between here and the server - the page asks to be kept for a year and the service
   worker answers from its own copy first, and both are told to step aside for this one request. If the
@@ -188,7 +191,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.20.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-4.0.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -228,7 +231,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.20.0` is pushed.
+built files to a release when a tag like `v4.0.0` is pushed.
 
 ## Building
 
@@ -334,7 +337,7 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-128 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+129 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
 budget calculations per limit period, the currency a locale suggests (region before language, never one
