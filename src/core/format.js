@@ -170,6 +170,16 @@ export function isoWeek(isoDate) {
 
 export const PERIODS = ['day', 'week', 'month', 'year'];
 
+/**
+ * "per week" as one phrase per language, not a preposition plus a word put into
+ * lower case. Lower-casing is an English habit: Russian needs a different case
+ * after "за" - "за неделю", not "за неделя" - and German spells its nouns with
+ * a capital whatever is done to them elsewhere.
+ */
+export const PERIOD_PHRASES = {
+  day: 'budget.perDay', week: 'budget.perWeek', month: 'budget.perMonth', year: 'budget.perYear',
+};
+
 /** Key that identifies the period a date belongs to. */
 export function periodKey(isoDate, period) {
   switch (period) {

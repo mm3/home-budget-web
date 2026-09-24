@@ -462,11 +462,12 @@ async function main() {
     const promptedAfterClick = prompted;
     const gone = !document.querySelector('.install-row button');
     const toast = document.querySelector('.toast');
-    return { before: before.slice(0, 40), hasButtonBefore, defaultPrevented, promptedBeforeClick,
+    return { before: before.slice(0, 200), hasButtonBefore, defaultPrevented, promptedBeforeClick,
       promptedAfterClick, gone, toast: toast ? toast.textContent : '' };
   `);
   check('the install button appears only when the browser offers one',
-    !install.hasButtonBefore && /published page|Safari/.test(install.before), JSON.stringify(install));
+    !install.hasButtonBefore && /published|Safari|does not offer/.test(install.before),
+    JSON.stringify(install));
   check('the install prompt is shown on the click and not before',
     install.defaultPrevented && install.promptedBeforeClick === 0 && install.promptedAfterClick === 1
       && install.gone && /Installed/i.test(install.toast),
@@ -960,6 +961,56 @@ async function main() {
       && follows.afterChoosing === 'GBP'
       && follows.afterEntries === follows.held,
     JSON.stringify(follows));
+
+  // Nothing may make the page wider than the phone it is on. This is the check
+  // that would have caught the budget row: a figure that could not wrap ran out
+  // of its card, the layout viewport grew to hold it, and every dialog on that
+  // page then sized itself against the wider viewport and put its buttons off
+  // the screen. Measured against the device width, because window.innerWidth
+  // grows with the overflow and can never see it.
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width: 390, height: 844, deviceScaleFactor: 1, mobile: true,
+  });
+  const widths = await cdp.evaluate(`
+    const app = window.homeBudget;
+    const store = app.store;
+    const iso = (back) => new Date(Date.now() - back * 86400000).toISOString().slice(0, 10);
+    const out = {};
+    store.resetAll();
+    store.updateSettings({ uiMode: 'mobile' });
+    // A long category name, a limit it has blown, and an amount at the ceiling:
+    // the three things that made something refuse to fit.
+    store.addCategory({ name: 'Wachstumsbeschleunigungsgesetzgebung', icon: 'W' });
+    const wordy = store.categories[store.categories.length - 1];
+    store.updateCategory(wordy.id, { limit: 100, limitPeriod: 'week' });
+    store.addEntry({ amount: 99999999999, categoryId: wordy.id, currency: 'EUR', date: iso(1), note: 'big' });
+    for (const language of ['en', 'ru', 'de']) {
+      store.updateSettings({ language });
+      for (const tab of ['home', 'entries', 'stats', 'settings']) {
+        app.setTab(tab);
+        app.ui.message = null;
+        app.render();
+        await new Promise((done) => setTimeout(done, 200));
+        out[language + '/' + tab] = document.documentElement.scrollWidth;
+      }
+    }
+    // ... and a dialog opened on top of all that has to stay on the screen too.
+    app.setTab('home');
+    app.editEntry(null);
+    await new Promise((done) => setTimeout(done, 250));
+    const dialog = document.querySelector('.dialog').getBoundingClientRect();
+    out.dialog = Math.round(dialog.right);
+    app.closeDialog();
+    store.resetAll();
+    return out;
+  `);
+  const widest = Math.max(...Object.entries(widths)
+    .filter(([key]) => key !== 'dialog').map(([, value]) => value));
+  check('nothing makes the page wider than the phone it is on',
+    widest <= 391 && widths.dialog <= 391, JSON.stringify(widths));
+  await cdp.send('Emulation.setDeviceMetricsOverride', {
+    width: 1280, height: 900, deviceScaleFactor: 1, mobile: false,
+  });
 
   const reset = await cdp.evaluate(`
     window.confirm = () => true;

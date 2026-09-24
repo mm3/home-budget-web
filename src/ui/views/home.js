@@ -2,7 +2,7 @@
 
 import { barChart, donutChart } from '../../core/charts.js';
 import { MAX_AMOUNT } from '../../core/model.js';
-import { formatDate, formatMoney, PERIODS } from '../../core/format.js';
+import { formatDate, formatMoney, PERIOD_PHRASES, PERIODS } from '../../core/format.js';
 import { byCategory, overview, series } from '../../core/stats.js';
 import { el, field, options } from '../dom.js';
 
@@ -15,6 +15,15 @@ const PERIOD_TITLES = {
 // the period is going well. A day has nothing finer to divide by, so that card
 // keeps the long-run average instead: what a day of yours usually costs.
 const RATE_TEXTS = { week: 'home.rateDay', month: 'home.rateWeek', year: 'home.rateMonth' };
+
+/**
+ * A budget can be blown by a factor of ten million, and the figure is true and
+ * useless. Past a thousand percent the number stops carrying information that
+ * the bar and the colour do not already carry.
+ */
+function percentText(percent) {
+  return percent > 999 ? '999+%' : `${percent}%`;
+}
 const CHART_LENGTH = { day: 14, week: 12, month: 12, year: 5 };
 
 export function homeView(app) {
@@ -168,10 +177,22 @@ function currencySelector(app) {
   }, options(used.map((code) => ({ value: code, label: code })), app.viewCurrency())));
 }
 
+/**
+ * The big figure on a card. Amounts run to eleven digits before this app stops
+ * accepting them - that is the point where the totals stop being exact - and a
+ * card has to be able to show one, so a long figure gets smaller type instead
+ * of leaving the card or breaking across two lines in the middle of a number.
+ */
+function statValue(text) {
+  const steps = [[16, 'stat-value longest'], [13, 'stat-value longer'], [11, 'stat-value long']];
+  const step = steps.find(([length]) => text.length > length);
+  return el('strong', { class: step ? step[1] : 'stat-value', text });
+}
+
 function statCard(app, summary, currency) {
   return el('article.card.stat', {}, [
     el('span.stat-title', { text: app.t(PERIOD_TITLES[summary.period]) }),
-    el('strong.stat-value', { text: formatMoney(summary.current.expense, currency) }),
+    statValue(formatMoney(summary.current.expense, currency)),
     el('span.stat-sub', {
       text: RATE_TEXTS[summary.period]
         ? app.t(RATE_TEXTS[summary.period], { amount: formatMoney(summary.rateExpense, currency) })
@@ -196,20 +217,29 @@ function budgetCard(app, budgets, currency) {
       el('button.link', { type: 'button', text: t('nav.settings'), on: { click: () => app.setTab('settings') } }),
     ]),
     budgets.length ? el('ul.bar-list', {}, budgets.map((budget) => el('li', {}, [
+      // Three parts that each refuse to break in the middle - a name, a sum, a
+      // period - in a row that has to fit a phone. The name gives way with an
+      // ellipsis and the period drops to a line of its own; the sum never
+      // breaks, because half of a number is worse than no number.
       el('div.bar-head', {}, [
-        el('span', {}, [
+        el('span.bar-name', {}, [
           el('span.category-icon', { text: budget.category.icon }),
-          app.categoryName(budget.category),
-          budget.over ? el('span.badge.over', { text: `${budget.percent}%` })
-            : el('span.badge', { text: `${budget.percent}%` }),
+          el('span.bar-label', { text: app.categoryName(budget.category) }),
+          el('span', {
+            class: budget.over ? 'badge over' : 'badge',
+            text: percentText(budget.percent),
+          }),
         ]),
-        el('span.num', {
-          class: budget.over ? 'expense' : '',
-          text: `${t('home.budgetOf', {
-            spent: formatMoney(budget.spent, currency),
-            limit: formatMoney(budget.limit, currency),
-          })} · ${t('home.budgetPeriod', { period: t(`period.${budget.period}`).toLowerCase() })}`,
-        }),
+        el('span.num', { class: budget.over ? 'expense' : '' }, [
+          el('span.nowrap', {
+            text: t('home.budgetOf', {
+              spent: formatMoney(budget.spent, currency),
+              limit: formatMoney(budget.limit, currency),
+            }),
+          }),
+          ' ',
+          el('span.nowrap', { text: t(PERIOD_PHRASES[budget.period]) }),
+        ]),
       ]),
       el('div.track', {}, el('div', {
         class: `fill ${budget.over ? 'over' : ''}`,

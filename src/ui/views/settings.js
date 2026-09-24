@@ -1,7 +1,7 @@
 /** Settings screen: defaults, categories, currencies, language and data management. */
 
 import { CUSTOM_LANGUAGE, EN, LANGUAGES, sanitizeTranslation, translationKeys } from '../../core/i18n.js';
-import { formatMoney, parseAmount, toPlainAmount } from '../../core/format.js';
+import { formatMoney, parseAmount, PERIOD_PHRASES, toPlainAmount } from '../../core/format.js';
 import { ICON_CHOICES, LIMIT_PERIODS } from '../../core/model.js';
 import { APP_VERSION, REPO_URL, SITE_URL } from '../../core/version.js';
 import { actionButton, el, field, fieldSlot, fileButton, options, render } from '../dom.js';
@@ -69,11 +69,12 @@ export function settingsView(app) {
             category.id === store.settings.defaultCategoryId ? el('span.badge', { text: t('common.default') }) : null,
           ]),
           el('td.hide-sm', { text: t(`common.${category.kind}`) }),
-          el('td.num', {
-            text: category.limit
-              ? `${formatMoney(category.limit, currency)} / ${t(`period.${category.limitPeriod || 'month'}`).toLowerCase()}`
-              : '—',
-          }),
+          // The amount and its period on two lines: side by side they made the
+          // column wide enough to push the whole table off a phone screen.
+          el('td.num', {}, category.limit ? [
+            el('span.nowrap', { text: formatMoney(category.limit, currency) }),
+            el('span.muted.small.block', { text: t(PERIOD_PHRASES[category.limitPeriod || 'month']) }),
+          ] : '—'),
           el('td.num.hide-sm', { text: String(usage.get(category.id) || 0) }),
           el('td.row-actions', {}, [
             actionButton({
@@ -146,8 +147,13 @@ export function settingsView(app) {
       el('header.card-head', {}, [el('h2', { text: t('settings.about') })]),
       el('p', { text: t('settings.version', { version: APP_VERSION }) }),
       el('p.muted', { text: t('settings.aboutText') }),
-      installRow(app),
-      updateRow(app),
+      // Two rows on the published page, one sentence from a file: there neither
+      // installing nor asking for a new version is possible, and they used to
+      // say so separately, one under the other. An install offer still wins -
+      // whether the browser makes one is the browser's business, not ours.
+      ...(app.canUpdate() || app.installPrompt || app.isInstalled()
+        ? [installRow(app), app.canUpdate() ? updateRow(app) : null]
+        : [offlineRow(app)]),
       el('p.about-links', {}, [
         el('a', { href: SITE_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.webApp') }),
         el('a', { href: REPO_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.sourceCode') }),
@@ -291,13 +297,17 @@ function installRow(app) {
   return el('p.muted.install-row', { text: app.isIos() ? t('settings.installIos') : t('settings.installWhere') });
 }
 
+/** What a file opened from disk can say about installing and updating: nothing. */
+function offlineRow(app) {
+  return el('p.muted.install-row', { text: app.t('settings.fromFile') });
+}
+
 /**
  * The way to ask the published page whether it has changed. A file opened from
  * disk has no server to ask, so there the row says what to do instead.
  */
 function updateRow(app) {
   const t = app.t;
-  if (!app.canUpdate()) return el('p.muted.install-row', { text: t('settings.updateOffline') });
   return el('div.install-row.update-row', {}, [
     el('button', {
       type: 'button',

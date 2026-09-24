@@ -7,6 +7,7 @@
   --border: #e2e5ea;
   --text: #171a21;
   --muted: #667085;
+  --badge-text: #5d6678;
   /* The icon's green carries the whole interface: buttons, links, focus rings
      and the income figures are the same colour, because they mean the same
      thing here - money coming in, and the thing you press to record it. */
@@ -40,6 +41,7 @@ body.dark {
   --border: #2a2f3a;
   --text: #e7e9ee;
   --muted: #98a2b3;
+  --badge-text: #98a2b3;
   --green: #4ade80;
   --accent: var(--green);
   --accent-text: #0f1116;
@@ -183,9 +185,21 @@ button, input, select { font: inherit; color: inherit; }
   gap: 12px;
 }
 .grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
+/* A 1fr track is never narrower than its item's min-content width unless the
+   item is told it may shrink, and min-width: auto is the default that forbids
+   it. Without this line a ten digit sum or a 36 character category name widens
+   its card, the track holding the card, and with it the whole page - which is
+   how a figure that would not fit ended up pushing dialogs off the screen. */
+.grid > *, .cards > *, .row-2 > * { min-width: 0; }
 .stat { display: flex; flex-direction: column; gap: 2px; }
 .stat-title { color: var(--muted); font-weight: 600; font-size: .85rem; }
 .stat-value { font-size: 1.45rem; font-variant-numeric: tabular-nums; }
+/* The app accepts amounts up to the point where the totals stop being exact, so
+   a card has to be able to show one. A long figure gets smaller type rather
+   than breaking in half or leaving the card. */
+.stat-value.long { font-size: 1.15rem; }
+.stat-value.longer { font-size: .95rem; }
+.stat-value.longest { font-size: .78rem; }
 .stat-sub { color: var(--muted); font-size: .78rem; }
 
 /* ---------- quick add ---------- */
@@ -297,7 +311,7 @@ input:focus-visible, select:focus-visible, button:focus-visible {
    between one line of fields and the next is the padding under each field. */
 .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); column-gap: 12px; row-gap: 4px; }
 .inline-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); column-gap: 10px; row-gap: 4px; margin-top: 12px; }
-.row-2 { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 4px; }
+.row-2 { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); column-gap: 12px; row-gap: 4px; }
 .filters > .field, .inline-form > .field, .row-2 > .field {
   grid-row: span 3;
   display: grid;
@@ -328,6 +342,10 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 .filters > .field > .date-input,
 .inline-form > .field > select,
 .inline-form > .field > input { width: 100%; min-width: 0; }
+/* The dialog's two-column row: a select is as wide as its widest option, and
+   in a 92 pixel column "Период лимита" was 101. It may shrink here; the colour
+   and icon fields keep the exact widths they are given. */
+.row-2 .field > select, .row-2 .field > input { min-width: 0; max-width: 100%; }
 /* The date field is a text box and a calendar button sharing that width. */
 .filters > .field > .date-input .date-text { flex: 1 1 auto; width: auto; min-width: 0; }
 
@@ -378,6 +396,9 @@ input:focus-visible, select:focus-visible, button:focus-visible {
    piece of text, sharing one baseline. */
 .about-links { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; margin-top: 10px; }
 .about-links > a, .about-links > button.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
   padding: 0;
   border: 0;
   background: none;
@@ -441,9 +462,12 @@ tbody tr:last-child td { border-bottom: 0; }
   padding: 1px 7px;
   border-radius: 99px;
   background: var(--surface-2);
-  color: var(--muted);
+  /* Not --muted: at this size that is 4.36 against the card, and eleven pixel
+     text needs 4.5 to be readable. This is the same grey, one step darker. */
+  color: var(--badge-text);
   font-size: .7rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .chip {
@@ -473,7 +497,22 @@ tbody tr:last-child td { border-bottom: 0; }
 .facts { margin: 0; padding-left: 18px; color: var(--muted); display: flex; flex-direction: column; gap: 6px; }
 
 .bar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.bar-head { display: flex; justify-content: space-between; gap: 10px; font-size: .9rem; margin-bottom: 5px; }
+/* Three parts that each refuse to break in the middle. The row wraps, the name
+   gives way with an ellipsis, and the period drops to a line of its own before
+   any of it leaves the card - which is what it used to do in every language but
+   English, taking the width of the whole page with it. */
+.bar-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 10px;
+  font-size: .9rem;
+  margin-bottom: 5px;
+}
+.bar-name { display: flex; align-items: center; min-width: 0; }
+.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-head .num { white-space: normal; text-align: right; }
+.nowrap { white-space: nowrap; }
 .track { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
 .fill { height: 100%; border-radius: 99px; }
 
@@ -489,9 +528,20 @@ svg .grid { fill: none; }
 .donut-empty { fill: none; stroke: var(--surface-2); stroke-width: 26; }
 .donut-box { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .donut { width: 160px; height: 160px; flex: none; }
-.legend { display: flex; gap: 14px; margin-top: 8px; color: var(--muted); font-size: .8rem; align-items: center; }
+/* Wraps: three labels in a longer language are wider than a phone. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: .8rem;
+  align-items: center;
+}
 .toggle { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
-.toggle input { width: 14px; height: 14px; }
+/* The label is the target, and it has to be one a finger can find. */
+.toggle { min-height: 28px; }
+.toggle input { width: 18px; height: 18px; }
 .chart-scale { fill: var(--muted); font-size: 10px; }
 .average-line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 4; }
 .average-label { fill: var(--accent); font-size: 10px; font-weight: 600; }
@@ -506,8 +556,11 @@ svg .grid { fill: none; }
 }
 .key.income::before { background: var(--bar-income); }
 .legend-list { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 160px; }
-.legend-list li { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: .88rem; }
-.legend-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* min-width: 0 twice over, because neither a flex item nor its flex child
+   shrinks below its content without it - and a 36 character category name is a
+   lot of content to refuse to shrink beside a chart. */
+.legend-list li { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: .88rem; min-width: 0; }
+.legend-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .legend-value { color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* ---------- transfer ---------- */
@@ -538,7 +591,10 @@ svg .grid { fill: none; }
 .dialog::backdrop { background: rgba(15, 17, 22, .45); }
 .dialog-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .dialog-form { display: flex; flex-direction: column; gap: 12px; }
-.dialog-actions { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+/* The buttons wrap rather than run out of the dialog: three words in German
+   are wider than a phone's dialog, and a Save button outside it is no button. */
+.dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.dialog-actions .spacer { flex: 1 1 0; min-width: 0; }
 
 /* ---------- mobile ----------
    The narrow layout used to hide .row-actions outright, which left no way at

@@ -225,6 +225,8 @@ const PROBE = `
     if (!node.clientWidth || !node.clientHeight) continue;
     if (!visible(node)) continue;
     const style = getComputedStyle(node);
+    // Text longer than the box is how a text field works; it scrolls.
+    if (/^(INPUT|TEXTAREA)$/.test(node.tagName)) continue;
     const scrolls = /auto|scroll/.test(style.overflowX + style.overflowY);
     const ellipsis = style.textOverflow === 'ellipsis';
     const wide = node.scrollWidth > node.clientWidth + 1;
@@ -256,9 +258,12 @@ const PROBE = `
   // 5. A target too small to hit with a finger.
   if (DEVICE_WIDTH < 500) {
     for (const node of controls) {
-      const box = node.getBoundingClientRect();
-      if (!box.width || !box.height) continue;
       if (node.tagName === 'A') continue; // a link in a sentence is not a target
+      // A control inside a label is hit by the whole label - that is what a
+      // label is for - so the target is the label's box, not the checkbox's.
+      const target = node.closest('label') || node;
+      const box = target.getBoundingClientRect();
+      if (!box.width || !box.height) continue;
       if (box.width < 24 || box.height < 24) {
         say('tiny', label(node), Math.round(box.width) + 'x' + Math.round(box.height));
       }

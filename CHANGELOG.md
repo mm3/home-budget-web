@@ -4,6 +4,44 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.18.0
+
+**All nine findings of the visual sweep, fixed.** `docs/visual-review.md` has
+the report and now what was done about each one. The two that mattered:
+
+**A single category made the donut chart draw nothing.** An arc whose two ends
+are the same point draws nothing at all - that is what the format says to do
+with it - and a slice covering the whole circle is exactly that arc. The state
+of every installation after its first entry, so the most ordinary screen there
+is showed a legend beside an empty space. A full turn is now two arcs out and
+two back, and a unit test fails if it ever collapses again.
+
+**One row that would not fit took every dialog on the phone down with it.** The
+figure in a budget row could not wrap, so in Russian and German it ran out of
+its card; the layout viewport grew to hold it; and `.dialog`, sized from
+`100vw`, then measured itself against that wider viewport and put its Close and
+Add buttons off the screen. Three separate things were widening the page and all
+three had one cause: a `1fr` grid track is never narrower than its item's
+min-content width unless the item is told it may shrink. `min-width: 0` on grid
+items is the line that was missing. A new check renders every tab in all three
+languages at 390 pixels, with a long category name and an amount at the ceiling,
+and fails if anything makes the page wider than the phone.
+
+The rest: buttons in a dialog wrap instead of overflowing it; a figure at the
+allowed maximum gets smaller type instead of leaving its card, and a budget
+blown past a thousand percent says `999+%`; the chart toggles and the Share
+control are targets a finger can find; the small grey badge measures 5.06
+against the card rather than 4.36; and one sentence replaces the two that both
+said a file cannot install or update itself.
+
+Two localisation bugs went with them, both from one `toLowerCase()` - an English
+habit applied to every language. "за неделя" needed the accusative and German
+does not lower-case its nouns. The phrase is now one key per period, written out
+in each language.
+
+The sweep itself learned two more things: a control inside a `<label>` is hit by
+the whole label, and text longer than a text field is how a text field works.
+
 ## 3.17.0
 
 **A visual sweep, and a report of what it found.** `npm run sweep` renders every

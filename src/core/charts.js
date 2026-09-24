@@ -82,12 +82,39 @@ export function donutChart(slices, options = {}) {
   for (const slice of slices) {
     const sweep = (slice.amount / total) * Math.PI * 2;
     const end = angle + sweep;
-    parts.push(`<path d="${arcPath(radius, radius, radius - 1, inner, angle, end)}" fill="${escapeXml(slice.color)}">`
+    // A slice with the whole circle to itself cannot be an arc: an arc whose two
+    // ends are the same point draws nothing at all, which is what the format
+    // says to do with it, and is why a first entry in a single category used to
+    // produce an empty card. Anything within a pixel of a full turn is a ring.
+    const whole = sweep >= Math.PI * 2 - 1 / (radius - 1);
+    const shape = whole
+      ? ringPath(radius, radius, radius - 1, inner)
+      : arcPath(radius, radius, radius - 1, inner, angle, end);
+    parts.push(`<path d="${shape}" fill="${escapeXml(slice.color)}">`
       + `<title>${escapeXml(slice.name)}: ${slice.share}%</title></path>`);
     angle = end;
   }
   parts.push('</svg>');
   return parts.join('');
+}
+
+/**
+ * A complete ring: two half circles out and two back, because one arc cannot
+ * describe a full turn. The outer pair runs one way and the inner pair the
+ * other, which is what leaves the hole in the middle - the same trick arcPath
+ * uses, and the reason neither needs a fill rule.
+ */
+function ringPath(cx, cy, outer, inner) {
+  const top = -Math.PI / 2;
+  const bottom = Math.PI / 2;
+  const outerTop = point(cx, cy, outer, top);
+  const outerBottom = point(cx, cy, outer, bottom);
+  const innerTop = point(cx, cy, inner, top);
+  const innerBottom = point(cx, cy, inner, bottom);
+  return `M ${outerTop} A ${round(outer)} ${round(outer)} 0 0 1 ${outerBottom} `
+    + `A ${round(outer)} ${round(outer)} 0 0 1 ${outerTop} Z `
+    + `M ${innerTop} A ${round(inner)} ${round(inner)} 0 0 0 ${innerBottom} `
+    + `A ${round(inner)} ${round(inner)} 0 0 0 ${innerTop} Z`;
 }
 
 function arcPath(cx, cy, outer, inner, from, to) {

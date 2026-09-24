@@ -58,3 +58,35 @@ test('donutChart shows an empty ring without data', () => {
   const single = donutChart([{ name: 'All', amount: 5, color: '#000000', share: 100 }]);
   assert.equal((single.match(/<path/g) || []).length, 1);
 });
+
+test('a category with the whole circle to itself is drawn as a ring, not as nothing', () => {
+  // An arc whose two ends are the same point draws nothing - that is what the
+  // format says to do with it - so a full turn has to be two arcs. This is the
+  // state of every installation after its first entry, so "nothing" meant an
+  // empty card on the most ordinary screen there is.
+  const one = donutChart([{ amount: 100, color: '#16a34a', name: 'Only', share: 100 }]);
+  const paths = [...one.matchAll(/d="([^"]*)"/g)].map((match) => match[1]);
+  assert.equal(paths.length, 1);
+  const arcs = paths[0].match(/A /g) || [];
+  assert.equal(arcs.length, 4, 'two arcs out and two back');
+  const ends = paths[0].match(/M ([\d.]+) ([\d.]+)/g);
+  assert.ok(ends.length === 2, 'an outer ring and an inner one');
+
+  // ... and the slice that owns all but a rounding error is the same case: at
+  // 99.999% the arc used to be a hundredth of a pixel wide.
+  const dominant = donutChart([
+    { amount: 999999, color: '#16a34a', name: 'Big', share: 100 },
+    { amount: 1, color: '#ea580c', name: 'Tiny', share: 0 },
+  ]);
+  const first = [...dominant.matchAll(/d="([^"]*)"/g)][0][1];
+  assert.equal((first.match(/A /g) || []).length, 4, 'the dominant slice is a ring too');
+
+  // An ordinary split is still two ordinary arcs.
+  const half = donutChart([
+    { amount: 50, color: '#16a34a', name: 'A', share: 50 },
+    { amount: 50, color: '#ea580c', name: 'B', share: 50 },
+  ]);
+  for (const [, path] of half.matchAll(/d="([^"]*)"/g)) {
+    assert.equal((path.match(/A /g) || []).length, 2);
+  }
+});
