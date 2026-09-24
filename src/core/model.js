@@ -87,6 +87,58 @@ export function defaultCurrencies() {
   ];
 }
 
+/**
+ * Where each currency is spent. The region of a locale decides first, because
+ * the language alone gets it wrong exactly where it matters: de-CH is francs,
+ * en-GB is pounds, and en-IN is rupees. Only the places whose currency the app
+ * actually ships are listed; anywhere else falls through to the language below.
+ */
+const CURRENCY_BY_REGION = {
+  AT: 'EUR', BE: 'EUR', CY: 'EUR', DE: 'EUR', EE: 'EUR', ES: 'EUR', FI: 'EUR', FR: 'EUR',
+  GR: 'EUR', HR: 'EUR', IE: 'EUR', IT: 'EUR', LT: 'EUR', LU: 'EUR', LV: 'EUR', MC: 'EUR',
+  MT: 'EUR', NL: 'EUR', PT: 'EUR', SI: 'EUR', SK: 'EUR',
+  US: 'USD', EC: 'USD', SV: 'USD', PA: 'USD',
+  GB: 'GBP', CH: 'CHF', LI: 'CHF', SE: 'SEK', NO: 'NOK', DK: 'DKK', PL: 'PLN', CZ: 'CZK',
+  RU: 'RUB', UA: 'UAH', TR: 'TRY', KZ: 'KZT', GE: 'GEL', RO: 'RON', HU: 'HUF', BG: 'BGN',
+  CA: 'CAD', AU: 'AUD', NZ: 'NZD', JP: 'JPY', CN: 'CNY', IN: 'INR', IL: 'ILS',
+};
+
+/** Used when a locale names no region: "ru" on its own still says rubles. */
+const CURRENCY_BY_LANGUAGE = {
+  en: 'USD', de: 'EUR', ru: 'RUB', uk: 'UAH', pl: 'PLN', cs: 'CZK', sk: 'EUR', tr: 'TRY',
+  kk: 'KZT', ka: 'GEL', ro: 'RON', hu: 'HUF', bg: 'BGN', sv: 'SEK', da: 'DKK',
+  nb: 'NOK', nn: 'NOK', no: 'NOK', ja: 'JPY', zh: 'CNY', hi: 'INR', he: 'ILS',
+  fr: 'EUR', es: 'EUR', it: 'EUR', pt: 'EUR', nl: 'EUR', el: 'EUR', fi: 'EUR',
+  et: 'EUR', lv: 'EUR', lt: 'EUR', sl: 'EUR', hr: 'EUR', mt: 'EUR', ga: 'EUR',
+};
+
+/**
+ * The currency a locale most likely wants, so a fresh app opened in Russian
+ * starts in rubles rather than euro.
+ *
+ * It is a guess, never a conversion: it only picks which currency new entries
+ * are recorded in, and it is only ever used while nobody has chosen one.
+ *
+ * @param {string[]|string} locales BCP 47 tags, best first (navigator.languages)
+ * @param {string[]} [available] codes the app currently has; nothing else is returned
+ * @returns {string} a code from `available`
+ */
+export function currencyForLocales(locales, available = defaultCurrencies().map((item) => item.code)) {
+  const codes = new Set(available);
+  for (const locale of Array.isArray(locales) ? locales : [locales]) {
+    if (typeof locale !== 'string' || !locale) continue;
+    const parts = locale.replace(/_/g, '-').split('-');
+    // The region is the two-letter (or three-digit) subtag; four letters is a
+    // script, as in sr-Cyrl-RS, and skipping it is what finds the RS.
+    const region = parts.slice(1).find((part) => /^([A-Za-z]{2}|\d{3})$/.test(part));
+    const byRegion = region ? CURRENCY_BY_REGION[region.toUpperCase()] : undefined;
+    if (byRegion && codes.has(byRegion)) return byRegion;
+    const byLanguage = CURRENCY_BY_LANGUAGE[parts[0].toLowerCase()];
+    if (byLanguage && codes.has(byLanguage)) return byLanguage;
+  }
+  return codes.has('EUR') ? 'EUR' : available[0];
+}
+
 /** Flags for the currencies people add by hand; the code's country is a good guess. */
 const FLAGS_BY_CODE = {
   AED: '🇦🇪', ARS: '🇦🇷', AMD: '🇦🇲', AZN: '🇦🇿', BRL: '🇧🇷', BYN: '🇧🇾', CLP: '🇨🇱', COP: '🇨🇴',
@@ -113,6 +165,9 @@ export function createDefaultState() {
       currencies: defaultCurrencies(),
       defaultCategoryId: DEFAULT_CATEGORY_ID,
       defaultCurrency: 'EUR',
+      // False until the person picks a currency themselves. While it is false
+      // the app is free to follow the interface language; afterwards it is not.
+      currencyChosen: false,
       uiMode: 'auto',
       theme: 'auto',
       convertToDefault: false,

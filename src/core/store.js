@@ -266,6 +266,12 @@ export class BudgetStore {
         throw new AppError('Unknown currency');
       }
       settings.defaultCurrency = changes.defaultCurrency;
+      // Setting the currency is choosing it. The one caller that passes
+      // currencyChosen: false is the app guessing from the interface language,
+      // and a guess must not look like the person's own decision.
+      settings.currencyChosen = changes.currencyChosen !== false;
+    } else if (changes.currencyChosen !== undefined) {
+      settings.currencyChosen = changes.currencyChosen === true;
     }
     if (changes.uiMode !== undefined) {
       if (!['auto', 'mobile', 'desktop'].includes(changes.uiMode)) throw new AppError('Unknown display mode');

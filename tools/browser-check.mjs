@@ -86,6 +86,12 @@ async function main() {
     'const inputs = document.querySelectorAll(".quick-form input"); return inputs.length === 1 && inputs[0].type === "number";',
   ));
 
+  // Everything below books and reads entries in euro. The app now starts in the
+  // currency its locale suggests, so without saying which one this is, the run
+  // would depend on the language of whatever machine it happens to be on - and
+  // a check that passes on a laptop and fails on a runner is worse than none.
+  await cdp.evaluate(`window.homeBudget.store.updateSettings({ defaultCurrency: 'EUR' });`);
+
   const added = await cdp.evaluate(`
     const input = document.getElementById('quick-amount');
     input.value = '12.50';
@@ -126,6 +132,8 @@ async function main() {
   check('categories show their icons', await cdp.evaluate(
     'return document.querySelectorAll(".category-icon").length > 3;',
   ));
+
+
 
   // The card for a week, a month or a year has to divide by the sub-periods that
   // have passed inside it - days, weeks, months - not repeat the period's own
@@ -769,6 +777,54 @@ async function main() {
     writeFileSync(join(shotDir, `${shot.name}.png`), Buffer.from(data, 'base64'));
   }
   console.log(`  screenshots in ${shotDir}`);
+
+
+  // The default currency follows the interface language, but only while the app
+  // is still empty and nobody has picked one. The second half is the part that
+  // matters: a figure already recorded must never change meaning underneath it.
+  const follows = await cdp.evaluate(`
+    const app = window.homeBudget;
+    const store = app.store;
+    const logo = () => document.querySelector('.logo').textContent;
+    store.resetAll();
+    await new Promise((done) => setTimeout(done, 100));
+    const start = store.settings.defaultCurrency;
+
+    app.setLanguage('ru');
+    await new Promise((done) => setTimeout(done, 120));
+    const afterRussian = { currency: store.settings.defaultCurrency, logo: logo(),
+      told: (app.ui.message || {}).text || '' };
+
+    app.setLanguage('de');
+    await new Promise((done) => setTimeout(done, 120));
+    const afterGerman = store.settings.defaultCurrency;
+
+    // The person picks one: from here the language must not move it again.
+    store.updateSettings({ defaultCurrency: 'GBP' });
+    app.setLanguage('ru');
+    await new Promise((done) => setTimeout(done, 120));
+    const afterChoosing = store.settings.defaultCurrency;
+
+    // And an app that already holds entries is left alone even before that.
+    store.resetAll();
+    await new Promise((done) => setTimeout(done, 100));
+    store.quickAdd('5');
+    const held = store.settings.defaultCurrency;
+    app.setLanguage('ru');
+    await new Promise((done) => setTimeout(done, 120));
+    const afterEntries = store.settings.defaultCurrency;
+
+    store.resetAll();
+    await new Promise((done) => setTimeout(done, 100));
+    return { start, afterRussian, afterGerman, afterChoosing, held, afterEntries };
+  `);
+  check('the currency follows the language until it is chosen, then never again',
+    follows.afterRussian.currency === 'RUB' && follows.afterRussian.logo === '\u20bd'
+      && /RUB/.test(follows.afterRussian.told)
+      && follows.afterGerman === 'EUR'
+      && follows.afterChoosing === 'GBP'
+      && follows.afterEntries === follows.held,
+    JSON.stringify(follows));
 
   const reset = await cdp.evaluate(`
     window.confirm = () => true;

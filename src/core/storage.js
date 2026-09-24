@@ -101,6 +101,10 @@ export function migrateState(raw) {
         ? settings.defaultCategoryId : fallback.settings.defaultCategoryId,
       defaultCurrency: typeof settings.defaultCurrency === 'string'
         ? settings.defaultCurrency : fallback.settings.defaultCurrency,
+      // Missing means the state was written before the app followed the
+      // language, so the currency it holds is one the person has lived with:
+      // treat it as chosen, and leave it exactly where it is.
+      currencyChosen: typeof settings.currencyChosen === 'boolean' ? settings.currencyChosen : true,
       uiMode: ['auto', 'mobile', 'desktop'].includes(settings.uiMode) ? settings.uiMode : 'auto',
       convertToDefault: settings.convertToDefault === true,
       theme: ['auto', 'light', 'dark'].includes(settings.theme) ? settings.theme : 'auto',

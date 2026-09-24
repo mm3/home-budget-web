@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  AppError, convertAmount, createCategory, createCurrency, createDefaultState, createEntry, defaultCategory,
+  AppError, convertAmount, createCategory, createCurrency, createDefaultState, createEntry,
+  currencyForLocales, defaultCategory,
   defaultCurrencies, findCategory, findCurrency, ICON_CHOICES, LIMIT_PERIODS, MAX_AMOUNT, newId,
   signedAmount, slugify,
 } from '../src/core/model.js';
@@ -157,4 +158,40 @@ test('an amount has an upper bound, so totals stay exact', () => {
   assert.throws(() => createEntry({ ...entry, amount: -1e300 }), /too large/);
   // A full store of the largest entries still adds up inside the exact integer range.
   assert.ok(MAX_AMOUNT * 60000 < Number.MAX_SAFE_INTEGER);
+});
+
+test('a locale suggests the currency it is most likely to want', () => {
+  // The region decides, because the language alone gets these three wrong.
+  assert.equal(currencyForLocales(['de-CH']), 'CHF');
+  assert.equal(currencyForLocales(['en-GB']), 'GBP');
+  assert.equal(currencyForLocales(['en-IN']), 'INR');
+  assert.equal(currencyForLocales(['ru-RU']), 'RUB');
+  assert.equal(currencyForLocales(['de-DE']), 'EUR');
+
+  // No region: the language still says something.
+  assert.equal(currencyForLocales(['ru']), 'RUB');
+  assert.equal(currencyForLocales(['de']), 'EUR');
+  assert.equal(currencyForLocales(['en']), 'USD');
+  assert.equal(currencyForLocales(['pl']), 'PLN');
+
+  // A script subtag is not a region; sr-Cyrl-RS must not read Cyrl as one, and
+  // Serbia's dinar does not ship, so it falls through to the euro.
+  assert.equal(currencyForLocales(['sr-Cyrl-RS']), 'EUR');
+  // An unknown region falls back to the language of the same tag.
+  assert.equal(currencyForLocales(['de-XX']), 'EUR');
+  // The next locale is tried when the first says nothing at all.
+  assert.equal(currencyForLocales(['xx', 'ja-JP']), 'JPY');
+
+  // Underscores and lower case are what some browsers report.
+  assert.equal(currencyForLocales(['ru_ru']), 'RUB');
+  assert.equal(currencyForLocales('tr-TR'), 'TRY');
+
+  // Nothing to go on is the euro, which is where the app has always started.
+  assert.equal(currencyForLocales([]), 'EUR');
+  assert.equal(currencyForLocales([null, '', 7]), 'EUR');
+
+  // Never a currency the app does not have: someone who deleted the franc gets
+  // the language's answer instead, and a list without the euro still gets one.
+  assert.equal(currencyForLocales(['de-CH'], ['EUR', 'USD']), 'EUR');
+  assert.equal(currencyForLocales(['de-CH'], ['USD', 'GBP']), 'USD');
 });

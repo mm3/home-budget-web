@@ -29,7 +29,7 @@ export function settingsView(app) {
         })),
           store.settings.defaultCurrency))),
         field(t('settings.language'), el('select', {
-          on: { change: (event) => app.run(() => store.updateSettings({ language: event.target.value })) },
+          on: { change: (event) => app.setLanguage(event.target.value) },
         }, options([
           { value: 'auto', label: t('settings.languageAuto', { language: app.detectedLanguageName() }) },
           ...LANGUAGES.map((item) => ({ value: item.code, label: item.name })),

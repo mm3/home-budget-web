@@ -1,4 +1,4 @@
-# Home Budget 3.10.0 (browser version)
+# Home Budget 3.11.0 (browser version)
 
 <table>
 <tr>
@@ -64,6 +64,11 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 - **Languages:** English, Russian and German, picked automatically from the browser or chosen in the
   settings. A built-in editor lets you write **your own translation** of every text; it is stored in the
   browser and can be downloaded and shared as a JSON file.
+- **The currency follows the language**, until you say otherwise. A fresh app opened in Russian starts
+  in rubles, in German in euro, and the *region* decides where it disagrees with the language - `de-CH`
+  is francs, `en-GB` pounds, `en-IN` rupees. It stops the moment you pick a currency yourself **or**
+  record your first entry, whichever comes first: a figure already written down must never change
+  meaning underneath it. Existing installations are never touched.
 - **Currencies:** twenty-four come with the app - EUR, USD, GBP, CHF, SEK, NOK, DKK, PLN, CZK, **RUB**,
   UAH, TRY, KZT, GEL, RON, HUF, BGN, CAD, AUD, NZD, JPY, CNY, INR, ILS - each with its **flag** and with
   a symbol that belongs to it alone: the three Nordic crowns read Skr / Nkr / Dkr and the Chinese yuan
@@ -146,7 +151,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.10.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.11.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -186,7 +191,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.10.0` is pushed.
+built files to a release when a tag like `v3.11.0` is pushed.
 
 ## Building
 
@@ -291,10 +296,11 @@ replaced by a box, and the gap they leave is closed.
 npm run coverage
 ```
 
-122 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
+125 tests covering the core modules, including round trips (CSV → parse → CSV, XLSX write → read,
 ZIP write → read), the embedded PDF font (flate stream length, Identity-H structure, the `/ToUnicode`
 map, Cyrillic written as glyphs, the cross reference table), charts, storage upgrades from older data,
-budget calculations per limit period, the two kinds of average (the long-run one per whole period and
+budget calculations per limit period, the currency a locale suggests (region before language, never one
+the app does not have), the two kinds of average (the long-run one per whole period and
 the pace inside the period now running, which divides by the days, weeks or months that have actually
 passed in it), currency conversion, unique flags and symbols, localized period
 labels, deleting entries versus resetting everything, version consistency, translation completeness
@@ -302,7 +308,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (48 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (49 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German

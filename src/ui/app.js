@@ -1,7 +1,7 @@
 /** Application shell: state, navigation, dialogs and rendering. */
 
 import { BudgetStore } from '../core/store.js';
-import { AppError } from '../core/model.js';
+import { AppError, currencyForLocales } from '../core/model.js';
 import {
   createTranslator, CUSTOM_LANGUAGE, detectLanguage, LANGUAGES, periodTexts,
 } from '../core/i18n.js';
@@ -50,6 +50,9 @@ export class App {
     };
     this.store.subscribe(() => this.render());
     this.t = (key, params) => this.translator()(key, params);
+    // Before the first render, so the app opens in the right currency rather
+    // than switching a moment after it is drawn.
+    this.followLanguage();
     this.watchInstall();
   }
 
@@ -120,12 +123,46 @@ export class App {
     return this.translatedPeriods;
   }
 
-  /** Language code guessed from the browser. */
-  detectedLanguage() {
-    const navigatorLanguages = typeof navigator === 'object' && navigator
+  /** The locales the browser reports, best first: ['de-CH', 'de', 'en']. */
+  browserLocales() {
+    return typeof navigator === 'object' && navigator
       ? (navigator.languages || [navigator.language]).filter(Boolean)
       : [];
-    return detectLanguage(navigatorLanguages);
+  }
+
+  /** Language code guessed from the browser. */
+  detectedLanguage() {
+    return detectLanguage(this.browserLocales());
+  }
+
+  /**
+   * Moves the default currency to the one the interface language suggests.
+   *
+   * It runs while the app is still empty and nobody has picked a currency: that
+   * is what makes a fresh app opened in Russian start in rubles instead of euro,
+   * and what lets someone who switches the interface to German before entering
+   * anything get euro. The moment there is an entry, or the moment the person
+   * picks a currency themselves, the setting is theirs and this stops touching
+   * it - a figure already recorded must never change meaning underneath it.
+   *
+   * @param {boolean} [announce] say so in the message line; the first run is silent
+   */
+  followLanguage(announce = false) {
+    const settings = this.store.settings;
+    if (settings.currencyChosen || this.store.entries.length) return;
+    // A language the person invented says nothing about money.
+    if (settings.language === CUSTOM_LANGUAGE) return;
+    const locales = settings.language === 'auto' ? this.browserLocales() : [settings.language];
+    const code = currencyForLocales(locales, this.store.currencies.map((item) => item.code));
+    if (code === settings.defaultCurrency) return;
+    this.store.updateSettings({ defaultCurrency: code, currencyChosen: false });
+    if (announce) this.notify(this.t('settings.currencyFollowed', { currency: code }), 'info');
+  }
+
+  /** Changes the interface language, and the currency with it while it is still a guess. */
+  setLanguage(code) {
+    this.run(() => this.store.updateSettings({ language: code }));
+    this.followLanguage(true);
   }
 
   detectedLanguageName() {

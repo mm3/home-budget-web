@@ -278,3 +278,35 @@ test('an amount that rounds away says so instead of claiming it is zero', () => 
   assert.throws(() => store.quickAdd('999999999999999'), /too large/);
   assert.equal(store.quickAdd('0.005').amount, 1, 'half a cent still rounds up to one');
 });
+
+test('picking a currency marks it as the person\'s own; the app guessing does not', () => {
+  const store = makeStore();
+  assert.equal(store.settings.currencyChosen, false);
+
+  // The app following the interface language leaves the flag alone, so it stays
+  // free to follow again on the next change.
+  store.updateSettings({ defaultCurrency: 'RUB', currencyChosen: false });
+  assert.equal(store.settings.defaultCurrency, 'RUB');
+  assert.equal(store.settings.currencyChosen, false);
+
+  // A plain change is the person choosing, and that is final.
+  store.updateSettings({ defaultCurrency: 'USD' });
+  assert.equal(store.settings.currencyChosen, true);
+
+  // Which the app's own guess must not undo.
+  store.updateSettings({ defaultCurrency: 'EUR', currencyChosen: false });
+  assert.equal(store.settings.currencyChosen, false);
+});
+
+test('a stored state written before the app followed the language keeps its currency', async () => {
+  const { migrateState } = await import('../src/core/storage.js');
+  // No flag in the stored settings means an older version wrote them: the
+  // currency in there is one the person has lived with, so it counts as chosen.
+  const older = migrateState({ settings: { defaultCurrency: 'GBP' }, entries: [] });
+  assert.equal(older.settings.defaultCurrency, 'GBP');
+  assert.equal(older.settings.currencyChosen, true);
+
+  // A newer state says for itself.
+  const newer = migrateState({ settings: { defaultCurrency: 'RUB', currencyChosen: false }, entries: [] });
+  assert.equal(newer.settings.currencyChosen, false);
+});
