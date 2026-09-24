@@ -290,6 +290,75 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 }
 
 /* A field on its own - in a dialog, one per line - is just the three parts stacked. */
+/* ---------- the drop-down list ----------
+   A native <select> hands its list to the operating system, which draws it in
+   its own font, at its own size, in its own colours, and ignores everything
+   this stylesheet says - two dozen currencies as a bare grey column. Where the
+   browser can be asked for the list instead, it is asked, and the list becomes
+   part of the app: our surface, our spacing, a flag and a code and a symbol in
+   three columns that line up, and the group headings saying what is what.
+
+   Everywhere else this block simply does not apply and the list stays exactly
+   as it was, which is why the option text is still readable on its own - the
+   spans below are separated by real spaces, and a browser that drops the spans
+   keeps the spaces. */
+@supports (appearance: base-select) {
+  select, ::picker(select) { appearance: base-select; }
+
+  select::picker-icon { color: var(--muted); font-size: .7em; transition: rotate .15s ease; }
+  select:open::picker-icon { rotate: 180deg; }
+
+  ::picker(select) {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 10px 30px rgba(16, 24, 40, .18);
+    padding: 6px;
+    /* Tall enough that a list of categories fits whole - which is the list a
+       person opens most - short enough to stay on a phone screen. */
+    max-height: min(70vh, 420px);
+    overflow: auto;
+  }
+
+  option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--text);
+    background: transparent;
+  }
+  option:hover, option:focus { background: var(--surface-2); }
+  option:checked { font-weight: 700; }
+  /* The tick goes to the far end, where a list of choices is read. */
+  option::checkmark { content: '\2713'; color: var(--accent); margin-left: auto; order: 1; }
+
+  optgroup { padding-top: 2px; }
+  /* Just `optgroup legend`: a pseudo-element cannot have descendants in a
+     selector, so prefixing this with ::picker(select) made the whole list
+     invalid - and one invalid selector in a comma list drops the rule. */
+  optgroup legend {
+    padding: 8px 10px 4px;
+    color: var(--muted);
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  /* Three columns: the mark is a fixed width so the keys start together, the
+     key takes what is left, the note sits against the tick. */
+  .opt-mark { flex: none; width: 1.5em; text-align: center; }
+  .opt-key { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .opt-note { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* The closed control shows the same parts, without the list's spacing. */
+  select selectedcontent { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  select selectedcontent .opt-key { flex: 0 1 auto; }
+  select selectedcontent .opt-note { color: inherit; }
+}
+
 .field { display: flex; flex-direction: column; gap: 4px; }
 .field-label {
   color: var(--muted); font-size: .8rem; font-weight: 600;

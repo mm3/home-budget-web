@@ -4,6 +4,30 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.20.0
+
+**The drop-down lists are the app's own now.** A `<select>` used to hand its
+list to the operating system: a grey system menu, the system's font, the
+system's highlight colour, dropped on top of a page it shares nothing with. It
+is now drawn by the page - the same surface, the same rounded corners, the same
+shadow as a dialog - and the three things a list of choices needs:
+
+- **Groups with names.** Currencies come as *In use* first, then *Other
+  currencies*; categories as *Expenses* and *Income*. The entry form no longer
+  writes "(Expense)" after every single row to say the same thing one row at a
+  time.
+- **Columns that line up.** A currency row is flag, code, symbol in three
+  aligned columns, so the codes start together instead of each one beginning
+  wherever the flag before it ended. A category row is icon, then name.
+- **A tick on the chosen row**, in the app's green, at the end of the row where
+  a list of choices is read.
+
+This uses `appearance: base-select`, which today only Chromium-based browsers
+have. Nothing depends on it: where it is missing the browser draws its own list
+exactly as before, and the option text there reads "🇪🇺 EUR €" and "🛒
+Groceries", because the spaces between the parts are real text. `<optgroup>`
+gives the group names in every browser either way.
+
 ## 3.19.0
 
 **An entry can be in several categories.** One of them is the main one - it

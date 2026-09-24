@@ -981,6 +981,40 @@ async function main() {
     ordering.firstInTable === 'RUB' && ordering.firstInPicker === 'RUB' && ordering.count > 20,
     JSON.stringify(ordering));
 
+  // The lists are laid out in parts - a flag, a code, a symbol - for the browsers
+  // that let the page draw a drop-down. A browser that draws its own keeps only
+  // the text inside an <option>, so the parts have to read as the one line they
+  // used to be, and the group names have to survive as the <optgroup> attribute.
+  const lists = await cdp.evaluate(`
+    const app = window.homeBudget;
+    app.store.updateSettings({ language: 'en' });
+    app.setTab('settings');
+    await new Promise((done) => setTimeout(done, 250));
+    const selects = [...document.querySelectorAll('.filters select')];
+    const currency = selects.find((one) => [...one.options].some((option) => option.value === 'EUR'));
+    const category = selects.find((one) => [...one.options].some((option) => option.value === 'groceries'));
+    const groups = (select) => [...select.querySelectorAll('optgroup')].map((group) => ({
+      label: group.getAttribute('label'),
+      legend: group.querySelector('legend') && group.querySelector('legend').textContent,
+    }));
+    const text = (select, value) => [...select.options].find((option) => option.value === value).textContent;
+    return {
+      currencyGroups: groups(currency),
+      categoryGroups: groups(category),
+      eur: text(currency, 'EUR'),
+      groceries: text(category, 'groceries'),
+      // A <legend> must never become an option: it would be a choice nobody can make.
+      legendsAsOptions: [...currency.options].filter((option) => option.tagName === 'LEGEND').length,
+      values: [...category.options].every((option) => option.value),
+    };
+  `);
+  const named = (groups) => groups.length === 2 && groups.every((group) => group.label && group.label === group.legend);
+  check('a list says what it is grouping, and still reads as one line where the browser draws it',
+    named(lists.currencyGroups) && named(lists.categoryGroups)
+      && lists.eur === '🇪🇺 EUR €' && lists.groceries === '🛒 Groceries'
+      && lists.legendsAsOptions === 0 && lists.values,
+    JSON.stringify(lists));
+
   // The four spans the rest of the app thinks in, one press each.
   const quick = await cdp.evaluate(`
     const app = window.homeBudget;

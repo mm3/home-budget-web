@@ -130,13 +130,50 @@ export function fieldSlot(control) {
   ]);
 }
 
-/** An <option> list for a <select>. */
+/**
+ * An <option> list for a <select>.
+ *
+ * An item may carry `parts` - a mark, a key and a note - instead of one flat
+ * label. Where the browser can style a drop-down list they become three columns
+ * that line up down the list; where it cannot, only the text inside an option
+ * survives, which is why the spaces between the parts are text nodes of their
+ * own: such a browser then sees exactly the string it saw before.
+ */
 export function options(items, selected) {
-  return items.map((item) => el('option', {
+  return items.map((item) => optionNode(item, selected));
+}
+
+/**
+ * The same, in named groups. A list of two dozen currencies or of every
+ * category a person has is far easier to walk when it says what it is grouping,
+ * and <optgroup> is understood by every browser, styled list or not.
+ */
+export function optionGroups(groups, selected) {
+  return groups
+    .filter((group) => group.items.length)
+    .map((group) => el('optgroup', { label: group.label }, [
+      // Both: the label attribute is what a browser drawing its own list reads,
+      // and a <legend> is what a styled list lets the stylesheet get at. A
+      // browser that draws its own list renders only the attribute.
+      el('legend', { text: group.label }),
+      ...options(group.items, selected),
+    ]));
+}
+
+function optionNode(item, selected) {
+  const node = el('option', {
     value: item.value,
-    text: item.label,
     selected: String(item.value) === String(selected),
-  }));
+  });
+  if (!item.parts) {
+    node.textContent = item.label;
+    return node;
+  }
+  item.parts.filter((part) => part && part.text).forEach((part, index) => {
+    if (index) node.append(document.createTextNode(' '));
+    node.append(el(`span.${part.kind}`, { text: part.text }));
+  });
+  return node;
 }
 
 /**
@@ -205,4 +242,53 @@ export function dateField({ value, onChange, t, required = false, clearable = fa
   });
   wrap.dateText = text;
   return wrap;
+}
+
+/**
+ * The options of a currency picker: a flag, the code, the symbol, in that
+ * order, so codes and symbols line up down the list instead of each row
+ * starting wherever the flag before it ended.
+ *
+ * Grouped into the ones already in use and the rest. Two dozen currencies ship
+ * with the app and almost nobody uses more than two, so the two that matter are
+ * worth putting at the top with a word saying why they are there.
+ */
+export function currencyOptions(app, selected, { onlyUsed = false } = {}) {
+  const store = app.store;
+  const used = new Set(store.usedCurrencies());
+  const toItem = (item) => ({
+    value: item.code,
+    parts: [
+      { kind: 'opt-mark', text: item.flag || '' },
+      { kind: 'opt-key', text: item.code },
+      { kind: 'opt-note', text: item.symbol },
+    ],
+  });
+  const all = store.currenciesByDefault();
+  const inUse = all.filter((item) => used.has(item.code)).map(toItem);
+  if (onlyUsed) return options(inUse, selected);
+  return optionGroups([
+    { label: app.t('common.inUse'), items: inUse },
+    { label: app.t('common.otherCurrencies'), items: all.filter((item) => !used.has(item.code)).map(toItem) },
+  ], selected);
+}
+
+/**
+ * The options of a category picker: the emoji, then the name. Grouped by what
+ * the category does to the balance, which is what the "(Expense)" after every
+ * single row used to say one row at a time.
+ */
+export function categoryOptions(app, selected) {
+  const item = (category) => ({
+    value: category.id,
+    parts: [
+      { kind: 'opt-mark', text: category.icon },
+      { kind: 'opt-key', text: app.categoryName(category) },
+    ],
+  });
+  const of = (kind) => app.store.categories.filter((category) => category.kind === kind).map(item);
+  return optionGroups([
+    { label: app.t('common.expenses'), items: of('expense') },
+    { label: app.t('common.income'), items: of('income') },
+  ], selected);
 }

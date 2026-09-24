@@ -4,7 +4,9 @@ import { CUSTOM_LANGUAGE, EN, LANGUAGES, sanitizeTranslation, translationKeys } 
 import { formatMoney, parseAmount, PERIOD_PHRASES, toPlainAmount } from '../../core/format.js';
 import { ICON_CHOICES, LIMIT_PERIODS } from '../../core/model.js';
 import { APP_VERSION, REPO_URL, SITE_URL } from '../../core/version.js';
-import { actionButton, el, field, fieldSlot, fileButton, options, render } from '../dom.js';
+import {
+  actionButton, categoryOptions, currencyOptions, el, field, fieldSlot, fileButton, options, render,
+} from '../dom.js';
 import { download, MIME } from '../files.js';
 
 export function settingsView(app) {
@@ -19,15 +21,10 @@ export function settingsView(app) {
       el('div.filters', {}, [
         field(t('settings.quickCategory'), el('select', {
           on: { change: (event) => app.run(() => store.updateSettings({ defaultCategoryId: event.target.value })) },
-        }, options(store.categories.map((category) => ({
-          value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
-        })), store.settings.defaultCategoryId))),
+        }, categoryOptions(app, store.settings.defaultCategoryId))),
         field(t('common.currency'), el('select', {
           on: { change: (event) => app.run(() => store.updateSettings({ defaultCurrency: event.target.value })) },
-        }, options(store.currenciesByDefault().map((item) => ({
-          value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
-        })),
-          store.settings.defaultCurrency))),
+        }, currencyOptions(app, store.settings.defaultCurrency))),
         field(t('settings.language'), el('select', {
           on: { change: (event) => app.setLanguage(event.target.value) },
         }, options([

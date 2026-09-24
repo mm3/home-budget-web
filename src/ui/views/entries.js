@@ -3,7 +3,9 @@
 import { formatDate, formatMoney, periodStart, PERIODS, todayIso } from '../../core/format.js';
 import { AppError, MAX_AMOUNT } from '../../core/model.js';
 import { totals } from '../../core/stats.js';
-import { actionButton, dateField, el, field, fieldSlot, options, render } from '../dom.js';
+import {
+  actionButton, categoryOptions, currencyOptions, dateField, el, field, fieldSlot, options, render,
+} from '../dom.js';
 import { transferPanel } from '../transfer.js';
 
 // Today, this week, this month, this year - the four spans the rest of the app
@@ -27,12 +29,9 @@ export function entriesView(app) {
   const shown = entries.slice(0, app.ui.shownEntries);
   const hidden = entries.length - shown.length;
 
-  const categoryOptions = [{ value: '', label: t('entries.allCategories') },
-    ...store.categories.map((category) => ({
-      value: category.id, label: `${category.icon} ${app.categoryName(category)}`,
-    }))];
-  const currencyOptions = [{ value: '', label: t('entries.allCurrencies') },
-    ...store.currenciesByDefault().map((item) => ({ value: item.code, label: `${item.flag || ''} ${item.code}`.trim() }))];
+  // "Any" first, then the same grouped lists the forms use.
+  const anyCategory = options([{ value: '', label: t('entries.allCategories') }], filter.categoryId || '');
+  const anyCurrency = options([{ value: '', label: t('entries.allCurrencies') }], filter.currency || '');
 
   const update = (changes) => app.setUi({ filter: { ...filter, ...changes } });
 
@@ -53,10 +52,10 @@ export function entriesView(app) {
           })),
           field(t('common.category'), el('select', {
             on: { change: (event) => update({ categoryId: event.target.value }) },
-          }, options(categoryOptions, filter.categoryId || ''))),
+          }, [...anyCategory, ...categoryOptions(app, filter.categoryId || '')])),
           field(t('common.currency'), el('select', {
             on: { change: (event) => update({ currency: event.target.value }) },
-          }, options(currencyOptions, filter.currency || ''))),
+          }, [...anyCurrency, ...currencyOptions(app, filter.currency || '')])),
           field(t('entries.search'), el('input', {
             type: 'search', value: filter.text || '', placeholder: t('entries.searchHint'),
             on: { input: (event) => update({ text: event.target.value }) },
@@ -146,13 +145,8 @@ export function entryForm(app, entry) {
   });
   const dateInput = dateField({ value: entry ? entry.date : todayIso(new Date()), t, required: true,
     onChange: () => {} });
-  const categorySelect = el('select', {}, options(
-    store.categories.map((category) => ({
-      value: category.id,
-      label: `${category.icon} ${app.categoryName(category)} (${t(`common.${category.kind}`)})`,
-    })),
-    entry ? entry.categoryId : store.settings.defaultCategoryId,
-  ));
+  const categorySelect = el('select', {},
+    categoryOptions(app, entry ? entry.categoryId : store.settings.defaultCategoryId));
   // The main category decides whether this is money in or money out, so it stays
   // a single choice. The rest are labels: the entry's whole amount counts under
   // each of them, which is what makes "how much did I spend on anything to do
@@ -178,12 +172,8 @@ export function entryForm(app, entry) {
     sync();
     return chip;
   }));
-  const currencySelect = el('select', {}, options(
-    store.currenciesByDefault().map((item) => ({
-      value: item.code, label: `${item.flag || ''} ${item.code} ${item.symbol}`.trim(),
-    })),
-    entry ? entry.currency : store.settings.defaultCurrency,
-  ));
+  const currencySelect = el('select', {},
+    currencyOptions(app, entry ? entry.currency : store.settings.defaultCurrency));
   const noteInput = el('input', { type: 'text', maxlength: '200', value: entry ? entry.note : '' });
 
   const form = el('form.dialog-form', {
