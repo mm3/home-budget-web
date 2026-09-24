@@ -30,6 +30,12 @@
   --control-height: 40px;
   --label-height: 18px;
   --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .06);
+  /* The one arrow the app uses: on a drop-down and on a section that folds
+     open. It is a mask rather than a picture, so the colour comes from whatever
+     paints it and it follows the theme like any other text. Drawn once here
+     because a browser draws its own only as a solid platform triangle, in a
+     weight that belongs to no other mark on the page. */
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.75 4.5 6 7.75 9.25 4.5' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   color-scheme: light;
 }
 
@@ -305,7 +311,30 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 @supports (appearance: base-select) {
   select, ::picker(select) { appearance: base-select; }
 
-  select::picker-icon { color: var(--muted); font-size: .7em; transition: rotate .15s ease; }
+  /* The closed control, said out loud rather than left to the base stylesheet:
+     the chosen row on one side, the arrow on the other, both on the middle line
+     whatever height the emoji in front of them asks for.
+
+     `gap: 0` is not tidying up: the base stylesheet puts a 0.5em gap on this
+     flex box, and under base-select the options are still the select's own
+     children, so with the parts centred that gap makes the control report
+     itself four pixels taller than the line it stands in. The alignment check
+     fails on exactly that. `space-between` separates the two parts on its own
+     and needs no gap to do it. */
+  select { display: flex; align-items: center; justify-content: space-between; gap: 0; }
+
+  /* The arrow was the last piece of the control still drawn by the system: a
+     solid platform disclosure triangle, in a weight nothing else on the page
+     uses. This is the app's own chevron, the same one a folding section gets. */
+  select::picker-icon {
+    content: '';
+    flex: none;
+    width: .8em;
+    height: .8em;
+    background: var(--muted);
+    mask: var(--chevron) center / contain no-repeat;
+    transition: rotate .15s ease;
+  }
   select:open::picker-icon { rotate: 180deg; }
 
   ::picker(select) {
@@ -420,6 +449,23 @@ input:focus-visible, select:focus-visible, button:focus-visible {
 
 /* The error message is a sentence, not a field: it takes the whole width. */
 .inline-form > .error { grid-column: 1 / -1; margin: 0; }
+/* A section that folds open gets the same arrow as a drop-down, for the same
+   reason: the marker a browser puts there is the platform's solid triangle, and
+   two different arrows on one screen read as two different kinds of thing. */
+details > summary { list-style: none; display: flex; align-items: center; gap: 8px; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before {
+  content: '';
+  flex: none;
+  width: .8em;
+  height: .8em;
+  background: currentColor;
+  mask: var(--chevron) center / contain no-repeat;
+  rotate: -90deg; /* closed: pointing the way it will open */
+  transition: rotate .15s ease;
+}
+details[open] > summary::before { rotate: 0deg; }
+
 .filters-box { margin-bottom: 4px; }
 .filters-box > summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: .85rem; padding: 4px 0; }
 .filters-box[open] > summary { margin-bottom: 8px; }

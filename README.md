@@ -1,4 +1,4 @@
-# Home Budget 4.0.0 (browser version)
+# Home Budget 4.0.1 (browser version)
 
 <table>
 <tr>
@@ -88,7 +88,9 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
   Chromium today) a `<select>` no longer hands its list to the operating system: it is drawn by the
   page, on the same surface as a dialog, with named groups (*In use* / *Other currencies*, *Expenses* /
   *Income*), a currency written as three aligned columns - flag, code, symbol - and a green tick on the
-  chosen row. Where the browser does not allow it, it draws its own list exactly as before and the rows
+  chosen row. The closed control keeps the app's **one arrow** - a thin chevron drawn once and used
+  both here and on a section that folds open, in place of the platform's solid triangle. Where the
+  browser does not allow it, it draws its own list exactly as before and the rows
   still read "🇪🇺 EUR €"; the group names come from `<optgroup>` and are there either way.
 - **Storage:** everything stays in the browser's `localStorage`, which holds roughly **30 000 entries**
   (see *Limits* below). `sessionStorage` and an in-memory store are used as fallbacks when a browser
@@ -173,6 +175,14 @@ which is why such a browser, which keeps only the text inside an `<option>`, sti
 `🇪🇺 EUR €` rather than `🇪🇺EUR€`. `<optgroup label>` is set as well as the `<legend>`: the
 attribute is what a browser drawing its own list reads.
 
+The **arrow** is the piece that is easy to forget, and it is the one on screen all day. Left alone,
+`::picker-icon` is a solid platform disclosure triangle - the browser's `content` for it is literally
+`counter(fake-counter-name, disclosure-open)` - and it is heavier than every other mark on the page.
+The app defines one chevron, `--chevron`, as an inline SVG **mask** rather than a picture, so its
+colour comes from whatever paints it and it follows the theme like text. The same chevron is used on
+`<summary>`, where the browser's marker is the identical triangle: two different arrows on one screen
+read as two different kinds of thing.
+
 The entry list draws **200 rows at a time**, with *Show 200 more* and *Show all* underneath; the
 summary, the statistics and the exports always cover every matching entry - the export panel says so -
 only the table is paged.
@@ -191,7 +201,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-4.0.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-4.0.1.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -231,7 +241,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v4.0.0` is pushed.
+built files to a release when a tag like `v4.0.1` is pushed.
 
 ## Building
 
@@ -349,7 +359,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (57 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (58 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
@@ -361,7 +371,9 @@ confirms that deleting the entries keeps the settings while resetting really res
 width and again at 390 pixels, **in all three languages** - and fails when a label of a different
 length pushes its control off the line its neighbours sit on, when a control lies on top of the one
 beside it, or when a button's words spill outside it; it also checks that the name and the tabs share
-one line of the top bar in every language, checks that the drop-down lists name their groups and
+one line of the top bar in every language, checks that a drop-down and a folding section carry the
+same arrow and that it is the app's own rather than the platform's triangle, checks that the
+drop-down lists name their groups and
 that an option still reads as one line where the browser draws its own list, checks that a
 phone can still reach the edit and delete actions of every table row and that they are big enough to
 hit, adds five thousand entries at once to check that the list pages instead of drawing

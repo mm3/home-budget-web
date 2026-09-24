@@ -1008,6 +1008,31 @@ async function main() {
       values: [...category.options].every((option) => option.value),
     };
   `);
+  // The arrow is the piece of a drop-down that is on screen all day, and the
+  // one the browser will happily draw itself as a solid platform triangle. One
+  // chevron, ours, in both places a browser offers to draw one.
+  const arrows = await cdp.evaluate(`
+    const select = document.querySelector('.filters select');
+    const summary = document.querySelector('.filters-box > summary') || document.querySelector('summary');
+    const icon = getComputedStyle(select, '::picker-icon');
+    const marker = summary && getComputedStyle(summary, '::before');
+    const mask = (style) => style && (style.maskImage || style.webkitMaskImage || '');
+    return {
+      iconContent: icon.content,
+      iconMask: mask(icon).slice(0, 30),
+      markerMask: mask(marker).slice(0, 30),
+      sameChevron: mask(icon) === mask(marker),
+      // A gap here makes the control taller than the line it stands in.
+      gap: getComputedStyle(select).rowGap,
+      fits: select.scrollHeight <= select.clientHeight,
+    };
+  `);
+  check('one arrow, drawn by the app, on a drop-down and on a folding section',
+    /^url\("data:image\/svg/.test(arrows.iconMask) && arrows.sameChevron
+      && arrows.iconContent !== 'counter(fake-counter-name, disclosure-open)'
+      && arrows.gap === '0px' && arrows.fits,
+    JSON.stringify(arrows));
+
   const named = (groups) => groups.length === 2 && groups.every((group) => group.label && group.label === group.legend);
   check('a list says what it is grouping, and still reads as one line where the browser draws it',
     named(lists.currencyGroups) && named(lists.categoryGroups)

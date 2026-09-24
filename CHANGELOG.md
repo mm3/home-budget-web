@@ -4,6 +4,26 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 4.0.1
+
+**The arrow on a drop-down was still the system's.** 3.20.0 took the open list
+away from the operating system and left the closed control alone, and the
+control is what a person looks at all day: a solid platform disclosure triangle,
+heavier than any other mark on the page, sitting inside a field that was
+otherwise the app's. The list had stopped looking borrowed; the button had not.
+
+There is now one arrow in the app - a thin rounded chevron, defined once as
+`--chevron` and painted as a mask, so it takes its colour from whatever it sits
+in and follows the theme like text. It is used in both places a browser
+otherwise draws its own: the drop-down, where it turns over while the list is
+open, and a section that folds (**Filters and search**, the translation editor),
+where it points the way the section will open.
+
+The closed control also says its own layout now - the chosen row at one end, the
+arrow at the other, both on the middle line - instead of leaving it to the
+browser's base stylesheet, which centred nothing and let an emoji in front of
+the text push it off the line.
+
 ## 4.0.0
 
 **The major version is now the document version.** Saved data has been at
