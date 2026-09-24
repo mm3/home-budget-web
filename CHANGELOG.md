@@ -4,6 +4,24 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.15.0
+
+**A message no longer moves the page under the hand that caused it.** The
+confirmation line sat between the top bar and the content, so pressing Add on
+the home screen pushed the quick form 53 pixels down - out from under the finger
+that had just pressed it, and with the cursor still in the amount field - and
+pulled it back up four seconds later when the message expired.
+
+The message is now written after the page rather than before it, and taken out
+of the flow: it sits at the foot of the window, below whatever produced it, so
+nothing moves when it arrives or when it goes. It also carries `role="status"`,
+which is what makes a screen reader read it out.
+
+A new check measures the quick form and the figures beneath it before a message,
+while it is shown and after it expires, and fails if any of the three differ.
+Putting the message back where it was makes it fail with the 53 pixels in the
+detail line.
+
 ## 3.14.0
 
 **Settings → About → Update the app.** The page asks to be cached for a year and

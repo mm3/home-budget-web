@@ -452,12 +452,25 @@ export class App {
           on: { click: () => this.setTab(tab.id) },
         }, [el('span.tab-icon', { text: tab.icon }), el('span.tab-label', { text: this.t(tab.key) })]))),
       ]),
-      this.ui.message ? el('p', { class: `toast ${this.ui.message.kind}`, text: this.ui.message.text }) : null,
       el('main.main', {}, view),
       el('footer.app-footer', {}, [
         el('span', { text: this.t('app.storedIn', { storage: this.storageKind }) }),
         el('span.app-version', { text: ` · v${APP_VERSION}` }),
       ]),
+      // After the page, not before it. The message used to sit between the bar
+      // and the content, so every confirmation pushed the whole page down and
+      // every one that expired pulled it back up - and the worst case was the
+      // quick form on the home screen, which moved out from under the finger
+      // that had just pressed Add. The stylesheet takes it out of the flow, so
+      // now nothing moves at all; role=status is what reads it out loud.
+      this.ui.message
+        ? el('p', {
+          class: `toast ${this.ui.message.kind}`,
+          role: 'status',
+          'aria-live': 'polite',
+          text: this.ui.message.text,
+        })
+        : null,
     ]);
   }
 

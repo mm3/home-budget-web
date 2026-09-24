@@ -135,17 +135,31 @@ button, input, select { font: inherit; color: inherit; }
   font-size: .8rem;
 }
 
+/* A message takes no room in the page, because a message that took room would
+   move the page twice: once when it appears and once when it gives up four
+   seconds later. It sits at the foot of the window instead, below whatever
+   produced it, and is opaque so it reads over the content it covers. */
 .toast {
-  max-width: 1080px;
-  margin: 12px auto -4px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--income) 14%, transparent);
+  position: fixed;
+  /* Both edges, then centred by the margin: with only `left: 50%` the box may
+     shrink to fit in half a window, which wraps a sentence into a column. */
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: fit-content;
+  margin: 0 auto;
+  z-index: 30;
+  max-width: min(680px, calc(100vw - 32px));
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
   color: var(--income);
   font-weight: 600;
+  box-shadow: 0 6px 20px rgba(16, 24, 40, .18);
 }
-.toast.error { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
-.toast.info { background: var(--surface-2); color: var(--muted); }
+.toast.error { color: var(--danger); }
+.toast.info { color: var(--muted); }
 
 /* ---------- cards ---------- */
 .card {

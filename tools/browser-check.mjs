@@ -110,6 +110,52 @@ async function main() {
     'return JSON.parse(localStorage.getItem("home-budget/v1")).entries.length === 1;',
   ));
 
+  // Nothing on the page may move because a message appeared. It used to sit
+  // between the bar and the content, so pressing Add pushed the quick form down
+  // by the height of the confirmation - out from under the finger that had just
+  // pressed it - and pulled it back up when the message expired.
+  const steady = await cdp.evaluate(`
+    const app = window.homeBudget;
+    app.ui.message = null;
+    app.setTab('home');
+    await new Promise((done) => setTimeout(done, 200));
+    const where = () => {
+      const form = document.querySelector('.quick-form');
+      const cards = document.querySelector('.cards');
+      return {
+        form: Math.round(form.getBoundingClientRect().top),
+        cards: cards ? Math.round(cards.getBoundingClientRect().top) : 0,
+      };
+    };
+    const before = where();
+    document.getElementById('quick-amount').value = '7';
+    document.querySelector('.quick-form button').click();
+    await new Promise((done) => setTimeout(done, 250));
+    const shown = where();
+    const message = document.querySelector('.toast');
+    const withMessage = {
+      text: message ? message.textContent : '',
+      inFlow: message ? getComputedStyle(message).position !== 'fixed' : false,
+      spoken: message ? message.getAttribute('role') : '',
+    };
+    app.ui.message = null;
+    app.render();
+    await new Promise((done) => setTimeout(done, 150));
+    const after = where();
+    // Put the store back: the checks that follow count what is in it.
+    const added = app.store.entries.find((entry) => entry.amount === 700);
+    if (added) app.store.deleteEntry(added.id);
+    app.ui.message = null;
+    app.render();
+    return { before, shown, after, withMessage };
+  `);
+  check('a message does not move the page under the hand that caused it',
+    steady.shown.form === steady.before.form && steady.after.form === steady.before.form
+      && steady.shown.cards === steady.before.cards && steady.after.cards === steady.before.cards
+      && /Added/.test(steady.withMessage.text) && !steady.withMessage.inFlow
+      && steady.withMessage.spoken === 'status',
+    JSON.stringify(steady));
+
   await cdp.evaluate(`
     const store = window.homeBudget.store;
     const today = new Date();
