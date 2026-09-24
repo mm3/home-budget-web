@@ -2,7 +2,7 @@
  * The single place where the application version lives.
  * The build stamps it into the file name, the bundle banner and the page.
  */
-export const APP_VERSION = '3.15.0';
+export const APP_VERSION = '3.16.0';
 
 /**
  * Where the app lives. Both are shown in Settings -> About and written into the

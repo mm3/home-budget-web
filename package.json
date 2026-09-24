@@ -1,6 +1,6 @@
 {
   "name": "home-budget-web",
-  "version": "3.15.0",
+  "version": "3.16.0",
   "private": true,
   "type": "module",
   "description": "Offline single-file home budget app for the browser",

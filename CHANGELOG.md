@@ -4,6 +4,25 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.16.0
+
+**The workflows ran on a Node that no longer exists.** GitHub removed Node 20
+from its runners on 23 September 2026; actions still pinned to it warned first
+and then stop working. Every action is moved to the major that runs on Node 24:
+
+| action | was | now |
+|---|---|---|
+| `actions/checkout` | v4 | v7 |
+| `actions/setup-node` | v4 | v7 |
+| `actions/upload-pages-artifact` | v3 | v5 |
+| `actions/deploy-pages` | v4 | v5 |
+| `softprops/action-gh-release` | v2 | v3 |
+
+`node-version` stays at 22 on purpose. That is the Node this project's own
+scripts and tests are checked against, and it has nothing to do with the runtime
+the actions themselves run on - the two are separate, and the warning was only
+ever about the second.
+
 ## 3.15.0
 
 **A message no longer moves the page under the hand that caused it.** The

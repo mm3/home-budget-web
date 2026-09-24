@@ -23,8 +23,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # The action versions below are the ones that run on Node 24. GitHub
+      # removed Node 20 from the runners on 23.09.2026, so anything still
+      # pinned to it warns first and then stops working. node-version stays
+      # at 22 on purpose: that is the Node this project's own scripts and
+      # tests are checked against, and it is unrelated to the runtime the
+      # actions themselves use.
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Unit tests and coverage
@@ -38,7 +44,7 @@ jobs:
         # (CHROME_PATH overrides it) and says so plainly when there is none - on a
         # self-hosted runner without one, install it in the runner's own image.
         run: npm run site-check
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -50,4 +56,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

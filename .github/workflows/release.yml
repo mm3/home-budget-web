@@ -16,8 +16,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # The action versions below are the ones that run on Node 24. GitHub
+      # removed Node 20 from the runners on 23.09.2026, so anything still
+      # pinned to it warns first and then stops working. node-version stays
+      # at 22 on purpose: that is the Node this project's own scripts and
+      # tests are checked against, and it is unrelated to the runtime the
+      # actions themselves use.
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Unit tests and coverage
@@ -39,7 +45,7 @@ jobs:
           cd dist
           sha256sum home-budget*.html > SHA256SUMS.txt
           cat SHA256SUMS.txt
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
