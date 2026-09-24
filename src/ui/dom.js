@@ -89,6 +89,35 @@ export function actionButton({ icon, label, danger = false, onClick, extraClass 
 }
 
 /**
+ * A file chooser that looks like the app's other buttons and speaks its
+ * language.
+ *
+ * A bare `<input type="file">` draws the browser's own control, and the words on
+ * it - "Choose File", "No file chosen" - are written by the browser in the
+ * browser's language, so English text sits in the middle of a Russian page. The
+ * input is still there, because it is what opens the dialog; it is just hidden
+ * behind a label that carries the app's own word.
+ *
+ * Clearing the value afterwards is what lets the same file be picked twice in a
+ * row: `change` only fires when the value differs from the last one.
+ */
+export function fileButton(label, accept, onPick) {
+  return el('label.file-button', {}, [
+    label,
+    el('input', {
+      type: 'file', accept, hidden: true,
+      on: {
+        change: (event) => {
+          const file = event.target.files[0];
+          event.target.value = '';
+          onPick(file);
+        },
+      },
+    }),
+  ]);
+}
+
+/**
  * A cell in a row of fields that has no label of its own - a pair of buttons, a
  * submit. The empty label keeps it on the same rows as the fields beside it, so
  * nothing has to guess a margin when a label next to it wraps to two lines.

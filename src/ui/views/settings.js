@@ -4,7 +4,7 @@ import { CUSTOM_LANGUAGE, EN, LANGUAGES, sanitizeTranslation, translationKeys } 
 import { formatMoney, parseAmount, toPlainAmount } from '../../core/format.js';
 import { ICON_CHOICES, LIMIT_PERIODS } from '../../core/model.js';
 import { APP_VERSION, REPO_URL, SITE_URL } from '../../core/version.js';
-import { actionButton, el, field, fieldSlot, options, render } from '../dom.js';
+import { actionButton, el, field, fieldSlot, fileButton, options, render } from '../dom.js';
 import { download, MIME } from '../files.js';
 
 export function settingsView(app) {
@@ -159,13 +159,7 @@ export function settingsView(app) {
       el('p.muted', { text: t('settings.dataHint', { storage: app.storageKind }) }),
       el('div.button-row', {}, [
         el('button', { type: 'button', text: t('settings.backup'), on: { click: () => backup(app) } }),
-        el('label.file-button', {}, [
-          t('settings.restore'),
-          el('input', {
-            type: 'file', accept: '.json', hidden: true,
-            on: { change: (event) => restore(app, event.target.files[0]) },
-          }),
-        ]),
+        fileButton(t('settings.restore'), '.json', (file) => restore(app, file)),
         el('button.danger', { type: 'button', text: t('settings.deleteAll'), on: { click: () => app.clearEntries() } }),
         el('button.danger', { type: 'button', text: t('settings.resetAll'), on: { click: () => app.resetAll() } }),
       ]),
@@ -219,13 +213,7 @@ function translationCard(app) {
           },
         },
       }),
-      el('label.file-button', {}, [
-        t('settings.translationImport'),
-        el('input', {
-          type: 'file', accept: '.json', hidden: true,
-          on: { change: (event) => loadTranslation(app, event.target.files[0]) },
-        }),
-      ]),
+      fileButton(t('settings.translationImport'), '.json', (file) => loadTranslation(app, file)),
     ]),
   ]);
 }

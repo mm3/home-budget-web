@@ -654,39 +654,80 @@ async function main() {
               + ' tops=' + tops.join('/') + ' heights=' + heights.join('/'));
           }
         }
+        // A button beside a control is never shorter than it, or the row reads
+        // as two lines. Taller is allowed: a longer language needs the room.
         const buttonHeights = [...new Set([...row.querySelectorAll('button')]
           .map((button) => Math.round(button.getBoundingClientRect().height)))];
         const controlHeight = items.length ? Math.round(items[0].control.height) : null;
-        if (buttonHeights.some((height) => height !== controlHeight) && controlHeight !== null) {
+        if (controlHeight !== null && buttonHeights.some((height) => height < controlHeight)) {
           problems.push(where + ' ' + row.className
-            + ' buttons=' + buttonHeights.join('/') + ' controls=' + controlHeight);
+            + ' buttons=' + buttonHeights.join('/') + ' shorter than controls=' + controlHeight);
+        }
+        // Nothing sits on top of anything. A control with no width of its own is
+        // as wide as its widest option, which in a grid is not its own cell:
+        // "Все категории" lay 45 pixels over the search box beside it, and
+        // measuring tops and heights alone never saw it.
+        const boxes = [...row.querySelectorAll('input, select, button')]
+          .filter((node) => node.getAttribute('aria-hidden') !== 'true'
+            && node.clientWidth && node.clientHeight)
+          .map((node) => ({ node, box: node.getBoundingClientRect() }));
+        for (let first = 0; first < boxes.length; first += 1) {
+          for (let second = first + 1; second < boxes.length; second += 1) {
+            const a = boxes[first];
+            const b = boxes[second];
+            if (a.node.contains(b.node) || b.node.contains(a.node)) continue;
+            const across = Math.min(a.box.right, b.box.right) - Math.max(a.box.left, b.box.left);
+            const down = Math.min(a.box.bottom, b.box.bottom) - Math.max(a.box.top, b.box.top);
+            if (across > 1 && down > 1) {
+              problems.push(where + ' ' + row.className + ' "'
+                + (a.node.textContent || a.node.placeholder || a.node.type).trim().slice(0, 16)
+                + '" lies over "'
+                + (b.node.textContent || b.node.placeholder || b.node.type).trim().slice(0, 16)
+                + '" by ' + Math.round(across) + 'x' + Math.round(down));
+            }
+          }
+        }
+        // ... and its words stay inside it. An exact height looked right in
+        // English and printed the second line of a longer label over the card.
+        for (const node of row.querySelectorAll('button, input, select, .field-label')) {
+          // Deliberately invisible: the native date input exists only to open
+          // the browser's calendar and is a transparent pixel in the corner.
+          if (node.getAttribute('aria-hidden') === 'true') continue;
+          if (!node.clientWidth || !node.clientHeight) continue;
+          if (node.scrollHeight > node.clientHeight + 1 || node.scrollWidth > node.clientWidth + 1) {
+            problems.push(where + ' ' + row.className + ' "' + node.textContent.trim().slice(0, 20)
+              + '" spills ' + node.clientWidth + 'x' + node.clientHeight
+              + ' < ' + node.scrollWidth + 'x' + node.scrollHeight);
+          }
         }
       }
       return problems;
     };
+    // Everything below is driven through the app rather than by clicking text:
+    // this probe runs in three languages, and "Settings" is a word in one.
+    const app = window.homeBudget;
     const found = [];
-    window.homeBudget.closeDialog();
-    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Settings')).click();
+    app.closeDialog();
+    app.setTab('settings');
     await new Promise((done) => setTimeout(done, 200));
     found.push(...check('settings'));
     // the category dialog, with its colour/icon and limit/limit period rows
-    [...document.querySelectorAll('.entries-table button')]
-      .find((button) => button.getAttribute('aria-label') === 'Edit').click();
+    app.editCategory(app.store.categories[0].id);
     await new Promise((done) => setTimeout(done, 250));
     found.push(...check('category dialog'));
-    window.homeBudget.closeDialog();
-    [...document.querySelectorAll('.tab')].find((tab) => tab.textContent.includes('Entries')).click();
+    app.closeDialog();
+    app.setTab('entries');
     await new Promise((done) => setTimeout(done, 200));
     const box = document.querySelector('.filters-box');
     if (box) box.open = true;
     await new Promise((done) => setTimeout(done, 200));
     found.push(...check('entry filters'));
-    const row = document.querySelector('.entries-table tbody tr');
-    if (row) {
-      row.click();
+    const entry = app.store.entries[0];
+    if (entry) {
+      app.editEntry(entry.id);
       await new Promise((done) => setTimeout(done, 250));
       found.push(...check('entry dialog'));
-      window.homeBudget.closeDialog();
+      app.closeDialog();
     }
     return found;
   `;
@@ -699,11 +740,43 @@ async function main() {
     await cdp.send('Emulation.setDeviceMetricsOverride', {
       width: layout.width, height: layout.height, deviceScaleFactor: 1, mobile: layout.mobile,
     });
-    await cdp.evaluate(`window.homeBudget.store.updateSettings({ uiMode: '${layout.mode}' });`);
-    await sleep(200);
-    const found = await cdp.evaluate(alignmentProbe);
-    aligned.push(...found.map((item) => `${layout.name}: ${item}`));
+    // Every language, because this is where the layout breaks first: English is
+    // the short one, and a row that fits it can still throw "В этом месяце" out
+    // of its button and "Сбросить" off the screen.
+    for (const language of ['en', 'ru', 'de']) {
+      await cdp.evaluate(`window.homeBudget.store.updateSettings(`
+        + `{ uiMode: '${layout.mode}', language: '${language}' });`);
+      await sleep(200);
+      const found = await cdp.evaluate(alignmentProbe);
+      aligned.push(...found.map((item) => `${layout.name}/${language}: ${item}`));
+    }
   }
+  await cdp.evaluate(`window.homeBudget.store.updateSettings({ language: 'en' });`);
+
+  // The bar across the top has one line for a name and four tabs. A longer name
+  // used to wrap - doubling the height of something sticky, on every screen -
+  // or run past the right edge, and only one of the three languages showed it.
+  const bar = await cdp.evaluate(`
+    const app = window.homeBudget;
+    const out = {};
+    for (const language of ['en', 'ru', 'de']) {
+      app.store.updateSettings({ uiMode: 'mobile', language });
+      await new Promise((done) => setTimeout(done, 150));
+      const name = document.querySelector('.brand strong');
+      const lineHeight = parseFloat(getComputedStyle(name).lineHeight);
+      out[language] = {
+        lines: Math.round(name.getBoundingClientRect().height / lineHeight),
+        height: Math.round(document.querySelector('.app-bar').getBoundingClientRect().height),
+        overflow: document.querySelector('.app-bar').scrollWidth > window.innerWidth + 1,
+      };
+    }
+    app.store.updateSettings({ language: 'en' });
+    return out;
+  `);
+  check('the name and the tabs share one line on a phone, in every language',
+    ['en', 'ru', 'de'].every((language) => bar[language].lines === 1 && !bar[language].overflow)
+      && new Set(['en', 'ru', 'de'].map((language) => bar[language].height)).size === 1,
+    JSON.stringify(bar));
   check('controls in a row of fields stay on one line', aligned.length === 0, aligned.join(' | '));
 
   // Hiding the row actions on a narrow screen left no way at all to edit or delete

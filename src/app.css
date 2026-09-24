@@ -200,7 +200,7 @@ button, input, select { font: inherit; color: inherit; }
    drops under the hint rather than squeezing it. */
 .quick-more { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
 .quick-more .quick-hint { flex: 1 1 220px; margin: 0; }
-.quick-more button { height: var(--control-height); white-space: nowrap; }
+.quick-more button { white-space: nowrap; }
 .quick-message { margin-top: 8px; font-size: .88rem; min-height: 1.2em; color: var(--muted); }
 .quick-message.ok { color: var(--income); }
 .quick-message.error { color: var(--danger); }
@@ -289,6 +289,11 @@ input:focus-visible, select:focus-visible, button:focus-visible {
   display: grid;
   grid-template-rows: auto auto auto;
   align-content: start;
+  /* Each part sits at the top of its row instead of stretching to fill it. When
+     something in the line is taller than a control - two buttons that had to
+     take a line each in a longer language - a control that stretches centres
+     itself in that height and drops below its neighbours. */
+  align-items: start;
   padding-bottom: 8px;
 }
 @supports (grid-template-rows: subgrid) {
@@ -299,16 +304,41 @@ input:focus-visible, select:focus-visible, button:focus-visible {
     min-height: calc(var(--label-height) * 2);
   }
 }
+/* A <select> is as wide as its widest option and an <input> as wide as its size
+   attribute. In a grid that means spilling over the cell next door: "Все
+   категории ☕ Ежедневные" pushed the currency filter 45 pixels under the search
+   box beside it. Inside a row of fields a control is the width of its cell, and
+   min-width: 0 is what lets it actually shrink to that. */
+.filters > .field > select,
+.filters > .field > input,
+.filters > .field > .date-input,
+.inline-form > .field > select,
+.inline-form > .field > input { width: 100%; min-width: 0; }
+/* The date field is a text box and a calendar button sharing that width. */
+.filters > .field > .date-input .date-text { flex: 1 1 auto; width: auto; min-width: 0; }
+
 /* The error message is a sentence, not a field: it takes the whole width. */
 .inline-form > .error { grid-column: 1 / -1; margin: 0; }
-.filter-buttons { display: flex; gap: 8px; }
 .filters-box { margin-bottom: 4px; }
 .filters-box > summary { cursor: pointer; color: var(--muted); font-weight: 600; font-size: .85rem; padding: 4px 0; }
 .filters-box[open] > summary { margin-bottom: 8px; }
 .entry-row { cursor: pointer; }
 /* Buttons that stand in a row with form controls are exactly as tall as they are. */
+/* A button standing in a row with form controls is never shorter than they are,
+   so the row reads as one line - but never taller than its own words either.
+   `height` used to be exact here, which looked right in English and spilled the
+   text of a longer language straight out of the button: "В этом месяце" wrapped
+   to two lines inside a 40 pixel box and printed the second one over the card. */
 .inline-form button, .filters button, .button-row > button, .file-button,
-.install-row button { height: var(--control-height); }
+.install-row button, .quick-more button {
+  min-height: var(--control-height);
+  height: auto;
+}
+/* Two buttons sharing one cell of the field grid. When their words do not fit
+   side by side they take a line each, full width, rather than shrinking into
+   columns too narrow for a word - which is what pushed "Сбросить" off screen. */
+.filter-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-buttons > button { flex: 1 1 auto; }
 
 /* ---------- lists and tables ---------- */
 .summary { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; font-size: .9rem; font-weight: 600; }
@@ -469,6 +499,9 @@ svg .grid { fill: none; }
 /* ---------- transfer ---------- */
 .transfer { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .transfer-block { display: flex; flex-direction: column; gap: 8px; }
+/* The file chooser is a button, so it is as wide as its word - not as wide
+   as the column, which is what a stretched flex child would be. */
+.transfer-block > .file-button { align-self: start; }
 .transfer-block h3 { font-size: .95rem; }
 .import-preview {
   margin-top: 16px;
@@ -505,6 +538,8 @@ svg .grid { fill: none; }
   body[data-mode="auto"] .grid,
   body[data-mode="auto"] .transfer { grid-template-columns: 1fr; }
   body[data-mode="auto"] .app-bar { gap: 10px; }
+  body[data-mode="auto"] .tab { padding: 8px 10px; }
+  body[data-mode="auto"] .brand { white-space: nowrap; }
   body[data-mode="auto"] .hide-sm { display: none; }
   body[data-mode="auto"] .main { padding: 14px 12px 32px; }
 }
@@ -515,8 +550,14 @@ body[data-mode="mobile"] .transfer { grid-template-columns: 1fr; }
 body[data-mode="mobile"] .hide-sm { display: none; }
 body[data-mode="mobile"] .main { max-width: 560px; padding: 14px 12px 32px; }
 body[data-mode="mobile"] .cards { grid-template-columns: repeat(2, 1fr); }
-body[data-mode="mobile"] .app-bar { position: sticky; }
+body[data-mode="mobile"] .app-bar { position: sticky; gap: 10px; }
 body[data-mode="mobile"] .tabs { flex: 1; justify-content: space-around; }
+/* The bar has one line to fit a name and four tabs. "Home Budget" left room to
+   spare; "Haushaltsbudget" ran 7 pixels past the edge and "Домашний бюджет"
+   wrapped, which made the sticky bar twice as tall on every screen. The icons
+   are what give the room back - they do not need the padding of a word. */
+body[data-mode="mobile"] .tab { padding: 8px 10px; }
+body[data-mode="mobile"] .brand { white-space: nowrap; }
 
 /* The narrow layout, whichever way it was reached. */
 @media (max-width: 720px) {
@@ -536,8 +577,6 @@ body[data-mode="mobile"] .tabs { flex: 1; justify-content: space-around; }
   body[data-mode="auto"] .rate-input { width: 84px; }
   /* Two selects fit a phone; a third squeezed to nothing. */
   body[data-mode="auto"] .filters > .field { flex: 1 1 140px; }
-  body[data-mode="auto"] .filters select,
-  body[data-mode="auto"] .filters input { width: 100%; }
   body[data-mode="auto"] .inline-form > .field { flex: 1 1 130px; }
   body[data-mode="auto"] .translation-table { max-height: 260px; }
 }
@@ -552,8 +591,6 @@ body[data-mode="mobile"] th,
 body[data-mode="mobile"] td { padding-left: 5px; padding-right: 5px; }
 body[data-mode="mobile"] .rate-input { width: 84px; }
 body[data-mode="mobile"] .filters > .field { flex: 1 1 140px; }
-body[data-mode="mobile"] .filters select,
-body[data-mode="mobile"] .filters input { width: 100%; }
 body[data-mode="mobile"] .inline-form > .field { flex: 1 1 130px; }
 body[data-mode="mobile"] .translation-table { max-height: 260px; }
 

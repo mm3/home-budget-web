@@ -1,4 +1,4 @@
-# Home Budget 3.12.0 (browser version)
+# Home Budget 3.13.0 (browser version)
 
 <table>
 <tr>
@@ -151,7 +151,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.12.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.13.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -191,7 +191,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.12.0` is pushed.
+built files to a release when a tag like `v3.13.0` is pushed.
 
 ## Building
 
@@ -308,7 +308,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (49 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (50 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
@@ -317,8 +317,10 @@ settings editor, checks the version stamp, the cache and web app metadata, the a
 bars with their periods, the ruble, the currency flags and that no two currencies share a symbol,
 confirms that deleting the entries keeps the settings while resetting really restores the defaults,
 **measures every row of form controls** - in the cards, in the filters and in the dialogs, at a desktop
-width and again at 390 pixels - and fails when a label of a different length, a label that wraps to two
-lines or a hint under one field pushes its control off the line its neighbours sit on, checks that a
+width and again at 390 pixels, **in all three languages** - and fails when a label of a different
+length pushes its control off the line its neighbours sit on, when a control lies on top of the one
+beside it, or when a button's words spill outside it; it also checks that the name and the tabs share
+one line of the top bar in every language, checks that a
 phone can still reach the edit and delete actions of every table row and that they are big enough to
 hit, adds five thousand entries at once to check that the list pages instead of drawing
 them all, refuses the amounts that would break the totals, checks that no native date input is left in the page

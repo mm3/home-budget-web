@@ -4,6 +4,40 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.13.0
+
+**The interface was measured in one language and broke in the other two.** Every
+fault below was there in Russian and German while the checks, which ran in
+English only, said the layout was fine.
+
+- **Controls lay on top of each other.** A `<select>` is as wide as its widest
+  option and refuses to shrink below it, so "Все категории ☕ Ежедневные" reached
+  45 pixels across the search box in the cell beside it. `min-width: 0` is what
+  lets a grid item shrink to its cell; controls in a row of fields now also fill
+  that cell, so the row looks deliberate rather than ragged.
+- **Words fell out of their buttons.** Buttons standing beside form controls had
+  an exact height, which looked right in English: "В этом месяце" wrapped to two
+  lines inside a 40 pixel box and printed the second one over the card, and
+  "Сбросить" was pushed off the screen entirely. A button is now never *shorter*
+  than the controls beside it and never taller than its own words, and two
+  buttons sharing a cell take a line each when they do not fit side by side.
+- **The name and the tabs no longer share the top bar unevenly.** "Домашний
+  бюджет" wrapped, doubling the height of a sticky bar on every screen, and
+  "Haushaltsbudget" ran seven pixels past the right edge. The tab icons give
+  back the padding they do not need, and all three languages fit one line.
+- **The import button spoke the browser's language, not the app's.** A bare
+  `<input type="file">` draws the browser's own control, so "Choose File / No
+  file chosen" sat in English in the middle of a Russian page. All three file
+  choosers in the app now share one helper, carry the app's own word, and clear
+  themselves afterwards - which also fixes picking the same file twice in a row,
+  where `change` never fired because the value had not changed.
+
+The alignment check now runs **in all three languages** at both widths, and looks
+for two things it never did: a control overlapping its neighbour, and text
+spilling outside the box that holds it. Reverting each fix makes it fail, and it
+named faults in English too that nobody had noticed - "Add currency" had been
+spilling all along.
+
 ## 3.12.0
 
 **A deploy no longer installs a browser or touches the kernel.** Both workflows

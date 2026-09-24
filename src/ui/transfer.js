@@ -7,7 +7,7 @@ import {
 import { formatDate, formatMoney } from '../core/format.js';
 import { convertRows, describeImport, detectStructure } from '../core/importer.js';
 import { parseXlsx } from '../core/xlsx.js';
-import { el, field, options, render } from './dom.js';
+import { el, field, fileButton, options, render } from './dom.js';
 import { download, MIME, readAsBytes, readAsText } from './files.js';
 
 const FIELD_KEYS = {
@@ -30,10 +30,7 @@ export function transferPanel(app, entries) {
       ]),
       el('div.transfer-block', {}, [
         el('h3', { text: t('transfer.importTitle') }),
-        el('input', {
-          type: 'file', accept: '.csv,.txt,.tsv,.xlsx',
-          on: { change: (event) => pickFile(app, event.target.files[0]) },
-        }),
+        fileButton(t('transfer.chooseFile'), '.csv,.txt,.tsv,.xlsx', (file) => pickFile(app, file)),
         el('p.muted', { text: t('transfer.importHint') }),
       ]),
     ]),
