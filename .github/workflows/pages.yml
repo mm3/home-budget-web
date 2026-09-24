@@ -31,24 +31,12 @@ jobs:
         run: npm run coverage
       - name: Build the site
         run: npm run build:site
-      - name: Make sure a browser is installed
-        # The browser checks drive a real Chrome over the DevTools protocol. Hosted
-        # runners usually ship one; this installs one when they do not, and
-        # tools/cdp.mjs finds whichever is there (CHROME_PATH overrides it).
-        run: |
-          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
-          if [ -z "$BROWSER" ]; then
-            curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo apt-get update
-            sudo apt-get install -y /tmp/chrome.deb
-            BROWSER="$(command -v google-chrome)"
-          fi
-          echo "Using $BROWSER - $("$BROWSER" --version)"
-          # Ubuntu 24.04 blocks unprivileged user namespaces, which stops Chrome's
-          # sandbox from starting. The checks pass --no-sandbox, and this covers the
-          # rest; the runner is thrown away after the job either way.
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 2>/dev/null || true
       - name: Check the published build
+        # Uses the Chrome the hosted runner already ships. Nothing is installed and
+        # no kernel setting is touched here: a deploy should not be reaching for
+        # root on a machine it does not own. tools/cdp.mjs finds the browser
+        # (CHROME_PATH overrides it) and says so plainly when there is none - on a
+        # self-hosted runner without one, install it in the runner's own image.
         run: npm run site-check
       - uses: actions/upload-pages-artifact@v3
         with:

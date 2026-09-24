@@ -1,4 +1,4 @@
-# Home Budget 3.11.0 (browser version)
+# Home Budget 3.12.0 (browser version)
 
 <table>
 <tr>
@@ -151,7 +151,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.11.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.12.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -191,7 +191,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.11.0` is pushed.
+built files to a release when a tag like `v3.12.0` is pushed.
 
 ## Building
 
@@ -335,8 +335,12 @@ app really works offline.
 Both need a real browser. `tools/cdp.mjs` looks for one in this order: `CHROME_PATH`, then
 `google-chrome`, `chromium` or `chromium-browser` in the usual places, then a Chromium that
 Playwright has downloaded - so it works on a laptop, in a container and on a CI runner without
-anything being configured, and the workflows install Chrome when the runner does not already have
-one. The headless flag is tried in both spellings (`--headless=new` and `--headless`), since a
+anything being configured. The workflows install nothing and change no system setting: GitHub's
+hosted images already ship Chrome, and the sandbox flags the checks pass (`--no-sandbox`,
+`--disable-setuid-sandbox`) are what makes Ubuntu's restriction on unprivileged user namespaces
+irrelevant - a deploy has no business reaching for `sudo` on a machine it does not own. A
+self-hosted runner that has no browser should get one in its own image; the checks there fail with
+a sentence saying so. The headless flag is tried in both spellings (`--headless=new` and `--headless`), since a
 runner may have a Chrome that only understands one of them.
 
 When the browser will not start, the error carries **the browser's own output**, not just

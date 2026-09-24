@@ -1,0 +1,207 @@
+# Changelog
+
+Newest first. The pull-request script reads this file: a pull request describes
+only the versions above the one the target repository is on, so the description
+is always the difference from the release being replaced.
+
+## 3.12.0
+
+**A deploy no longer installs a browser or touches the kernel.** Both workflows
+used to download Chrome when the runner had none and then turn off Ubuntu's
+restriction on unprivileged user namespaces with `sudo sysctl`. Neither step is
+needed: GitHub's hosted images already ship Chrome, and the sandbox flags the
+checks pass (`--no-sandbox`, `--disable-setuid-sandbox`) are what made the
+namespace setting irrelevant in the first place - it was belt and braces that
+reached for root on a machine the project does not own. The checks themselves
+stay; `tools/cdp.mjs` finds the browser, and says plainly when there is none, so
+a self-hosted runner without one fails with a sentence rather than a mystery. A
+runner that needs Chrome should have it in its own image.
+
+**A pull request now describes only the difference from the release it
+replaces.** This file is that description: `create-pr.sh` reads
+`src/core/version.js` in the clone it is pointed at and takes the sections above
+that version, so a repository on 3.9.0 gets 3.10 through 3.12 and a repository on
+3.0.0 gets everything - without anyone editing the script. A clone that is
+already current gets no pull request at all.
+
+## 3.11.0
+
+**The default currency follows the interface language.** A fresh app opened in
+Russian started in euro, and the only way out was the settings. The locale now
+picks the starting currency, with the *region* deciding where it disagrees with
+the language:
+
+| locale | currency |
+|---|---|
+| `ru-RU`, `ru` | RUB |
+| `de-DE`, `de` | EUR |
+| `de-CH` | CHF |
+| `en-GB` | GBP |
+| `en-IN` | INR |
+| `en-US`, `en` | USD |
+
+It follows a language chosen by hand as well, and says so in the message line
+when it does.
+
+Where it stops is the part that matters: the currency is left alone from the
+moment the person picks one themselves, **or** records their first entry,
+whichever comes first - a figure already written down must never change meaning
+underneath it. A `currencyChosen` flag carries that, and a stored state without
+it counts as chosen, so nothing moves under an existing installation. A currency
+the app does not have is never returned, so someone who deleted the franc gets
+the euro rather than a broken setting.
+
+The browser checks now pin the currency at the top of the run. They had been
+quietly depending on the app starting in euro - fine on a laptop, a failure on a
+runner in another locale, which is the worst kind.
+
+## 3.10.0
+
+**The cards on the home screen pace their period from the inside.** *This month*
+used to read `avg 1 901.82 € / month` - the average month over the whole history,
+on a card that is about *this* month; with less than a year of data the year card
+just repeated its own total.
+
+| card | before | now |
+|---|---|---|
+| Today | `avg 66.57 € / day` | unchanged - a day has nothing finer to divide by |
+| This week | `avg 459.06 € / week` | `avg 110.20 € / day this week` |
+| This month | `avg 1 901.82 € / month` | `avg 414.71 € / week this month` |
+| This year | `avg 13 312.73 € / year` | `avg 1 973.37 € / month this year` |
+
+The divisor is **elapsed** sub-periods, not the ones that happen to have entries:
+a day on which nothing was spent is still a day that passed, and dividing by the
+days with entries would turn a quiet week into a high daily rate. A month counts
+the calendar weeks its elapsed days fall in, so the week that crosses the first
+of the month counts once, for the month being looked at.
+
+The statistics table keeps the other average - per whole period, over the periods
+that have entries - because that is the one that answers what a typical week
+costs. Its hint now says which is which.
+
+## 3.9.0
+
+**The settings were unusable on a phone.** The narrow layout hid `.row-actions`
+outright, which left no way at all to edit or delete a category, a currency or an
+entry from a phone, and the tables ran past the right edge on top of it. The
+columns that carry the least are dropped instead, the actions stay as a sign with
+a 34 pixel target and the word as its accessible name, and in the entry list -
+where tapping the row already opens the editor - only the delete sign remains.
+
+**A row of fields is a grid now.** "Category for quick entries" wraps to two
+lines on a phone and almost every German label wraps somewhere; a wrapping label
+used to grow only its own field and push its control below the control beside it.
+Every field is three rows - label, control, hint - and a row of fields shares
+those rows through `subgrid`, so the tallest label sets the height for all of
+them. Where `subgrid` is missing the label reserves two lines and keeps the same
+promise. The alignment check runs at a desktop width **and at 390 pixels**.
+
+**The Share button no longer moves.** It was a bordered box among plain text
+links, and the install row above it changed height the moment the browser offered
+an installation, shoving everything below it down the page.
+
+**Two renames:** *Delete all entries* → **Delete all data**, *Reset everything* →
+**Reset to default**, in all three languages, with the confirmations and the hint
+reworded so they still say exactly what each one removes.
+
+**Add with details** on the home screen opens the same dialog the Entries tab
+uses, for an entry whose category, date, currency or note is not the usual one.
+
+A new test scans the error map in `app.js` against the messages the core throws:
+they are matched by exact English text, so rewording one would silently drop it
+back to English in every language.
+
+## 3.8.0
+
+**The interface matches its icon.** The accent, the income colour, the focus
+ring, `theme-color`, the manifest's `theme_color` and the browser's own
+checkboxes all derive from a single `--green`. The coin in the header carries the
+symbol of the currency the figures are shown in - it used to be a euro sign
+whatever you were counting in. The `apple-touch-icon` is a real 180x180 PNG,
+because an inline SVG is the one thing iOS will not read for a home screen icon.
+Category colours are left varied: they are data, and need to stay far apart on a
+chart.
+
+## 3.7.0
+
+The README opens with a GIF of the app being used, recorded by
+`tools/make-demo.mjs` and written by `tools/gif.mjs` - popularity based colour
+quantisation and the format's own LZW, no dependency. **Settings → About →
+Share** draws the app's address as a QR code, offline; the encoder moved into
+`src/core/qr.js` so the app and the build share it. The link to the repository
+reads *Source on GitHub*.
+
+## 3.6.0, 3.6.1
+
+**Settings → About** has an *Install as an app* button. The browser's own banner
+is cancelled, so the dialog opens on the press and only then, and the offer is
+used once. The button appears only where it can work; iOS shows the manual route
+instead, and a file opened from disk says installation needs the published page.
+
+A new icon: a gold coin on green instead of the indigo house, with the euro sign
+drawn as geometry so it does not depend on a font, and legible at 16 pixels.
+
+## 3.5.0
+
+The app links to itself. **Settings → About** offers *Open the web app* and
+*Source code*; both addresses live in `src/core/version.js` next to the version,
+feed the build banner - which used to carry a bare `https://github.com/` - and
+become the site's `canonical` and `og:url`. The README opens with the same links,
+a Pages badge and a QR code generated by `tools/make-qr.mjs`: byte mode,
+Reed-Solomon over GF(256), the mask chosen by the penalty rules of the
+specification, no dependency. Every version and correction level it can produce
+was verified by decoding the result with an independent reader, which is how two
+real bugs in the format information layout were found - one of them writing over
+the timing pattern.
+
+**The browser checks could not run in CI.** `tools/cdp.mjs` had Chromium's path
+hard coded to what it happens to be in one container, so every run failed with
+`spawn ... ENOENT`, and the failed spawn had no error handler, so it ended in a
+stack trace rather than a sentence. It now looks for `CHROME_PATH`, then
+`google-chrome` / `chromium` / `chromium-browser` in the usual places, then a
+Chromium downloaded by Playwright with its version globbed rather than pinned. A
+browser that is found but will not start carries its own output with the error,
+both headless spellings are tried, and the wait is 30 seconds
+(`CHROME_TIMEOUT_MS` to change it).
+
+## 3.4.0
+
+**The date field is the app's own.** `<input type="date">` displays the format of
+the browser's language setting alone - not the page, not `lang`, not the chosen
+interface language - so a browser set to American English showed `09/23/2026` in
+an otherwise Russian app. Dates are now typed and shown as `23.09.2026`
+everywhere, and the button still opens the browser's native calendar, which is
+what makes it usable on a phone. An unreadable date is refused instead of
+quietly becoming today.
+
+## 3.3.0
+
+Amounts have limits, and the limits are honest. There was no upper bound, so
+`1e300` was accepted and destroyed every total; `1e15` silently became `115.00`
+because the cleanup ate its exponent; and `0.001` was refused with "Amount cannot
+be zero", which is not what happened. All three are fixed, with messages that say
+which. The entry list draws one page at a time - 1507 ms to 12 ms at 30 000
+entries - while the summary, the exports and the statistics still cover every
+matching entry.
+
+## 3.2.0, 3.2.1
+
+Form controls stop jumping: every control in a row is one height, every label
+one height, and a hint under one field no longer moves the field beside it. The
+regression check groups fields into visual lines and was proven to fail on the
+layout it replaced. The three Nordic crowns get symbols of their own - `Skr`,
+`Nkr`, `Dkr` - so an amount always says which currency it is in. The category
+column reads *Limit* rather than *Monthly limit*, since a limit has its own
+period. *Delete all entries* and *Reset everything* are separated, and the
+settings spell out the difference.
+
+## 3.1.0
+
+**The PDF writes any language.** It used to fall back to a built-in font with no
+Cyrillic, so a Russian export came out as `?????`. It now embeds a subset of
+DejaVu Sans - CIDFontType2, Identity-H, `/ToUnicode` for copy and search - built
+by `tools/make-font.mjs`, a TrueType subsetter written for this project. The
+ruble joins the currencies, every currency has its flag, the page asks to be
+cached forever and carries the metadata that makes it installable, and the build
+also writes `home-budget.html` under a name that never changes, so a link can
+always point at the latest build.
