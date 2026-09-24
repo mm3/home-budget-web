@@ -1,4 +1,4 @@
-# Home Budget 3.13.0 (browser version)
+# Home Budget 3.14.0 (browser version)
 
 <table>
 <tr>
@@ -84,6 +84,11 @@ USB stick, a local folder or an offline laptop and it works. The same file is al
 - **Storage:** everything stays in the browser's `localStorage`, which holds roughly **30 000 entries**
   (see *Limits* below). `sessionStorage` and an in-memory store are used as fallbacks when a browser
   blocks storage, so the app still runs in private mode. A JSON backup can be downloaded and restored.
+- **Update it:** **Settings → About → Update the app** asks the published page whether it has changed,
+  past every cache between here and the server - the page asks to be kept for a year and the service
+  worker answers from its own copy first, and both are told to step aside for this one request. If the
+  version up there is the one already running it says so; if it is not, the caches are emptied and the
+  new one loads. A file opened from disk says there is no server to ask.
 - **Share it:** **Settings → About → Share** draws the app's address as a QR code, offline, with the
   same encoder that made the one at the top of this README - point a phone at the screen, or copy the
   link.
@@ -151,7 +156,7 @@ to export a backup and start a fresh file, or to remove old entries.
 
 ## Using it
 
-Open `home-budget-3.13.0.html` (or `home-budget.html`, the same build under a name that never changes)
+Open `home-budget-3.14.0.html` (or `home-budget.html`, the same build under a name that never changes)
 in any modern browser - Chrome, Edge, Firefox, Safari. Nothing to install. Amounts are stored as whole
 cents, so no rounding errors creep in. Data saved by an older version is upgraded automatically on first
 start: entries and categories are kept, and anything new (icons, limit periods, currency rates, currency
@@ -191,7 +196,7 @@ It is live at **https://mm3.github.io/home-budget-web/**, and the same build dow
 
 To publish: enable **Settings → Pages → Source: GitHub Actions** once. `.github/workflows/pages.yml`
 then tests, builds and deploys every push to `main`, and `.github/workflows/release.yml` attaches the
-built files to a release when a tag like `v3.13.0` is pushed.
+built files to a release when a tag like `v3.14.0` is pushed.
 
 ## Building
 
@@ -308,7 +313,7 @@ labels, deleting entries versus resetting everything, version consistency, trans
 for files with and without headers. The run **fails below 90%** line, branch and function coverage of
 `src/core`; it currently sits at about 99% lines, 95% branches.
 
-`tools/browser-check.mjs` additionally drives the built file in headless Chromium (50 checks): it adds
+`tools/browser-check.mjs` additionally drives the built file in headless Chromium (51 checks): it adds
 an entry through the quick form, checks that it is stored and survives a reload, exports CSV/XLSX/PDF
 and verifies the produced bytes (including the chart parts and the embedded font), exports a Russian
 PDF and asserts it contains real Cyrillic and no question marks, imports a semicolon-separated German
@@ -331,8 +336,10 @@ and never before, and
 takes the screenshots in this README. It fails if anything logs an error to the console.
 
 `tools/site-check.mjs` serves `site/` over HTTP, checks the manifest and the icons, waits for the
-service worker to fill its cache, then **switches the network off and reloads** to prove the published
-app really works offline.
+service worker to fill its cache, drives the **Update** button - counting the requests the server
+actually receives, because a button that answers from a cache would look identical from inside the
+page - publishes a different version for a moment to prove it is found and the caches go with it, then
+**switches the network off and reloads** to prove the published app really works offline.
 
 Both need a real browser. `tools/cdp.mjs` looks for one in this order: `CHROME_PATH`, then
 `google-chrome`, `chromium` or `chromium-browser` in the usual places, then a Chromium that

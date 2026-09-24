@@ -147,6 +147,7 @@ export function settingsView(app) {
       el('p', { text: t('settings.version', { version: APP_VERSION }) }),
       el('p.muted', { text: t('settings.aboutText') }),
       installRow(app),
+      updateRow(app),
       el('p.about-links', {}, [
         el('a', { href: SITE_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.webApp') }),
         el('a', { href: REPO_URL, target: '_blank', rel: 'noopener noreferrer', text: t('settings.sourceCode') }),
@@ -288,6 +289,24 @@ function installRow(app) {
     ]);
   }
   return el('p.muted.install-row', { text: app.isIos() ? t('settings.installIos') : t('settings.installWhere') });
+}
+
+/**
+ * The way to ask the published page whether it has changed. A file opened from
+ * disk has no server to ask, so there the row says what to do instead.
+ */
+function updateRow(app) {
+  const t = app.t;
+  if (!app.canUpdate()) return el('p.muted.install-row', { text: t('settings.updateOffline') });
+  return el('div.install-row.update-row', {}, [
+    el('button', {
+      type: 'button',
+      text: app.updating ? t('settings.updateChecking') : t('settings.update'),
+      disabled: Boolean(app.updating),
+      on: { click: () => app.updateApp() },
+    }),
+    el('span.muted', { text: t('settings.updateHint') }),
+  ]);
 }
 
 /** Dialog contents for creating or editing a category. */

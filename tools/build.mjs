@@ -73,8 +73,17 @@ function serviceWorker(version) {
 const CACHE = 'home-budget-${version}';
 const ASSETS = ${JSON.stringify(assets)};
 
+// cache.addAll() would go through the browser's HTTP cache, and the page asks to
+// be kept for a year, so a new release could cheerfully fill its brand new cache
+// with last year's bytes. Every asset is fetched past that cache instead.
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE)
+    .then((cache) => Promise.all(ASSETS.map((asset) => fetch(asset, { cache: 'reload' })
+      .then((response) => {
+        if (!response || !response.ok) throw new Error('could not fetch ' + asset);
+        return cache.put(asset, response);
+      }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -87,6 +96,10 @@ self.addEventListener('activate', (event) => {
 // refreshed in the background so the next visit picks up a new release.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
+  // A request that asked to skip the caches is left alone: answering it from
+  // this one is exactly what it said not to do. This is how the Update button
+  // in the settings gets to see what is really published.
+  if (event.request.cache === 'reload' || event.request.cache === 'no-store') return;
   event.respondWith(caches.match(event.request, { ignoreSearch: true }).then((hit) => {
     const fromNetwork = fetch(event.request).then((response) => {
       if (response && response.ok) {

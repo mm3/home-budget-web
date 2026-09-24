@@ -441,6 +441,22 @@ async function main() {
       appleLoads: await load(apple.href),
     };
   `);
+  // A file opened from disk has no server to ask, so the update row says so
+  // instead of offering a button that could only ever fail.
+  const update = await cdp.evaluate(`
+    window.homeBudget.setTab('settings');
+    await new Promise((done) => setTimeout(done, 200));
+    const row = document.querySelector('.update-row, .install-row');
+    return {
+      canUpdate: window.homeBudget.canUpdate(),
+      button: document.querySelectorAll('.update-row button').length,
+      text: [...document.querySelectorAll('.install-row')].map((node) => node.textContent).join(' | '),
+    };
+  `);
+  check('a file opened from disk says why it cannot update itself',
+    !update.canUpdate && update.button === 0 && /no server to ask/i.test(update.text),
+    JSON.stringify(update));
+
   check('the icons are inline and actually decode',
     icons.inline && icons.iconLoads && icons.appleLoads, JSON.stringify(icons));
 

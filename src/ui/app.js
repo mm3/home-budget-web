@@ -104,6 +104,70 @@ export class App {
       accepted ? 'ok' : 'info');
   }
 
+  /** True where there is a server to ask; a file opened from disk has none. */
+  canUpdate() {
+    return typeof location === 'object' && /^https?:$/.test(location.protocol);
+  }
+
+  /**
+   * Fetches the published page past every cache and reloads if what is up there
+   * is not what is running.
+   *
+   * Every layer in the way has to be asked to step aside, because each of them
+   * is doing what it was told to. The page carries "cache this for a year,
+   * immutable", which is right for a build whose name never changes and wrong
+   * for the one moment somebody wants to know whether it changed - so the fetch
+   * asks for `reload`, which goes past the browser's HTTP cache. The service
+   * worker answers from its own cache first, and lets a `reload` request through
+   * untouched for exactly this reason. Its caches are then thrown away, so the
+   * reload that follows cannot be served the old app from either of them.
+   *
+   * The version is read from the meta tag the build stamps into the page, not
+   * from the bytes being different: a rebuilt but unchanged release should not
+   * announce itself as an update.
+   */
+  async updateApp() {
+    if (this.updating || !this.canUpdate()) return;
+    this.updating = true;
+    this.render();
+    try {
+      const address = location.href.split('#')[0];
+      const response = await fetch(address, { cache: 'reload' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+      const published = page.querySelector('meta[name="application-version"]');
+      const version = published ? published.getAttribute('content') : '';
+      if (!version) throw new Error('the page did not say which version it is');
+
+      if (version === APP_VERSION) {
+        this.updating = false;
+        this.notify(this.t('settings.updateCurrent', { version: APP_VERSION }), 'info');
+        return;
+      }
+      this.notify(this.t('settings.updateFound', { version }));
+      if (typeof caches === 'object' && caches) {
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name)));
+      }
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        const workers = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(workers.map((worker) => worker.update().catch(() => {})));
+      }
+      this.reloadPage();
+    } catch (error) {
+      this.updating = false;
+      this.notify(this.t('settings.updateFailed', { message: error.message }), 'error');
+    }
+  }
+
+  /**
+   * The last step of an update, on its own so the site check can watch for it
+   * happening without the page it is inspecting disappearing underneath it.
+   */
+  reloadPage() {
+    location.reload();
+  }
+
   /** Translator for the language chosen in the settings. */
   translator() {
     const settings = this.store.settings;

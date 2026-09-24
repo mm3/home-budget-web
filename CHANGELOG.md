@@ -4,6 +4,37 @@ Newest first. The pull-request script reads this file: a pull request describes
 only the versions above the one the target repository is on, so the description
 is always the difference from the release being replaced.
 
+## 3.14.0
+
+**Settings → About → Update the app.** The page asks to be cached for a year and
+the service worker answers from its own copy first, which is right every day and
+wrong the one moment somebody wants to know whether a new version is published.
+The button asks the server, past both of them.
+
+- The fetch uses `cache: 'reload'`, which goes around the browser's HTTP cache.
+- The service worker now lets a `reload` request through untouched instead of
+  answering it from its cache - serving it would be exactly what the request
+  said not to do.
+- The version is read from the meta tag the build stamps into the page, not from
+  the bytes differing, so a rebuilt but unchanged release does not announce
+  itself as an update. If it matches, the app says so and nothing happens.
+- If it does not match, every cache is emptied and the worker re-checked before
+  the reload, so what comes back cannot be the old app from either cache.
+
+**The service worker no longer caches stale bytes on install.** `cache.addAll()`
+goes through the browser's HTTP cache, so a brand new release could fill its
+brand new cache with last year's page and be none the wiser. Each asset is
+fetched with `cache: 'reload'` instead.
+
+A file opened from disk has no server to ask, so there the row says so rather
+than offering a button that could only fail.
+
+The site check drives all of it: it counts the requests the server really
+receives - a button answering from a cache looks identical from inside the page -
+then publishes a different version for a moment and asserts that it is found,
+that the caches are emptied, and that the reload is reached. It then puts the
+worker back and still proves the app opens with the network switched off.
+
 ## 3.13.0
 
 **The interface was measured in one language and broke in the other two.** Every
